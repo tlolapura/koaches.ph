@@ -76,7 +76,7 @@ export function CoachProfilePhoto({
           src={photo}
           alt={name}
           className={cn(
-            "rounded-2xl object-cover ring-4 ring-[#FDEEE9]",
+            "rounded-2xl object-cover ring-4 ring-[#F0FDF4]",
             dim,
             editable && "cursor-pointer"
           )}
@@ -93,7 +93,7 @@ export function CoachProfilePhoto({
             name={name}
             size={size}
             variant="navy"
-            className={cn(editable && "ring-4 ring-[#FDEEE9]")}
+            className={cn(editable && "ring-4 ring-[#F0FDF4]")}
           />
         </button>
       )}
@@ -112,7 +112,7 @@ export function CoachProfilePhoto({
           <button
             type="button"
             onClick={pickPhoto}
-            className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#E07A5F] text-white shadow-md transition-transform active:scale-95"
+            className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-white shadow-md transition-transform active:scale-95"
             aria-label="Change profile photo"
           >
             <Camera className="h-4 w-4" />
@@ -168,7 +168,7 @@ export function CoachPhotoUploadField({
     <div className="flex flex-col items-center rounded-xl border border-dashed border-[#E5E7EB] bg-[#FAFAF8] p-4">
       {photo ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={photo} alt={name} className="h-24 w-24 rounded-2xl object-cover ring-4 ring-[#FDEEE9]" />
+        <img src={photo} alt={name} className="h-24 w-24 rounded-2xl object-cover ring-4 ring-[#F0FDF4]" />
       ) : (
         <InitialsAvatar name={name} size="xl" variant="navy" />
       )}

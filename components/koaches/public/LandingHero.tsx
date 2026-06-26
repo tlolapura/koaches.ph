@@ -2,9 +2,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { PublicBrand } from "@/components/koaches/public/BrandMark";
 import { cn } from "@/lib/utils";
+import { CourtStatGrid } from "@/components/koaches/coach/CourtStatGrid";
 
 const HERO_GRADIENT =
-  "bg-gradient-to-br from-[#1E3A5F] via-[#264a73] to-[#1a3352]";
+  "bg-gradient-to-br from-[#16A34A] via-[#1a8f48] to-[#4F8FF7]";
 
 type PublicHeroProps = {
   eyebrow?: string;
@@ -33,12 +34,12 @@ export function PublicHero({
         "relative overflow-hidden text-white",
         HERO_GRADIENT,
         compact ? "px-4 pb-5 pt-[max(0.75rem,env(safe-area-inset-top))]" : "px-5 pb-7 pt-[max(1rem,env(safe-area-inset-top))]",
-        !compact && "md:mx-auto md:max-w-3xl md:rounded-b-2xl md:shadow-[0_12px_40px_rgba(30,58,95,0.22)]",
+        !compact && "md:mx-auto md:max-w-3xl md:rounded-b-2xl md:shadow-[0_12px_40px_rgba(79,143,247,0.22)]",
         className
       )}
     >
       <div
-        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#E07A5F]/20 blur-3xl"
+        className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#4F8FF7]/25 blur-3xl"
         aria-hidden
       />
       <div
@@ -111,19 +112,7 @@ export function PublicStatGrid({
   stats: { value: string; label: string }[];
   className?: string;
 }) {
-  return (
-    <div className={cn("grid grid-cols-3 gap-2", className)}>
-      {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className="rounded-xl border border-white/10 bg-white/10 px-2 py-2.5 text-center backdrop-blur-sm"
-        >
-          <p className="font-heading text-base font-bold leading-none sm:text-lg">{stat.value}</p>
-          <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-white/55">{stat.label}</p>
-        </div>
-      ))}
-    </div>
-  );
+  return <CourtStatGrid stats={stats} className={className} />;
 }
 
 type PublicPathCardProps = {
@@ -137,9 +126,9 @@ type PublicPathCardProps = {
 
 const pathTones = {
   coral: {
-    card: "border-[#F4C4B8] bg-gradient-to-br from-[#FDEEE9] to-white",
-    icon: "bg-[#E07A5F] text-white shadow-[0_4px_12px_rgba(224,122,95,0.3)]",
-    tag: "bg-[#FDEEE9] text-[#8B4D3A]",
+    card: "border-[#BBF7D0] bg-gradient-to-br from-[#F0FDF4] to-white",
+    icon: "bg-[#16A34A] text-white shadow-[0_4px_12px_rgba(22,163,74,0.3)]",
+    tag: "bg-[#F0FDF4] text-[#166534]",
   },
   sage: {
     card: "border-[#C5D9CC] bg-gradient-to-br from-[#E5EFE8] to-white",
@@ -147,9 +136,9 @@ const pathTones = {
     tag: "bg-[#E5EFE8] text-[#3D5C47]",
   },
   navy: {
-    card: "border-[#C5D4E8] bg-gradient-to-br from-[#EDF2F7] to-white",
-    icon: "bg-[#1E3A5F] text-white shadow-[0_4px_12px_rgba(30,58,95,0.25)]",
-    tag: "bg-[#EDF2F7] text-[#1E3A5F]",
+    card: "border-[#C5D4E8] bg-gradient-to-br from-[#EFF6FF] to-white",
+    icon: "bg-[#4F8FF7] text-white shadow-[0_4px_12px_rgba(79,143,247,0.25)]",
+    tag: "bg-[#EFF6FF] text-[#1D4ED8]",
   },
 };
 
@@ -182,7 +171,7 @@ export function PublicPathCard({
         <p className="mt-0.5 text-sm leading-snug text-[#6B7280]">{description}</p>
       </div>
       <span
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#E07A5F]/40 transition-all group-hover:translate-x-0.5 group-hover:text-[#E07A5F]"
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#16A34A]/40 transition-all group-hover:translate-x-0.5 group-hover:text-[#16A34A]"
         aria-hidden
       >
         →

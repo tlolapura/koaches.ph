@@ -2,6 +2,7 @@
 
 import { KoachesLogo } from "@/components/koaches/KoachesLogo";
 import { CoachApplicationWizard } from "@/components/koaches/shared/CoachApplicationWizard";
+import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 
 type CoachApplyShellProps = {
   backHref: string;
@@ -18,9 +19,10 @@ export function CoachApplyShell({
 }: CoachApplyShellProps) {
   return (
     <div className="coach-portal relative flex h-dvh max-h-dvh w-full flex-col overflow-hidden bg-[#FAFAF8]">
+      <PickleballBallBackdrop variant="login" />
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#FDEEE9] opacity-80 blur-3xl" />
-        <div className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#EDF2F7] opacity-90 blur-3xl" />
+        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#F0FDF4] opacity-80 blur-3xl" />
+        <div className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#EFF6FF] opacity-90 blur-3xl" />
       </div>
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-6">

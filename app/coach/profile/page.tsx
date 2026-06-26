@@ -37,6 +37,9 @@ export default function ProfilePage() {
   const [bio, setBio] = useState("");
   const [pricing, setPricing] = useState<import("@/lib/koaches/types").CoachSessionPricing>(DEFAULT_SESSION_PRICING);
   const [skillTemplateId, setSkillTemplateId] = useState<SkillRubricId>("intermediate");
+  const [savingBio, setSavingBio] = useState(false);
+  const [savingPricing, setSavingPricing] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
   const { showToast } = useCoachToast();
 
   useEffect(() => {
@@ -79,7 +82,7 @@ export default function ProfilePage() {
           )}
           <button
             type="button"
-            className="mt-1.5 text-sm font-semibold text-[#E07A5F]"
+            className="mt-1.5 text-sm font-semibold text-[#4F8FF7]"
             onClick={() => setEditOpen(true)}
           >
             {bio.trim() ? "Edit bio" : "Add bio"}
@@ -89,12 +92,12 @@ export default function ProfilePage() {
         {(specialization || pricingSummary) ? (
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {specialization ? (
-              <span className="rounded-full bg-[#FDEEE9] px-3 py-1 text-xs font-semibold text-[#8B4D3A]">
+              <span className="rounded-full bg-[#F0FDF4] px-3 py-1 text-xs font-semibold text-[#166534]">
                 {specialization}
               </span>
             ) : null}
             {pricingSummary ? (
-              <span className="rounded-full bg-[#1E3A5F] px-3 py-1 text-xs font-semibold text-white">
+              <span className="rounded-full bg-[#14532D] px-3 py-1 text-xs font-semibold text-white">
                 {pricingSummary}
               </span>
             ) : null}
@@ -118,7 +121,7 @@ export default function ProfilePage() {
               Per session, by group size · {pricing.defaultDurationMinutes} min · {pricing.minimumPlayers}–{pricing.maximumPlayers} pax
             </p>
           </div>
-          <button type="button" className="text-sm font-semibold text-[#E07A5F]" onClick={() => setPricingOpen(true)}>
+          <button type="button" className="text-sm font-semibold text-[#4F8FF7]" onClick={() => setPricingOpen(true)}>
             Edit
           </button>
         </div>
@@ -129,7 +132,7 @@ export default function ProfilePage() {
               className="flex items-center justify-between rounded-lg bg-[#F9FAFB] px-3 py-2 text-sm"
             >
               <span className="text-[#374151]">{formatTierLabel(tier)}</span>
-              <span className="font-semibold text-[#1E3A5F]">{formatTierRate(tier)}</span>
+              <span className="font-semibold text-[#14532D]">{formatTierRate(tier)}</span>
             </li>
           ))}
         </ul>
@@ -147,7 +150,7 @@ export default function ProfilePage() {
               {SKILL_RUBRICS[skillTemplateId as keyof typeof SKILL_RUBRICS]?.name ?? "Custom"} rubric
             </p>
           </div>
-          <button type="button" className="text-sm font-semibold text-[#E07A5F]" onClick={() => setTemplateOpen(true)}>
+          <button type="button" className="text-sm font-semibold text-[#4F8FF7]" onClick={() => setTemplateOpen(true)}>
             Customize
           </button>
         </div>
@@ -158,7 +161,7 @@ export default function ProfilePage() {
         <p className="mt-1 text-sm text-[#6B7280]">
           Manage billing, invoices, and payment receipts.
         </p>
-        <Link href="/coach/billing" className="mt-3 inline-block text-sm font-semibold text-[#E07A5F]">
+        <Link href="/coach/billing" className="mt-3 inline-block text-sm font-semibold text-[#4F8FF7]">
           Go to billing →
         </Link>
       </div>
@@ -173,28 +176,39 @@ export default function ProfilePage() {
         title="Edit bio"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={EDIT_BIO_FORM_ID} className="coach-btn-primary">
-              Save bio
+            <button type="submit" form={EDIT_BIO_FORM_ID} className="coach-btn-primary" disabled={savingBio}>
+              {savingBio ? "Saving…" : "Save bio"}
             </button>
           </CoachSheetFooter>
         }
       >
         <form
           id={EDIT_BIO_FORM_ID}
+          className="coach-form"
           onSubmit={async (e) => {
             e.preventDefault();
-            await updateCoachBioAction(coachId, bio, coach.specialization);
-            showToast("Bio updated!");
-            setEditOpen(false);
+            setSavingBio(true);
+            try {
+              await updateCoachBioAction(coachId, bio, coach.specialization);
+              showToast("Bio updated!");
+              setEditOpen(false);
+            } catch (err) {
+              showToast(err instanceof Error ? err.message : "Could not save bio", "error");
+            } finally {
+              setSavingBio(false);
+            }
           }}
         >
-          <CoachSheetField label="Bio">
+          <CoachSheetField label="Bio" htmlFor="coach-bio">
             <textarea
+              id="coach-bio"
               className="coach-input min-h-[120px] resize-none"
+              placeholder="Tell students about your coaching style and experience"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
             />
           </CoachSheetField>
+          <button type="submit" form={EDIT_BIO_FORM_ID} className="hidden" />
         </form>
       </CoachBottomSheet>
 
@@ -208,13 +222,21 @@ export default function ProfilePage() {
             <button
               type="button"
               className="coach-btn-primary"
+              disabled={savingPricing}
               onClick={async () => {
-                await updateCoachPricingAction(coachId, pricing);
-                showToast("Pricing saved!");
-                setPricingOpen(false);
+                setSavingPricing(true);
+                try {
+                  await updateCoachPricingAction(coachId, pricing);
+                  showToast("Pricing saved!");
+                  setPricingOpen(false);
+                } catch (err) {
+                  showToast(err instanceof Error ? err.message : "Could not save pricing", "error");
+                } finally {
+                  setSavingPricing(false);
+                }
               }}
             >
-              Save Pricing
+              {savingPricing ? "Saving…" : "Save Pricing"}
             </button>
           </CoachSheetFooter>
         }
@@ -232,13 +254,21 @@ export default function ProfilePage() {
             <button
               type="button"
               className="coach-btn-primary"
+              disabled={savingTemplate}
               onClick={async () => {
-                await updateCoachSkillTemplateAction(coachId, skillTemplateId);
-                showToast("Template saved!");
-                setTemplateOpen(false);
+                setSavingTemplate(true);
+                try {
+                  await updateCoachSkillTemplateAction(coachId, skillTemplateId);
+                  showToast("Template saved!");
+                  setTemplateOpen(false);
+                } catch (err) {
+                  showToast(err instanceof Error ? err.message : "Could not save template", "error");
+                } finally {
+                  setSavingTemplate(false);
+                }
               }}
             >
-              Save Template
+              {savingTemplate ? "Saving…" : "Save Template"}
             </button>
           </CoachSheetFooter>
         }

@@ -20,7 +20,7 @@ export function CoachAchievementsList({ achievements, compact }: CoachAchievemen
           key={achievement.id}
           className="flex items-start gap-3 rounded-xl bg-[#F9FAFB] px-3 py-3"
         >
-          <Award className="mt-0.5 h-4 w-4 shrink-0 text-[#E07A5F]" strokeWidth={2} />
+          <Award className="mt-0.5 h-4 w-4 shrink-0 text-[#4F8FF7]" strokeWidth={2} />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-heading text-sm font-semibold text-[#111827]">{achievement.title}</p>

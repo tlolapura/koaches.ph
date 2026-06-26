@@ -56,10 +56,10 @@ function ScorePills({
             "h-9 min-w-[2rem] flex-1 rounded-lg text-sm font-bold transition-colors max-w-[2.75rem]",
             tone === "start"
               ? value === n
-                ? "bg-[#1E3A5F] text-white shadow-sm"
-                : "border border-[#1E3A5F]/25 bg-white text-[#1E3A5F]"
+                ? "bg-[#14532D] text-white shadow-sm"
+                : "border border-[#14532D]/25 bg-white text-[#14532D]"
               : value === n
-                ? "bg-[#E07A5F] text-white shadow-sm"
+                ? "bg-[#16A34A] text-white shadow-sm"
                 : "border border-[#E5E7EB] bg-white text-[#9CA3AF]"
           )}
         >
@@ -108,7 +108,7 @@ function SkillRatingRow({
           <ScorePills value={beforeScore} onChange={onBefore} tone="start" />
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-9 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[#E07A5F]">
+          <span className="w-9 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[#4F8FF7]">
             Now
           </span>
           <ScorePills value={afterScore} onChange={onAfter} tone="now" />
@@ -211,11 +211,11 @@ export function SkillRatingPanel({
         </div>
         <div className="mt-2 flex justify-center gap-4 text-[10px] font-medium text-[#6B7280]">
           <span className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4 border-t-2 border-dashed border-[#1E3A5F]" />
+            <span className="h-0.5 w-4 border-t-2 border-dashed border-[#14532D]" />
             Start
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-[#E07A5F]/40 ring-1 ring-[#E07A5F]" />
+            <span className="h-2 w-2 rounded-sm bg-[#16A34A]/40 ring-1 ring-[#16A34A]" />
             Now
           </span>
         </div>
@@ -232,7 +232,7 @@ export function SkillRatingPanel({
               className={cn(
                 "font-heading shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold min-h-[36px] transition-colors",
                 activeCategory === cat
-                  ? "bg-[#1E3A5F] text-white"
+                  ? "bg-[#14532D] text-white"
                   : "bg-white text-[#6B7280] ring-1 ring-[#E5E7EB]"
               )}
             >
@@ -249,7 +249,7 @@ export function SkillRatingPanel({
           <button
             type="button"
             onClick={copyStartToNow}
-            className="flex items-center gap-1 text-[11px] font-semibold text-[#E07A5F]"
+            className="flex items-center gap-1 text-[11px] font-semibold text-[#4F8FF7]"
           >
             Copy Start <ArrowRight className="h-3 w-3" /> Now
           </button>

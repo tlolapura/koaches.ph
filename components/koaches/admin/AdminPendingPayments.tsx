@@ -59,7 +59,7 @@ export function AdminPendingPayments({ initialPayments }: AdminPendingPaymentsPr
     <section className="mb-6">
       <h2 className="font-heading text-sm font-semibold text-[#111827]">
         Pending payment receipts
-        <span className="ml-2 rounded-full bg-[#FDEEE9] px-2 py-0.5 text-xs font-bold text-[#8B4D3A]">
+        <span className="ml-2 rounded-full bg-[#F0FDF4] px-2 py-0.5 text-xs font-bold text-[#166534]">
           {payments.length}
         </span>
       </h2>
@@ -77,7 +77,7 @@ export function AdminPendingPayments({ initialPayments }: AdminPendingPaymentsPr
         {payments.map((payment) => {
           const isBusy = busyId === payment.id;
           return (
-            <div key={payment.id} className="coach-card border-[#E07A5F]/30 p-4">
+            <div key={payment.id} className="coach-card border-[#16A34A]/30 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-heading font-semibold">{payment.coachName}</p>
@@ -94,7 +94,7 @@ export function AdminPendingPayments({ initialPayments }: AdminPendingPaymentsPr
                 </div>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 text-sm font-semibold text-[#E07A5F] hover:underline"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-[#4F8FF7] hover:underline"
                   onClick={() => void viewReceipt(payment)}
                 >
                   <ExternalLink className="h-3.5 w-3.5" />

@@ -13,7 +13,7 @@ import {
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { getSessionParticipants } from "@/lib/koaches/session-participants";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
-import { CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
+import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { RadarChart, SkillComparisonTable } from "@/components/koaches/RadarChart";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 
@@ -151,29 +151,32 @@ export function GenerateProgressCardSheet({
 
       {step === 2 && (
         <div className="space-y-4">
-          <textarea
-            className="coach-input min-h-[140px] resize-none"
-            placeholder={`e.g. ${participant.name}, your improvement today was awesome…`}
-            maxLength={280}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
+          <CoachSheetField label="Personal message" htmlFor="progress-card-message">
+            <textarea
+              id="progress-card-message"
+              className="coach-input min-h-[140px] resize-none"
+              placeholder={`e.g. ${participant.name}, your improvement today was awesome…`}
+              maxLength={280}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+          </CoachSheetField>
           <p className="text-right text-xs text-[#6B7280]">{message.length}/280</p>
         </div>
       )}
 
       {step === 3 && (
         <div className="rounded-2xl border border-[#E5E7EB] bg-white p-4 text-center">
-          <p className="font-heading text-lg font-bold text-[#1E3A5F]">{draft.studentName}</p>
+          <p className="font-heading text-lg font-bold text-[#14532D]">{draft.studentName}</p>
           <p className="text-sm text-[#6B7280]">Coached by {draft.coachName}</p>
-          <span className="mt-3 inline-block rounded-full bg-[#E07A5F] px-3 py-1 text-xs font-semibold text-white">
+          <span className="mt-3 inline-block rounded-full bg-[#16A34A] px-3 py-1 text-xs font-semibold text-white">
             {draft.programOrSession}
           </span>
           <div className="mt-4">
             <RadarChart before={draft.ratingsBefore} after={draft.ratingsAfter} height={200} compact />
           </div>
-          <blockquote className="mt-4 border-l-4 border-[#1E3A5F] pl-3 text-left">
-            <p className="text-sm italic text-[#1E3A5F]">
+          <blockquote className="mt-4 border-l-4 border-[#14532D] pl-3 text-left">
+            <p className="text-sm italic text-[#14532D]">
               &ldquo;{message.trim() || "Great work today — keep it up!"}&rdquo;
             </p>
           </blockquote>
@@ -182,8 +185,8 @@ export function GenerateProgressCardSheet({
 
       {step === 4 && (
         <div className="space-y-4 py-4 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FDEEE9]">
-            <PartyPopper className="h-7 w-7 text-[#8B4D3A]" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDF4]">
+            <PartyPopper className="h-7 w-7 text-[#166534]" />
           </div>
           <p className="font-heading text-lg font-semibold">Progress card generated</p>
           <p className="text-sm text-[#6B7280]">

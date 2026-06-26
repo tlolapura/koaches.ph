@@ -84,7 +84,7 @@ export function CoachDatePicker({
         )}
       >
         <span className="flex min-w-0 items-center gap-2">
-          <Calendar className="h-4 w-4 shrink-0 text-[#E07A5F]" />
+          <Calendar className="h-4 w-4 shrink-0 text-[#4F8FF7]" />
           <span className={cn("truncate", !selected && "text-[#9CA3AF]")}>{label}</span>
         </span>
         <ChevronDown
@@ -121,8 +121,8 @@ export function CoachDatePicker({
             day_button:
               "font-heading mx-auto flex h-10 w-10 items-center justify-center rounded-full text-sm text-[#374151] hover:bg-[#F9FAFB]",
             selected:
-              "[&>button]:bg-[#E07A5F] [&>button]:text-white [&>button]:hover:bg-[#C96A52]",
-            today: "[&>button]:font-bold [&>button]:text-[#1E3A5F]",
+              "[&>button]:bg-[#16A34A] [&>button]:text-white [&>button]:hover:bg-[#15803D]",
+            today: "[&>button]:font-bold [&>button]:text-[#14532D]",
             outside: "[&>button]:text-[#D1D5DB]",
             disabled: "[&>button]:opacity-40",
           }}

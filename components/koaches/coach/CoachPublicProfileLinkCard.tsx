@@ -44,9 +44,9 @@ export function CoachPublicProfileLinkCard({ coach, className }: CoachPublicProf
 
   return (
     <div className={cn("coach-card overflow-hidden", className)}>
-      <div className="bg-gradient-to-br from-[#EDF2F7] via-white to-[#FAFAF8] p-4 sm:p-5">
+      <div className="bg-gradient-to-br from-[#EFF6FF] via-white to-[#FAFAF8] p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1E3A5F] text-white">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#14532D] text-white">
             <Globe className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -66,7 +66,7 @@ export function CoachPublicProfileLinkCard({ coach, className }: CoachPublicProf
                 level="M"
                 marginSize={2}
                 bgColor="#ffffff"
-                fgColor="#1E3A5F"
+                fgColor="#14532D"
               />
             </div>
             <div className="min-w-0 flex-1 sm:pt-1">
@@ -76,7 +76,7 @@ export function CoachPublicProfileLinkCard({ coach, className }: CoachPublicProf
                 <button
                   type="button"
                   onClick={() => void copyLink()}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#1E3A5F]"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#14532D]"
                   aria-label="Copy profile link"
                 >
                   {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}

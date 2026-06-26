@@ -140,7 +140,7 @@ export function CoachSchedulePage() {
                 onClick={() => setScheduleParams(router, pathname, { view: id, status: listTab })}
                 className={cn(
                   "font-heading flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-all min-h-[40px]",
-                  viewMode === id ? "bg-[#E07A5F] text-white shadow-sm" : "text-[#6B7280]"
+                  viewMode === id ? "bg-[#16A34A] text-white shadow-sm" : "text-[#6B7280]"
                 )}
               >
                 <Icon className="h-4 w-4" strokeWidth={2.25} />
@@ -153,6 +153,20 @@ export function CoachSchedulePage() {
 
       {viewMode === "calendar" ? (
         <div className="mt-6">
+          {allSessions.length === 0 && (
+            <div className="mb-4">
+            <EmptyState
+              icon={CalendarDays}
+              title="No sessions scheduled"
+              description="Book your first session to fill your calendar."
+              action={
+                <button type="button" onClick={() => openAddSession()} className="coach-btn-primary max-w-xs">
+                  Book a session
+                </button>
+              }
+            />
+            </div>
+          )}
           <CoachScheduleGrid
             date={selectedDate}
             sessions={allSessions}
@@ -171,7 +185,7 @@ export function CoachSchedulePage() {
                 className={cn(
                   "font-heading shrink-0 rounded-full px-4 py-2 text-sm font-semibold min-h-[44px]",
                   listTab === t
-                    ? "bg-[#E07A5F] text-white"
+                    ? "bg-[#16A34A] text-white"
                     : "bg-white text-[#6B7280] border border-[#E5E7EB]"
                 )}
               >
@@ -206,7 +220,7 @@ export function CoachSchedulePage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <p className="font-heading font-semibold">{label}</p>
-                          <span className="shrink-0 text-sm font-semibold text-[#1E3A5F]">
+                          <span className="shrink-0 text-sm font-semibold text-[#14532D]">
                             {formatCurrency(s.price)}
                           </span>
                         </div>

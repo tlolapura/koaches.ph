@@ -83,7 +83,7 @@ export function CoachesBrowse({ coaches }: CoachesBrowseProps) {
         <button
           type="button"
           onClick={() => setFinderOpen(true)}
-          className="coach-btn-primary mt-3 gap-2 shadow-[0_4px_14px_rgba(224,122,95,0.28)]"
+          className="coach-btn-primary mt-3 gap-2 shadow-[0_4px_14px_rgba(22,163,74,0.28)]"
         >
           <SlidersHorizontal className="h-4 w-4" />
           Match me to a coach
@@ -100,7 +100,7 @@ export function CoachesBrowse({ coaches }: CoachesBrowseProps) {
       <div className="mx-auto w-full max-w-lg px-4 py-4 sm:max-w-xl lg:max-w-2xl">
         {filtered.length === 0 ? (
           <div className="py-14 text-center">
-            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EDF2F7] text-[#1E3A5F]">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#1D4ED8]">
               <Search className="h-6 w-6" strokeWidth={2} />
             </span>
             <p className="font-heading mt-4 text-lg font-semibold text-[#111827]">No coaches match</p>

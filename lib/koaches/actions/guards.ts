@@ -10,6 +10,12 @@ export async function assertCoachAccess(coachId: string): Promise<string> {
   return authCoachId;
 }
 
+export async function requireAuthenticatedCoachId(): Promise<string> {
+  const coachId = await getAuthenticatedCoachIdAction();
+  if (!coachId) throw new Error("Not authorized.");
+  return coachId;
+}
+
 export async function requireAdmin(): Promise<void> {
   const profile = await getProfileAction();
   if (!isAdminRole(profile?.role)) {

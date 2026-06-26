@@ -35,8 +35,8 @@ export function SkillRubricPreview({
         onClick={() => setExpanded((e) => !e)}
         className="flex w-full items-start gap-3 p-4 text-left"
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDEEE9]">
-          <ClipboardList className="h-5 w-5 text-[#8B4D3A]" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+          <ClipboardList className="h-5 w-5 text-[#166534]" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="font-heading text-sm font-semibold text-[#111827]">
@@ -64,7 +64,7 @@ export function SkillRubricPreview({
           </p>
           {breakdown.map((section) => (
             <div key={section.category} className="rounded-lg bg-white p-3 shadow-sm">
-              <p className="font-heading text-xs font-semibold text-[#1E3A5F]">{section.category}</p>
+              <p className="font-heading text-xs font-semibold text-[#14532D]">{section.category}</p>
               <ul className="mt-2 space-y-1.5">
                 {section.items.map((item) => (
                   <li key={item} className="flex items-center gap-2 text-xs text-[#6B7280]">

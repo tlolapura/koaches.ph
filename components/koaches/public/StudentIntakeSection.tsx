@@ -12,6 +12,7 @@ import {
 } from "@/lib/koaches/intake";
 import { submitIntakeAction } from "@/lib/koaches/actions/intake";
 import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
+import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { cn } from "@/lib/utils";
 
 type StudentIntakeSectionProps = {
@@ -100,48 +101,56 @@ export function StudentIntakeSection({ coach }: StudentIntakeSectionProps) {
   }
 
   return (
-    <form className="coach-card space-y-4 p-5 sm:p-6" onSubmit={handleSubmit}>
-      <Field label="Full name *">
+    <form className="coach-card coach-form p-5 sm:p-6" onSubmit={handleSubmit}>
+      <CoachSheetField label="Full name *" htmlFor="intake-name">
         <input
+          id="intake-name"
           className="coach-input"
           required
+          autoComplete="name"
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
           placeholder="Juan dela Cruz"
         />
-      </Field>
+      </CoachSheetField>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Mobile number *">
+        <CoachSheetField label="Mobile number *" htmlFor="intake-mobile">
           <input
+            id="intake-mobile"
             className="coach-input"
             required
             type="tel"
+            autoComplete="tel"
             value={form.mobile}
             onChange={(e) => setForm((f) => ({ ...f, mobile: e.target.value }))}
             placeholder="09171234567"
           />
-        </Field>
-        <Field label="Email *">
+        </CoachSheetField>
+        <CoachSheetField label="Email *" htmlFor="intake-email">
           <input
+            id="intake-email"
             className="coach-input"
             required
             type="email"
+            autoComplete="email"
             value={form.email}
             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
             placeholder="juan@email.com"
           />
-        </Field>
+        </CoachSheetField>
       </div>
-      <Field label="Emergency contact (optional)">
+      <CoachSheetField label="Emergency contact (optional)" htmlFor="intake-emergency">
         <input
+          id="intake-emergency"
           className="coach-input"
           value={form.emergencyContact}
           onChange={(e) => setForm((f) => ({ ...f, emergencyContact: e.target.value }))}
           placeholder="Name & number"
         />
-      </Field>
-      <Field label="Your skill level">
+      </CoachSheetField>
+      <CoachSheetField label="Your skill level" htmlFor="intake-skill">
         <CoachSelect
+          id="intake-skill"
           value={form.skillLevel}
           onChange={(level) => setForm((f) => ({ ...f, skillLevel: level as DuprLevel }))}
           options={DUPR_LEVELS.map((d) => ({
@@ -149,15 +158,16 @@ export function StudentIntakeSection({ coach }: StudentIntakeSectionProps) {
             label: `${d.level} — ${d.label}`,
           }))}
         />
-      </Field>
-      <Field label="Notes for your coach (optional)">
+      </CoachSheetField>
+      <CoachSheetField label="Notes for your coach (optional)" htmlFor="intake-notes">
         <textarea
+          id="intake-notes"
           className="coach-input min-h-[72px] resize-none"
           value={form.notes}
           onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
           placeholder="Booking reference, goals, injuries…"
         />
-      </Field>
+      </CoachSheetField>
 
       <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] p-4">
         <div className="flex items-start gap-2">
@@ -169,7 +179,7 @@ export function StudentIntakeSection({ coach }: StudentIntakeSectionProps) {
               onClick={() => setWaiverOpen((o) => !o)}
             >
               <span className="font-heading text-sm font-semibold text-[#111827]">{INTAKE_WAIVER_TITLE}</span>
-              <span className="text-xs font-medium text-[#E07A5F]">{waiverOpen ? "Hide" : "Read"}</span>
+              <span className="text-xs font-medium text-[#4F8FF7]">{waiverOpen ? "Hide" : "Read"}</span>
             </button>
             <div
               className={cn(
@@ -182,7 +192,7 @@ export function StudentIntakeSection({ coach }: StudentIntakeSectionProps) {
             <label className="mt-4 flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
-                className="mt-1 h-4 w-4 rounded border-[#D1D5DB] accent-[#E07A5F]"
+                className="mt-1 h-4 w-4 rounded border-[#D1D5DB] accent-[#16A34A]"
                 checked={form.agreed}
                 onChange={(e) => setForm((f) => ({ ...f, agreed: e.target.checked }))}
               />
@@ -194,15 +204,20 @@ export function StudentIntakeSection({ coach }: StudentIntakeSectionProps) {
         </div>
       </div>
 
-      <Field label="Sign waiver — type your full name *" hint="Must match the name above">
+      <CoachSheetField
+        label="Sign waiver — type your full name *"
+        htmlFor="intake-signed-name"
+        hint="Must match the name above"
+      >
         <input
+          id="intake-signed-name"
           className="coach-input font-medium italic"
           required
           value={form.signedName}
           onChange={(e) => setForm((f) => ({ ...f, signedName: e.target.value }))}
           placeholder={form.name || "Juan dela Cruz"}
         />
-      </Field>
+      </CoachSheetField>
 
       {error && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#991B1B]">{error}</p>}
 
@@ -210,23 +225,5 @@ export function StudentIntakeSection({ coach }: StudentIntakeSectionProps) {
         {submitting ? "Submitting…" : "Submit & join roster"}
       </button>
     </form>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="text-xs font-semibold text-[#374151]">{label}</label>
-      <div className="mt-1.5">{children}</div>
-      {hint ? <p className="mt-1 text-[10px] text-[#9CA3AF]">{hint}</p> : null}
-    </div>
   );
 }

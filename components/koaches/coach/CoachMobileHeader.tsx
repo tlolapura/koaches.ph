@@ -4,6 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { getCoachPageMeta } from "@/lib/koaches/coach-page-titles";
+import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
+import { CoachNotificationBell } from "@/components/koaches/coach/CoachNotificationBell";
+import { CoachAvatar } from "@/components/koaches/coach/CoachAvatar";
+import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 
@@ -15,7 +19,8 @@ export function CoachMobileHeader() {
   const isDashboard = pathname === "/coach/dashboard" || pathname === "/coach";
 
   return (
-    <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between gap-3 border-b border-[#E5E7EB] bg-[#FAFAF8]/95 px-4 py-3 backdrop-blur md:hidden">
+    <header className="sticky top-0 z-30 md:hidden">
+      <div className="flex min-h-14 items-center justify-between gap-3 border-b border-[#E5E7EB] bg-[#FAFAF8]/95 px-4 py-3 backdrop-blur">
       <div className="flex min-w-0 flex-1 items-center gap-1">
         {back ? (
           <Link
@@ -27,21 +32,23 @@ export function CoachMobileHeader() {
           </Link>
         ) : null}
         {isDashboard ? (
-          <span className="font-heading text-lg font-bold tracking-tight">
-            <span className="text-[#E07A5F]">Koaches</span>
-            <span className="text-[#1E3A5F]">PH</span>
-          </span>
+          <KoachesWordmark size="sm" />
         ) : (
           <h1 className="font-heading truncate text-lg font-semibold text-[#111827]">{title}</h1>
         )}
       </div>
-      <Link
-        href="/coach/profile"
-        className="font-heading flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1E3A5F] text-xs font-semibold text-white ring-2 ring-white"
-        title={coach?.name ?? "Profile"}
-      >
-        {(coach?.name ?? "?").charAt(0).toUpperCase()}
-      </Link>
+      <div className="flex shrink-0 items-center gap-2">
+        <CoachNotificationBell />
+        <Link
+          href="/coach/profile"
+          className="shrink-0"
+          title={coach?.name ?? "Profile"}
+        >
+          <CoachAvatar name={coach?.name ?? "Coach"} photo={coach?.photo} size="sm" />
+        </Link>
+      </div>
+      </div>
+      <CourtStripe />
     </header>
   );
 }

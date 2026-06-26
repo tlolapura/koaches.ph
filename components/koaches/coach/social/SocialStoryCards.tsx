@@ -113,7 +113,7 @@ export function SocialStoryWeeklyCard({
                   <p className="font-heading text-sm font-bold">{day.dayLabel}</p>
                   <p className="text-[10px] text-white/55">{day.dateLabel}</p>
                 </div>
-                <p className="mt-1.5 text-xs font-semibold leading-relaxed text-[#FDE047]">
+                <p className="mt-1.5 text-xs font-semibold leading-relaxed text-[#FACC15]">
                   {day.openSlots.map((s) => s.timeLabel).join(" · ")}
                 </p>
               </div>
@@ -154,11 +154,11 @@ export function SocialStoryProgramsCard({
                 key={program.name}
                 className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 px-3 py-3 backdrop-blur-sm"
               >
-                <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#E07A5F]/30 text-[10px] font-bold text-[#FDE047]">
+                <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#16A34A]/30 text-[10px] font-bold text-[#FACC15]">
                   {index + 1}
                 </span>
                 <p className="pr-8 font-heading text-sm font-bold leading-tight">{program.name}</p>
-                <p className="mt-1.5 text-xs font-semibold text-[#E07A5F]">{program.summary}</p>
+                <p className="mt-1.5 text-xs font-semibold text-[#4F8FF7]">{program.summary}</p>
                 {program.targetLevel ? (
                   <p className="mt-1 text-[10px] text-white/55">{program.targetLevel}</p>
                 ) : null}

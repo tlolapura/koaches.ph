@@ -5,7 +5,7 @@ import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 import { mapCoach, type DbCoach } from "@/lib/koaches/db/mappers";
-import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
+import { buildJoinPath, buildPublicCoachPath } from "@/lib/koaches/coach-routes";
 
 export async function fetchCoachProfileAction(coachId: string): Promise<CoachProfile> {
   await assertCoachAccess(coachId);
@@ -79,10 +79,25 @@ export async function updateCoachContactAction(
 export async function updateCoachPhotoAction(coachId: string, photoUrl: string | null) {
   await assertCoachAccess(coachId);
   const supabase = createServiceClient();
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("coaches")
+    .select("slug")
+    .eq("id", coachId)
+    .single();
+  if (fetchError) throw fetchError;
+
   const { error } = await supabase
     .from("coaches")
     .update({ photo_url: photoUrl, updated_at: new Date().toISOString() })
     .eq("id", coachId);
   if (error) throw error;
+
   revalidatePath("/coach/profile");
+  revalidatePath("/coaches");
+  if (existing?.slug) {
+    const publicPath = buildPublicCoachPath(existing.slug);
+    revalidatePath(publicPath);
+    revalidatePath(buildJoinPath(existing.slug));
+  }
 }

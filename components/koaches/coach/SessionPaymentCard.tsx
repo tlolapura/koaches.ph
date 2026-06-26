@@ -42,7 +42,7 @@ export function SessionPaymentCard({ session }: SessionPaymentCardProps) {
             className={cn(
               "font-heading flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all min-h-[44px]",
               paymentStatus === status
-                ? "bg-[#E07A5F] text-white shadow-sm"
+                ? "bg-[#16A34A] text-white shadow-sm"
                 : "text-[#6B7280] hover:bg-white/70"
             )}
           >

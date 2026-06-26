@@ -83,7 +83,7 @@ export function CoachFilters({ filters, onChange, onOpenQuiz, resultCount }: Coa
             {hasActive && (
               <>
                 {" · "}
-                <button type="button" onClick={clearAll} className="font-semibold text-[#E07A5F] hover:underline">
+                <button type="button" onClick={clearAll} className="font-semibold text-[#4F8FF7] hover:underline">
                   Reset
                 </button>
               </>
@@ -92,7 +92,7 @@ export function CoachFilters({ filters, onChange, onOpenQuiz, resultCount }: Coa
           <button
             type="button"
             onClick={onOpenQuiz}
-            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#1E3A5F]"
+            className="flex shrink-0 items-center gap-1 text-xs font-semibold text-[#1D4ED8]"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Match me
@@ -126,7 +126,7 @@ function FilterChip({
         active
           ? accent
             ? "border-[#6B9E78] bg-[#6B9E78] text-white"
-            : "border-[#E07A5F] bg-[#FDEEE9] text-[#8B4D3A]"
+            : "border-[#16A34A] bg-[#EFF6FF] text-[#1D4ED8]"
           : "border-[#E5E7EB] bg-white text-[#6B7280] hover:border-[#C5D4E8]"
       )}
     >

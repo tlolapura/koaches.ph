@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
+import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { CoachBillingSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import {
@@ -34,7 +35,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   return (
     <button
       type="button"
-      className="inline-flex items-center gap-1 text-xs font-semibold text-[#E07A5F]"
+      className="inline-flex items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
       onClick={() => {
         void navigator.clipboard.writeText(value);
         showToast(`${label} copied`);
@@ -153,7 +154,7 @@ export function CoachBillingPage() {
 
   return (
     <CoachPageShell className="pb-8">
-      <CoachPageHeader title="Billing" subtitle="Subscription and payments" mobileTitle />
+      <CoachPageHeader title="Billing" subtitle="Subscription and payments" />
 
       {isRestricted && (
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]">
@@ -228,7 +229,7 @@ export function CoachBillingPage() {
               </p>
             </div>
             <div className="text-right">
-              <p className="font-heading text-2xl font-bold text-[#1E3A5F]">
+              <p className="font-heading text-2xl font-bold text-[#14532D]">
                 {formatCurrency(currentInvoice.amount)}
               </p>
               <p className="mt-1 text-xs font-semibold text-[#6B7280]">
@@ -247,7 +248,7 @@ export function CoachBillingPage() {
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="coach-card p-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1E3A5F] text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#14532D] text-white">
                 <Smartphone className="h-4 w-4" />
               </div>
               <p className="font-heading font-semibold">{KOACHES_PAYMENT_DETAILS.gcash.label}</p>
@@ -270,7 +271,7 @@ export function CoachBillingPage() {
 
           <div className="coach-card p-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#1E3A5F] text-white">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#14532D] text-white">
                 <Building2 className="h-4 w-4" />
               </div>
               <p className="font-heading font-semibold">{KOACHES_PAYMENT_DETAILS.bank.label}</p>
@@ -312,7 +313,7 @@ export function CoachBillingPage() {
               </p>
               <button
                 type="button"
-                className="mt-2 text-sm font-semibold text-[#E07A5F] hover:underline"
+                className="mt-2 text-sm font-semibold text-[#4F8FF7] hover:underline"
                 onClick={() => void viewReceipt(pendingSubmission.receiptPath)}
               >
                 View uploaded receipt
@@ -325,17 +326,16 @@ export function CoachBillingPage() {
       {canUpload && currentInvoice && (
         <section className="coach-card mt-6 p-5">
           <div className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-[#E07A5F]" />
+            <CreditCard className="h-5 w-5 text-[#4F8FF7]" />
             <h2 className="font-heading font-semibold text-[#111827]">Upload receipt</h2>
           </div>
           <p className="mt-1 text-sm text-[#6B7280]">
             After paying, upload a screenshot or PDF of your GCash / bank transfer receipt.
           </p>
 
-          <form className="mt-4 space-y-4" onSubmit={(e) => void handleSubmit(e)}>
-            <div>
-              <p className="coach-label">Payment method</p>
-              <div className="mt-2 flex gap-2">
+          <form className="coach-form mt-4" onSubmit={(e) => void handleSubmit(e)}>
+            <CoachSheetField label="Payment method">
+              <div className="flex gap-2">
                 {(
                   [
                     { id: "gcash" as const, label: "GCash" },
@@ -349,7 +349,7 @@ export function CoachBillingPage() {
                     className={cn(
                       "rounded-full px-4 py-2 text-sm font-semibold transition-colors",
                       method === opt.id
-                        ? "bg-[#1E3A5F] text-white"
+                        ? "bg-[#14532D] text-white"
                         : "border border-[#E5E7EB] bg-white text-[#6B7280]"
                     )}
                   >
@@ -357,23 +357,22 @@ export function CoachBillingPage() {
                   </button>
                 ))}
               </div>
-            </div>
+            </CoachSheetField>
 
-            <div>
-              <label htmlFor="receipt-notes" className="coach-label">
-                Reference / notes <span className="font-normal text-[#9CA3AF]">(optional)</span>
-              </label>
+            <CoachSheetField
+              label="Reference / notes (optional)"
+              htmlFor="receipt-notes"
+            >
               <input
                 id="receipt-notes"
-                className="coach-input mt-1.5"
+                className="coach-input"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="e.g. GCash ref no. 123456"
               />
-            </div>
+            </CoachSheetField>
 
-            <div>
-              <p className="coach-label">Receipt file</p>
+            <CoachSheetField label="Receipt file" hint="JPEG, PNG, WebP, or PDF">
               <input
                 ref={fileRef}
                 type="file"
@@ -384,12 +383,12 @@ export function CoachBillingPage() {
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="coach-btn-outline mt-2 flex w-full items-center justify-center gap-2 py-3"
+                className="coach-btn-outline flex w-full items-center justify-center gap-2 py-3"
               >
                 <Upload className="h-4 w-4" />
                 {fileName ?? "Choose image or PDF"}
               </button>
-            </div>
+            </CoachSheetField>
 
             {error && (
               <p className="rounded-xl bg-[#FEF2F2] px-3 py-2 text-sm text-[#B91C1C]" role="alert">
@@ -420,7 +419,7 @@ export function CoachBillingPage() {
                 </div>
                 <button
                   type="button"
-                  className="text-sm font-semibold text-[#E07A5F]"
+                  className="text-sm font-semibold text-[#4F8FF7]"
                   onClick={() => void viewReceipt(s.receiptPath)}
                 >
                   View receipt
@@ -446,7 +445,7 @@ export function CoachBillingPage() {
                     Due {formatDisplayDate(inv.periodEnd)} · {invoiceStatusLabel(inv.status)}
                   </p>
                 </div>
-                <p className="font-semibold text-[#1E3A5F]">{formatCurrency(inv.amount)}</p>
+                <p className="font-semibold text-[#14532D]">{formatCurrency(inv.amount)}</p>
               </li>
             ))}
           </ul>

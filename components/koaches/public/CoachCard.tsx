@@ -28,10 +28,10 @@ export function CoachCard({ coach }: CoachCardProps) {
         <img
           src={coach.photo}
           alt={coach.name}
-          className="h-14 w-14 shrink-0 rounded-xl object-cover ring-2 ring-[#FDEEE9]"
+          className="h-14 w-14 shrink-0 rounded-xl object-cover ring-2 ring-[#EFF6FF]"
         />
       ) : (
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#FDEEE9] font-heading text-sm font-bold text-[#8B4D3A] ring-2 ring-[#FDEEE9]">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] font-heading text-sm font-bold text-[#1D4ED8] ring-2 ring-[#EFF6FF]">
           {initials}
         </div>
       )}
@@ -39,7 +39,7 @@ export function CoachCard({ coach }: CoachCardProps) {
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <p className="font-heading truncate text-[0.9375rem] font-semibold text-[#111827]">{coach.name}</p>
-          <p className="font-heading shrink-0 text-sm font-semibold text-[#E07A5F]">
+          <p className="font-heading shrink-0 text-sm font-semibold text-[#4F8FF7]">
             {formatCurrency(coach.ratePerSession)}
           </p>
         </div>
@@ -51,7 +51,7 @@ export function CoachCard({ coach }: CoachCardProps) {
           </p>
           <div className="flex shrink-0 items-center gap-1.5">
             {coach.freeTrialEnabled ? (
-              <span className="rounded-full bg-[#FDEEE9] px-2 py-0.5 text-[10px] font-bold text-[#8B4D3A]">
+              <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-bold text-[#1D4ED8]">
                 Free trial
               </span>
             ) : null}
@@ -65,7 +65,7 @@ export function CoachCard({ coach }: CoachCardProps) {
       <ChevronRight
         className={cn(
           "h-4 w-4 shrink-0 text-[#D1D5DB] transition-colors",
-          "group-hover:text-[#E07A5F]"
+          "group-hover:text-[#4F8FF7]"
         )}
       />
     </Link>

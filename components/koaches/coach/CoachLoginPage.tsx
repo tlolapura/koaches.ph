@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { LogIn } from "lucide-react";
 import { KoachesLogo } from "@/components/koaches/KoachesLogo";
+import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { coachSignInAction } from "@/lib/koaches/actions/auth";
 
 export function CoachLoginPage() {
@@ -24,9 +25,10 @@ export function CoachLoginPage() {
 
   return (
     <div className="coach-portal relative flex h-dvh max-h-dvh w-full overflow-hidden bg-[#FAFAF8]">
+      <PickleballBallBackdrop variant="login" />
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#FDEEE9] opacity-80 blur-3xl" />
-        <div className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#E5EFE8] opacity-90 blur-3xl" />
+        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#F0FDF4] opacity-60 blur-3xl" />
+        <div className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#EFF6FF] opacity-70 blur-3xl" />
       </div>
 
       <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4">
@@ -49,7 +51,7 @@ export function CoachLoginPage() {
             }}
           >
             <KoachesLogo size="md" />
-            <p className="font-heading mt-4 text-xs font-semibold uppercase tracking-wide text-[#E07A5F]">
+            <p className="font-heading mt-4 text-xs font-semibold uppercase tracking-wide text-[#4F8FF7]">
               Coach portal
             </p>
             <p className="mt-1 text-sm text-[#6B7280]">Sign in to your dashboard</p>
@@ -105,7 +107,7 @@ export function CoachLoginPage() {
 
           <p className="mt-6 text-center text-xs text-[#9CA3AF]">
             New coach?{" "}
-            <Link href="/coach/apply" className="font-semibold text-[#E07A5F] hover:underline">
+            <Link href="/coach/apply" className="font-semibold text-[#4F8FF7] hover:underline">
               Apply to join
             </Link>
           </p>

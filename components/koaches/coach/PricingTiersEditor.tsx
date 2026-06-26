@@ -3,6 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import type { CoachSessionPricing, SessionRateTier } from "@/lib/koaches/types";
 import { formatTierLabel } from "@/lib/koaches/pricing";
+import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 
 type PricingTiersEditorProps = {
   pricing: CoachSessionPricing;
@@ -46,60 +47,69 @@ export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProp
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-xs font-medium text-[#6B7280]">Minimum players</label>
+        <CoachSheetField
+          label="Minimum players"
+          htmlFor="pricing-min-players"
+          hint="Smallest group you'll accept"
+        >
           <input
+            id="pricing-min-players"
             type="number"
             min={1}
-            className="coach-input mt-1"
+            className="coach-input"
+            placeholder="1"
             value={pricing.minimumPlayers}
             onChange={(e) =>
               onChange({ ...pricing, minimumPlayers: Math.max(1, Number(e.target.value)) })
             }
           />
-          <p className="mt-1 text-[10px] text-[#6B7280]">Smallest group you&apos;ll accept</p>
-        </div>
-        <div>
-          <label className="text-xs font-medium text-[#6B7280]">Maximum players</label>
+        </CoachSheetField>
+        <CoachSheetField
+          label="Maximum players"
+          htmlFor="pricing-max-players"
+          hint="Largest group per session"
+        >
           <input
+            id="pricing-max-players"
             type="number"
             min={1}
-            className="coach-input mt-1"
+            className="coach-input"
+            placeholder="4"
             value={pricing.maximumPlayers}
             onChange={(e) =>
               onChange({ ...pricing, maximumPlayers: Math.max(1, Number(e.target.value)) })
             }
           />
-          <p className="mt-1 text-[10px] text-[#6B7280]">Largest group per session</p>
-        </div>
+        </CoachSheetField>
       </div>
 
-      <div>
-        <label className="text-xs font-medium text-[#6B7280]">Default session length (min)</label>
+      <CoachSheetField label="Default session length (min)" htmlFor="pricing-duration">
         <input
+          id="pricing-duration"
           type="number"
           min={60}
           step={60}
-          className="coach-input mt-1"
+          className="coach-input"
+          placeholder="60"
           value={pricing.defaultDurationMinutes}
           onChange={(e) =>
             onChange({ ...pricing, defaultDurationMinutes: Math.max(60, Number(e.target.value)) })
           }
         />
-      </div>
+      </CoachSheetField>
 
       <div>
         <div className="flex items-center justify-between">
-          <label className="text-xs font-medium text-[#6B7280]">Rates by group size</label>
+          <span className="coach-label">Rates by group size</span>
           <button
             type="button"
             onClick={addTier}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#E07A5F]"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
           >
             <Plus className="h-3.5 w-3.5" /> Add tier
           </button>
         </div>
-        <p className="mt-0.5 text-[10px] text-[#6B7280]">
+        <p className="coach-field-hint">
           Set different drop-in prices for 1-on-1, pairs, small groups, etc.
         </p>
 
@@ -125,43 +135,46 @@ export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProp
                 )}
               </div>
               <div className="mt-2 grid grid-cols-3 gap-2">
-                <div>
-                  <label className="text-[10px] text-[#6B7280]">Min pax</label>
+                <CoachSheetField label="Min pax" htmlFor={`tier-${tier.id}-min`}>
                   <input
+                    id={`tier-${tier.id}-min`}
                     type="number"
                     min={1}
-                    className="coach-input mt-0.5 text-sm"
+                    className="coach-input text-sm"
+                    placeholder="1"
                     value={tier.minPlayers}
                     onChange={(e) =>
                       updateTier(tier.id, { minPlayers: Math.max(1, Number(e.target.value)) })
                     }
                   />
-                </div>
-                <div>
-                  <label className="text-[10px] text-[#6B7280]">Max pax</label>
+                </CoachSheetField>
+                <CoachSheetField label="Max pax" htmlFor={`tier-${tier.id}-max`}>
                   <input
+                    id={`tier-${tier.id}-max`}
                     type="number"
                     min={1}
-                    className="coach-input mt-0.5 text-sm"
+                    className="coach-input text-sm"
+                    placeholder="2"
                     value={tier.maxPlayers}
                     onChange={(e) =>
                       updateTier(tier.id, { maxPlayers: Math.max(1, Number(e.target.value)) })
                     }
                   />
-                </div>
-                <div>
-                  <label className="text-[10px] text-[#6B7280]">Rate (₱)</label>
+                </CoachSheetField>
+                <CoachSheetField label="Rate (₱)" htmlFor={`tier-${tier.id}-rate`}>
                   <input
+                    id={`tier-${tier.id}-rate`}
                     type="number"
                     min={0}
                     step={50}
-                    className="coach-input mt-0.5 text-sm"
+                    className="coach-input text-sm"
+                    placeholder="800"
                     value={tier.rate}
                     onChange={(e) =>
                       updateTier(tier.id, { rate: Math.max(0, Number(e.target.value)) })
                     }
                   />
-                </div>
+                </CoachSheetField>
               </div>
             </div>
           ))}

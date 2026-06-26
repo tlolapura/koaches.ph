@@ -28,6 +28,7 @@ import {
 import { PresetIcon } from "@/components/koaches/coach/CoachIcons";
 import { SkillRubricPreview } from "@/components/koaches/coach/SkillRubricPreview";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { CoachSheetField, CoachSheetStickyActions } from "@/components/koaches/coach/CoachSheet";
 import { SessionCountField } from "@/components/koaches/coach/SessionCountField";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
@@ -163,10 +164,10 @@ export function ProgramCreateFlow({
           <button
             type="button"
             onClick={startCustom}
-            className="w-full rounded-2xl border-2 border-[#E07A5F] bg-[#FDEEE9]/40 p-4 text-left"
+            className="w-full rounded-2xl border-2 border-[#16A34A] bg-[#F0FDF4]/40 p-4 text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#E07A5F] text-white">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#16A34A] text-white">
                 <PenLine className="h-6 w-6" />
               </div>
               <div className="flex-1">
@@ -175,7 +176,7 @@ export function ProgramCreateFlow({
                   Name it, set your price, pick your sessions, and build a custom skill rubric
                 </p>
               </div>
-              <ChevronRight className="h-5 w-5 text-[#E07A5F]" />
+              <ChevronRight className="h-5 w-5 text-[#4F8FF7]" />
             </div>
           </button>
 
@@ -185,7 +186,7 @@ export function ProgramCreateFlow({
             className="coach-card w-full p-4 text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1E3A5F] text-white">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#14532D] text-white">
                 <Layers className="h-6 w-6" />
               </div>
               <div className="flex-1">
@@ -204,7 +205,7 @@ export function ProgramCreateFlow({
             className="coach-card w-full p-4 text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FDE047] text-[#1E3A5F]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FACC15] text-[#14532D]">
                 <ClipboardList className="h-6 w-6" />
               </div>
               <div className="flex-1">
@@ -230,16 +231,16 @@ export function ProgramCreateFlow({
               key={preset.id}
               type="button"
               onClick={() => pickPreset(preset.id)}
-              className="coach-card w-full p-4 text-left hover:border-[#E07A5F]"
+              className="coach-card w-full p-4 text-left hover:border-[#16A34A]"
             >
               <div className="flex items-start gap-3">
                 <PresetIcon icon={preset.icon} />
                 <div>
                   <p className="font-heading font-semibold">{preset.name}</p>
-                  <p className="text-xs text-[#E07A5F]">{preset.tagline}</p>
+                  <p className="text-xs text-[#4F8FF7]">{preset.tagline}</p>
                   <p className="mt-1 text-xs text-[#6B7280]">{preset.description}</p>
                   <div className="mt-2 flex gap-2">
-                    <span className="rounded-full bg-[#1E3A5F] px-2 py-0.5 text-[10px] font-semibold text-white">
+                    <span className="rounded-full bg-[#14532D] px-2 py-0.5 text-[10px] font-semibold text-white">
                       {preset.sessionCount} sessions · {formatCurrency(preset.price)}/person
                     </span>
                   </div>
@@ -274,12 +275,12 @@ export function ProgramCreateFlow({
                 key={id}
                 type="button"
                 onClick={() => pickRubric(id)}
-                className="coach-card w-full p-4 text-left hover:border-[#E07A5F]"
+                className="coach-card w-full p-4 text-left hover:border-[#16A34A]"
               >
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#E07A5F]" />
+                  <Sparkles className="h-4 w-4 text-[#4F8FF7]" />
                   <p className="font-heading font-semibold">{rubric.name}</p>
-                  <span className="rounded-full bg-[#FDEEE9] px-2 py-0.5 text-[10px] font-medium text-[#8B4D3A]">
+                  <span className="rounded-full bg-[#F0FDF4] px-2 py-0.5 text-[10px] font-medium text-[#166534]">
                     {rubric.subtitle}
                   </span>
                 </div>
@@ -313,9 +314,9 @@ export function ProgramCreateFlow({
                   className={cn(
                     "font-heading flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
                     customStep === s.id
-                      ? "bg-[#E07A5F] text-white"
+                      ? "bg-[#16A34A] text-white"
                       : customSteps.findIndex((x) => x.id === customStep) > i
-                        ? "bg-[#E07A5F]/30 text-[#8B4D3A]"
+                        ? "bg-[#16A34A]/30 text-[#166534]"
                         : "bg-[#E5E7EB] text-[#6B7280]"
                   )}
                 >
@@ -333,56 +334,60 @@ export function ProgramCreateFlow({
 
           {customStep === "details" && (
             <div className="space-y-4">
-              <div>
-                <label className="text-xs font-medium text-[#6B7280]">Program name *</label>
+              <CoachSheetField label="Program name *" htmlFor="program-name">
                 <input
-                  className="coach-input mt-1"
+                  id="program-name"
+                  className="coach-input"
                   placeholder="e.g. Weekend Warriors"
                   value={draft.name}
                   onChange={(e) => setDraft({ ...draft, name: e.target.value })}
                 />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-[#6B7280]">Description</label>
+              </CoachSheetField>
+              <CoachSheetField label="Description" htmlFor="program-description">
                 <textarea
-                  className="coach-input mt-1 min-h-[88px] resize-none"
+                  id="program-description"
+                  className="coach-input min-h-[88px] resize-none"
                   placeholder="What will students learn and achieve?"
                   value={draft.description}
                   onChange={(e) => setDraft({ ...draft, description: e.target.value })}
                 />
-              </div>
+              </CoachSheetField>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-[#6B7280]">Bundle price per person (₱)</label>
+                <CoachSheetField label="Bundle price per person (₱)" htmlFor="program-price">
                   <input
-                    className="coach-input mt-1"
+                    id="program-price"
+                    className="coach-input"
                     type="number"
+                    min={0}
+                    placeholder="2500"
                     value={draft.price}
                     onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })}
                   />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-[#6B7280]">Target level</label>
+                </CoachSheetField>
+                <CoachSheetField label="Target level" htmlFor="program-level">
                   <input
-                    className="coach-input mt-1"
+                    id="program-level"
+                    className="coach-input"
                     placeholder="e.g. 2.5 to 3.0"
                     value={draft.targetLevel}
                     onChange={(e) => setDraft({ ...draft, targetLevel: e.target.value })}
                   />
-                </div>
+                </CoachSheetField>
               </div>
               <SessionCountField
                 value={draft.sessionCount}
                 onChange={(sessionCount) => setDraft({ ...draft, sessionCount })}
               />
-              <button
-                type="button"
-                className="coach-btn-primary"
-                disabled={!draft.name.trim()}
-                onClick={() => setCustomStep("rubric")}
-              >
-                Next: Build Skill Rubric
-              </button>
+              <CoachSheetStickyActions>
+                <button
+                  type="button"
+                  className="coach-btn-primary"
+                  disabled={!draft.name.trim()}
+                  onClick={() => setCustomStep("rubric")}
+                >
+                  Next: Build Skill Rubric
+                </button>
+              </CoachSheetStickyActions>
             </div>
           )}
 
@@ -402,7 +407,7 @@ export function ProgramCreateFlow({
                       onClick={() => applyRubricBase(id)}
                       className={cn(
                         "rounded-full px-3 py-2 text-xs font-semibold min-h-[36px]",
-                        rubricBase === id ? "bg-[#E07A5F] text-white" : "border border-[#E5E7EB] bg-white"
+                        rubricBase === id ? "bg-[#16A34A] text-white" : "border border-[#E5E7EB] bg-white"
                       )}
                     >
                       {SKILL_RUBRICS[id].name}
@@ -413,7 +418,7 @@ export function ProgramCreateFlow({
                     onClick={() => applyRubricBase("scratch")}
                     className={cn(
                       "rounded-full px-3 py-2 text-xs font-semibold min-h-[36px]",
-                      rubricBase === "scratch" ? "bg-[#1E3A5F] text-white" : "border border-[#E5E7EB] bg-white"
+                      rubricBase === "scratch" ? "bg-[#14532D] text-white" : "border border-[#E5E7EB] bg-white"
                     )}
                   >
                     Pick from scratch
@@ -457,7 +462,7 @@ export function ProgramCreateFlow({
                           onClick={() => toggleCategory(cat)}
                           className={cn(
                             "shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold min-h-[32px]",
-                            allSelected ? "bg-[#E07A5F] text-white" : "bg-[#F3F4F6] text-[#6B7280]"
+                            allSelected ? "bg-[#16A34A] text-white" : "bg-[#F3F4F6] text-[#6B7280]"
                           )}
                         >
                           {allSelected ? "All on" : "Select all"}
@@ -474,13 +479,13 @@ export function ProgramCreateFlow({
                                 onClick={() => toggleSkill(skill.id)}
                                 className={cn(
                                   "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm min-h-[44px]",
-                                  on ? "bg-[#FDEEE9]/60" : "hover:bg-[#F9FAFB]"
+                                  on ? "bg-[#F0FDF4]/60" : "hover:bg-[#F9FAFB]"
                                 )}
                               >
                                 <span
                                   className={cn(
                                     "flex h-5 w-5 shrink-0 items-center justify-center rounded border",
-                                    on ? "border-[#E07A5F] bg-[#E07A5F] text-white" : "border-[#D1D5DB]"
+                                    on ? "border-[#16A34A] bg-[#16A34A] text-white" : "border-[#D1D5DB]"
                                   )}
                                 >
                                   {on && <Check className="h-3 w-3" />}
@@ -498,14 +503,16 @@ export function ProgramCreateFlow({
                 })}
               </div>
 
-              <button
-                type="button"
-                className="coach-btn-primary"
-                disabled={skillCount === 0}
-                onClick={() => setCustomStep("review")}
-              >
-                Next: Review
-              </button>
+              <CoachSheetStickyActions>
+                <button
+                  type="button"
+                  className="coach-btn-primary"
+                  disabled={skillCount === 0}
+                  onClick={() => setCustomStep("review")}
+                >
+                  Next: Review
+                </button>
+              </CoachSheetStickyActions>
             </div>
           )}
 
@@ -517,13 +524,13 @@ export function ProgramCreateFlow({
                   <p className="mt-1 text-sm text-[#6B7280]">{draft.description}</p>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-[#E07A5F] px-2.5 py-0.5 text-xs font-semibold text-white">
+                  <span className="rounded-full bg-[#16A34A] px-2.5 py-0.5 text-xs font-semibold text-white">
                     {formatCurrency(draft.price)}/person
                   </span>
-                  <span className="rounded-full bg-[#1E3A5F] px-2.5 py-0.5 text-xs font-semibold text-white">
+                  <span className="rounded-full bg-[#14532D] px-2.5 py-0.5 text-xs font-semibold text-white">
                     {draft.sessionCount} sessions
                   </span>
-                  <span className="rounded-full bg-[#FDEEE9] px-2.5 py-0.5 text-xs font-semibold text-[#8B4D3A]">
+                  <span className="rounded-full bg-[#F0FDF4] px-2.5 py-0.5 text-xs font-semibold text-[#166534]">
                     {draft.targetLevel}
                   </span>
                   <span className="rounded-full border border-[#E5E7EB] px-2.5 py-0.5 text-xs text-[#6B7280]">
@@ -534,17 +541,19 @@ export function ProgramCreateFlow({
 
               <SkillRubricPreview rubricId="custom" customSkillIds={draft.customSkillIds} />
 
-              <button
-                type="button"
-                className="coach-btn-primary"
-                disabled={!canSaveCustom}
-                onClick={() => {
-                  onSave({ ...draft, source: "custom", rubricId: "custom" });
-                  handleClose();
-                }}
-              >
-                Create Program
-              </button>
+              <CoachSheetStickyActions>
+                <button
+                  type="button"
+                  className="coach-btn-primary"
+                  disabled={!canSaveCustom}
+                  onClick={() => {
+                    onSave({ ...draft, source: "custom", rubricId: "custom" });
+                    handleClose();
+                  }}
+                >
+                  Create Program
+                </button>
+              </CoachSheetStickyActions>
             </div>
           )}
         </div>
@@ -572,39 +581,45 @@ function TemplateCustomizeForm({
 
       <SkillRubricPreview rubricId={draft.rubricId} customSkillIds={draft.customSkillIds} />
 
-      <div>
-        <label className="text-xs font-medium text-[#6B7280]">Program name</label>
+      <CoachSheetField label="Program name" htmlFor="template-program-name">
         <input
-          className="coach-input mt-1"
+          id="template-program-name"
+          className="coach-input"
+          placeholder="e.g. Play Ready"
           value={draft.name}
           onChange={(e) => setDraft({ ...draft, name: e.target.value })}
         />
-      </div>
-      <div>
-        <label className="text-xs font-medium text-[#6B7280]">Description</label>
+      </CoachSheetField>
+      <CoachSheetField label="Description" htmlFor="template-program-description">
         <textarea
-          className="coach-input mt-1 min-h-[72px] resize-none"
+          id="template-program-description"
+          className="coach-input min-h-[72px] resize-none"
+          placeholder="What will students learn and achieve?"
           value={draft.description}
           onChange={(e) => setDraft({ ...draft, description: e.target.value })}
         />
-      </div>
-      <div>
-        <label className="text-xs font-medium text-[#6B7280]">Bundle price per person (₱)</label>
+      </CoachSheetField>
+      <CoachSheetField label="Bundle price per person (₱)" htmlFor="template-program-price">
         <input
-          className="coach-input mt-1"
+          id="template-program-price"
+          className="coach-input"
           type="number"
+          min={0}
+          placeholder="2500"
           value={draft.price}
           onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })}
         />
-      </div>
+      </CoachSheetField>
       <SessionCountField
         value={draft.sessionCount}
         onChange={(sessionCount) => setDraft({ ...draft, sessionCount })}
       />
 
-      <button type="button" className="coach-btn-primary" onClick={onSave}>
-        Save Program
-      </button>
+      <CoachSheetStickyActions>
+        <button type="button" className="coach-btn-primary" onClick={onSave}>
+          Save Program
+        </button>
+      </CoachSheetStickyActions>
     </div>
   );
 }

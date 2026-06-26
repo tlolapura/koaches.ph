@@ -21,7 +21,7 @@ export function SessionDetailPageClient({ sessionId }: SessionDetailPageClientPr
   if (!session) {
     return (
       <CoachPageShell className="py-12 text-center">
-        <p className="font-heading text-5xl font-bold text-[#E07A5F]">404</p>
+        <p className="font-heading text-5xl font-bold text-[#4F8FF7]">404</p>
         <p className="font-heading mt-3 text-lg font-semibold text-[#111827]">Session not found</p>
         <p className="mt-2 text-sm text-[#6B7280]">It may have been removed or the link is incorrect.</p>
         <Link href="/coach/sessions" className="coach-btn-secondary mt-6 inline-flex">

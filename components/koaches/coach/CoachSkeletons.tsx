@@ -170,6 +170,13 @@ export function CoachProgressSkeleton() {
   );
 }
 
+/** Generic shell pulse — avoids showing dashboard layout on every route change */
 export function CoachRouteLoading() {
-  return <CoachDashboardSkeleton />;
+  return (
+    <CoachPageShell>
+      <CoachPageHeaderSkeleton />
+      <Bone className="mt-6 h-32 w-full rounded-2xl" />
+      <CoachCardListSkeleton count={2} className="mt-6" />
+    </CoachPageShell>
+  );
 }

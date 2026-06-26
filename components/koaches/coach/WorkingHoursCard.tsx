@@ -55,8 +55,8 @@ export function WorkingHoursCard() {
       <div className="coach-card mt-4 p-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDEEE9]">
-              <Clock className="h-5 w-5 text-[#8B4D3A]" strokeWidth={2} />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+              <Clock className="h-5 w-5 text-[#166534]" strokeWidth={2} />
             </div>
             <div>
               <p className="font-heading font-semibold">Working hours</p>
@@ -66,7 +66,7 @@ export function WorkingHoursCard() {
               </p>
             </div>
           </div>
-          <button type="button" className="shrink-0 text-sm font-semibold text-[#E07A5F]" onClick={openEditor}>
+          <button type="button" className="shrink-0 text-sm font-semibold text-[#4F8FF7]" onClick={openEditor}>
             Edit
           </button>
         </div>
@@ -152,7 +152,7 @@ export function WorkingHoursCard() {
           <button
             type="button"
             onClick={addWindow}
-            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#E07A5F]/50 bg-[#FDEEE9]/50 text-sm font-semibold text-[#E07A5F]"
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#16A34A]/50 bg-[#F0FDF4]/50 text-sm font-semibold text-[#4F8FF7]"
           >
             <Plus className="h-4 w-4" strokeWidth={2.5} />
             Add another window

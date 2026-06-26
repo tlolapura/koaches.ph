@@ -100,12 +100,12 @@ export function CoachSelect({
                     "flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors",
                     option.disabled && "cursor-not-allowed text-[#9CA3AF]",
                     active
-                      ? "bg-[#FDEEE9] font-semibold text-[#8B4D3A]"
+                      ? "bg-[#F0FDF4] font-semibold text-[#166534]"
                       : "text-[#374151] hover:bg-[#F9FAFB]"
                   )}
                 >
                   <span className="min-w-0 truncate">{option.label}</span>
-                  {active && <Check className="h-4 w-4 shrink-0 text-[#E07A5F]" />}
+                  {active && <Check className="h-4 w-4 shrink-0 text-[#4F8FF7]" />}
                 </button>
               </li>
             );

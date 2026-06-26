@@ -452,30 +452,30 @@ body {
   }
 }
 
-/* ── Koaches public — navy + lime sport premium ── */
+/* ── Koaches public — court green + kitchen blue ── */
 :root {
-  --k-navy: #0a1220;
-  --k-navy-mid: #141f33;
-  --k-ink: #0f172a;
-  --k-cream: #fff8f0;
+  --k-navy: #14532D;
+  --k-navy-mid: #166534;
+  --k-ink: #111827;
+  --k-cream: #FAFAF8;
   --k-surface: #ffffff;
-  --k-court: #3b82f6;
-  --k-court-light: #dbeafe;
-  --k-lime: #84cc16;
-  --k-lime-dark: #65a30d;
-  --k-lime-glow: rgba(198, 240, 52, 0.35);
-  --k-coral: var(--k-lime);
-  --k-coral-dark: var(--k-lime-dark);
-  --k-mango: #eab308;
-  --k-mango-light: rgba(198, 240, 52, 0.12);
-  --k-shadow: 0 4px 24px rgba(10, 18, 32, 0.12);
-  --k-shadow-lg: 0 16px 48px rgba(10, 18, 32, 0.2);
+  --k-court: #4F8FF7;
+  --k-court-light: #EFF6FF;
+  --k-lime: #16A34A;
+  --k-lime-dark: #15803D;
+  --k-lime-glow: rgba(22, 163, 74, 0.25);
+  --k-coral: #16A34A;
+  --k-coral-dark: #15803D;
+  --k-mango: #FACC15;
+  --k-mango-light: #FEFCE8;
+  --k-shadow: 0 4px 24px rgba(20, 83, 45, 0.1);
+  --k-shadow-lg: 0 16px 48px rgba(20, 83, 45, 0.16);
 
   --play-ink: var(--k-ink);
   --play-cream: var(--k-cream);
-  --play-coral: var(--k-lime);
-  --play-yellow: var(--k-mango);
-  --play-grass: #22c55e;
+  --play-coral: #16A34A;
+  --play-yellow: #FACC15;
+  --play-grass: #16A34A;
   --play-shadow: var(--k-shadow);
   --play-shadow-lg: var(--k-shadow-lg);
 }
@@ -534,7 +534,7 @@ body {
 
 .k-nav-hero {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(to bottom, rgba(10, 18, 32, 0.65), transparent);
+  background: linear-gradient(to bottom, rgba(22, 163, 74, 0.55), transparent);
   backdrop-filter: blur(4px);
 }
 
@@ -911,17 +911,33 @@ body {
   }
 }
 
-/* ── Coach Portal — Warm Coach (coral + navy + sage) ── */
+/* ── Coach Portal — Pickleball court (green surface + blue kitchen) ── */
 .coach-portal {
-  --coach-coral: #E07A5F;
-  --coach-coral-dark: #C96A52;
-  --coach-coral-light: #FDEEE9;
-  --coach-coral-text: #8B4D3A;
-  --coach-navy: #1E3A5F;
+  --coach-green: #16A34A;
+  --coach-green-dark: #15803D;
+  --coach-green-light: #F0FDF4;
+  --coach-green-text: #166534;
+  --coach-yellow: #FACC15;
+  --coach-yellow-light: #FEFCE8;
+  --coach-yellow-text: #854D0E;
+  --coach-forest: #14532D;
+  --coach-blue: #4F8FF7;
+  --coach-blue-dark: #3B82F6;
+  --coach-blue-light: #EFF6FF;
+  --coach-blue-text: #1D4ED8;
   --coach-sage: #6B9E78;
   --coach-sage-light: #E5EFE8;
   --coach-sage-text: #3D5C47;
   --coach-surface: #FAFAF8;
+
+  /* Semantic aliases used by component classes */
+  --coach-coral: var(--coach-green);
+  --coach-coral-dark: var(--coach-green-dark);
+  --coach-coral-light: var(--coach-green-light);
+  --coach-coral-text: var(--coach-green-text);
+  --coach-navy: var(--coach-forest);
+  --portal-bottom-nav-height: 4.5rem;
+  --portal-bottom-nav-offset: calc(var(--portal-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   color: #111827;
@@ -953,7 +969,7 @@ body {
 .coach-portal .coach-input:focus {
   outline: none;
   border-color: var(--coach-coral);
-  box-shadow: 0 0 0 3px rgba(224, 122, 95, 0.18);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.18);
 }
 
 .coach-portal .coach-input.coach-input-icon {
@@ -966,11 +982,59 @@ body {
   gap: 1rem;
 }
 
-.coach-portal .coach-sheet-field > label {
+.coach-portal.coach-sheet-panel {
+  background-color: #fff;
+}
+
+.coach-portal .coach-sheet-footer {
+  border-top: 1px solid #E5E7EB;
+  background: #fff;
+  padding: 1rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .coach-portal .coach-sheet-footer {
+    padding: 1rem 1.5rem;
+  }
+}
+
+.coach-portal .coach-sheet-sticky-cta {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #fff 36%);
+}
+
+/* Hide bottom chrome while a sheet/modal is open */
+body[data-coach-sheet-open] .coach-bottom-nav,
+body[data-coach-sheet-open] .admin-bottom-nav,
+body[data-coach-sheet-open] .coach-portal-fab {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.coach-portal .coach-sheet-field > label,
+.coach-portal .coach-label {
   display: block;
   font-size: 0.75rem;
   font-weight: 500;
   color: #6B7280;
+}
+
+.coach-portal .coach-field-hint {
+  margin-top: 0.25rem;
+  font-size: 0.625rem;
+  line-height: 1.4;
+  color: #6B7280;
+}
+
+.coach-portal .coach-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .coach-portal .coach-sheet-field > .coach-sheet-field-control {
@@ -991,13 +1055,13 @@ body {
   font-size: 0.875rem;
   font-weight: 600;
   color: white;
-  box-shadow: 0 1px 2px rgba(224, 122, 95, 0.18), 0 4px 14px rgba(224, 122, 95, 0.22);
+  box-shadow: 0 1px 2px rgba(22, 163, 74, 0.18), 0 4px 14px rgba(22, 163, 74, 0.22);
   transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 
 .coach-portal .coach-btn-primary:hover {
   background: var(--coach-coral-dark);
-  box-shadow: 0 2px 4px rgba(224, 122, 95, 0.2), 0 6px 18px rgba(224, 122, 95, 0.26);
+  box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2), 0 6px 18px rgba(22, 163, 74, 0.26);
 }
 
 .coach-portal .coach-btn-primary:active {
@@ -1012,11 +1076,17 @@ body {
   justify-content: center;
   padding: 0.75rem 1.25rem;
   border-radius: 0.75rem;
-  background: var(--coach-navy);
+  background: var(--coach-blue);
   font-family: var(--font-poppins), sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
   color: white;
+  box-shadow: 0 1px 2px rgba(79, 143, 247, 0.18), 0 4px 14px rgba(79, 143, 247, 0.22);
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.coach-portal .coach-btn-secondary:hover {
+  background: var(--coach-blue-dark);
 }
 
 .coach-portal .coach-btn-outline {
@@ -1074,19 +1144,19 @@ body {
   gap: 0.5rem;
   padding: 0.625rem 1.25rem;
   border-radius: 0.875rem;
-  border: 1px solid #D4E4DC;
-  background: linear-gradient(180deg, #F4FAF6 0%, #EAF4EE 100%);
+  border: 1px solid #BFDBFE;
+  background: linear-gradient(180deg, #F5F9FF 0%, #EFF6FF 100%);
   font-family: var(--font-poppins), sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #2F5C44;
-  box-shadow: 0 1px 2px rgba(47, 92, 68, 0.08);
+  color: var(--coach-blue-text);
+  box-shadow: 0 1px 2px rgba(79, 143, 247, 0.08);
   transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 
 .coach-portal .coach-btn-soft:hover {
-  background: linear-gradient(180deg, #EAF4EE 0%, #DFEDE5 100%);
-  box-shadow: 0 2px 6px rgba(47, 92, 68, 0.12);
+  background: linear-gradient(180deg, #EFF6FF 0%, #DBEAFE 100%);
+  box-shadow: 0 2px 6px rgba(79, 143, 247, 0.12);
 }
 
 .coach-portal .coach-btn-soft:active {
@@ -1111,18 +1181,28 @@ body {
   border-radius: 0.875rem;
   border: 1px solid #E5E7EB;
   background: #FFFFFF;
-  box-shadow: 0 12px 32px rgba(30, 58, 95, 0.14);
+  box-shadow: 0 12px 32px rgba(20, 83, 45, 0.14);
 }
 
 .coach-day-picker {
-  --rdp-accent-color: #E07A5F;
-  --rdp-accent-background-color: #FDEEE9;
-  --rdp-today-color: #1E3A5F;
+  --rdp-accent-color: #16A34A;
+  --rdp-accent-background-color: #F0FDF4;
+  --rdp-today-color: #14532D;
 }
 
 .coach-portal .activity-item {
-  border-left: 3px solid var(--coach-coral);
+  border-left: 3px solid var(--coach-blue);
   padding-left: 0.75rem;
+}
+
+.coach-portal .coach-zone-green {
+  background: var(--coach-green-light);
+  color: var(--coach-green-text);
+}
+
+.coach-portal .coach-zone-blue {
+  background: var(--coach-blue-light);
+  color: var(--coach-blue-text);
 }
 
 @keyframes slide-in-from-bottom {

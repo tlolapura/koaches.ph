@@ -41,7 +41,7 @@ export function RadarChart({ before, after, height = 280, showLegend = true, com
           <Radar
             name="Before"
             dataKey="before"
-            stroke="#1E3A5F"
+            stroke="#14532D"
             fill="transparent"
             strokeWidth={2}
             strokeDasharray="4 4"
@@ -49,8 +49,8 @@ export function RadarChart({ before, after, height = 280, showLegend = true, com
           <Radar
             name="After"
             dataKey="after"
-            stroke="#E07A5F"
-            fill="#E07A5F"
+            stroke="#16A34A"
+            fill="#16A34A"
             fillOpacity={0.3}
             strokeWidth={2}
           />

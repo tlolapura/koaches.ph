@@ -52,7 +52,7 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
       <div className="coach-card mt-4 p-4">
         <div className="flex items-start justify-between gap-3">
           <CoachEntityTitle>{primaryName}</CoachEntityTitle>
-          <span className="shrink-0 rounded-full bg-[#1E3A5F] px-3 py-1 text-sm font-semibold text-white">
+          <span className="shrink-0 rounded-full bg-[#14532D] px-3 py-1 text-sm font-semibold text-white">
             {formatCurrency(session.price)}
           </span>
         </div>
@@ -75,7 +75,7 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
               return (
               <span
                 key={p.id}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#FDEEE9] px-2.5 py-1 text-xs font-medium text-[#8B4D3A]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-xs font-medium text-[#166534]"
               >
                 {p.name}
                 <span className="text-[10px] opacity-75">· {programLabel}</span>
@@ -100,7 +100,7 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
       )}
 
       {displayStatus === "ready_to_share" && (
-        <p className="mt-3 rounded-xl border border-[#E07A5F]/25 bg-[#FDEEE9] px-3 py-2.5 text-sm text-[#8B4D3A]">
+        <p className="mt-3 rounded-xl border border-[#16A34A]/25 bg-[#F0FDF4] px-3 py-2.5 text-sm text-[#166534]">
           Ratings saved — generate a progress card to share with your student.
         </p>
       )}
@@ -116,9 +116,12 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
       <SessionPaymentCard session={session} />
 
       <div className="coach-card mt-4 p-4">
-        <label className="font-heading text-sm font-semibold">Session notes</label>
+        <label className="coach-label" htmlFor="session-notes">
+          Session notes
+        </label>
         <textarea
-          className="coach-input mt-2 min-h-[100px] resize-none"
+          id="session-notes"
+          className="coach-input mt-1 min-h-[100px] resize-none"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="How did the session go?"

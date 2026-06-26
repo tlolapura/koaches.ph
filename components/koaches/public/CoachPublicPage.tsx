@@ -72,7 +72,7 @@ export function CoachPublicPage({
 
   return (
     <div className="coach-portal min-h-screen bg-[#FAFAF8]">
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1E3A5F] via-[#243f66] to-[#152a45] text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#16A34A] via-[#1a8f48] to-[#4F8FF7] text-white">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.05]"
           style={{
@@ -81,7 +81,7 @@ export function CoachPublicPage({
           }}
           aria-hidden
         />
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#E07A5F]/20 blur-3xl" aria-hidden />
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#4F8FF7]/25 blur-3xl" aria-hidden />
         <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-[#FDE047]/10 blur-3xl" aria-hidden />
 
         <header className="relative mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
@@ -166,7 +166,7 @@ export function CoachPublicPage({
             {coach.mobile ? (
               <a
                 href={`tel:${coach.mobile}`}
-                className="coach-btn-primary gap-2 py-3.5 shadow-lg shadow-[#E07A5F]/25"
+                className="coach-btn-primary gap-2 py-3.5 shadow-lg shadow-[#16A34A]/25"
               >
                 <Phone className="h-4 w-4" />
                 Contact coach
@@ -190,7 +190,7 @@ export function CoachPublicPage({
             title="Coaching focus"
             subtitle={`${rubric.name} players · ${rubric.duprRange} DUPR`}
           >
-            <div className="coach-card border-l-4 border-l-[#E07A5F] p-5">
+            <div className="coach-card border-l-4 border-l-[#16A34A] p-5">
               <p className="font-heading text-base font-semibold text-[#111827]">{rubric.name} rubric</p>
               <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">{rubric.description}</p>
               <p className="mt-3 text-xs font-medium text-[#9CA3AF]">{rubric.subtitle}</p>
@@ -203,7 +203,7 @@ export function CoachPublicPage({
             <div className="space-y-3">
               {activePrograms.map((program) => (
                 <article key={program.id} className="coach-card overflow-hidden">
-                  <div className="border-l-4 border-l-[#1E3A5F] p-5">
+                  <div className="border-l-4 border-l-[#4F8FF7] p-5">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <h3 className="font-heading text-lg font-semibold text-[#111827]">{program.name}</h3>
@@ -211,7 +211,7 @@ export function CoachPublicPage({
                           <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">{program.description}</p>
                         ) : null}
                       </div>
-                      <p className="shrink-0 text-right font-heading text-sm font-bold text-[#1E3A5F]">
+                      <p className="shrink-0 text-right font-heading text-sm font-bold text-[#1D4ED8]">
                         {formatProgramBundleSummary(program)}
                       </p>
                     </div>
@@ -221,7 +221,7 @@ export function CoachPublicPage({
                         {program.sessionCount} sessions
                       </span>
                       {program.targetLevel ? (
-                        <span className="rounded-full bg-[#FDEEE9] px-2.5 py-1 text-xs font-semibold text-[#8B4D3A]">
+                        <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-xs font-semibold text-[#1D4ED8]">
                           {program.targetLevel}
                         </span>
                       ) : null}
@@ -242,7 +242,7 @@ export function CoachPublicPage({
             {pricing.tiers.map((tier) => (
               <li key={tier.id} className="flex items-center justify-between px-5 py-4 text-sm">
                 <span className="font-medium text-[#374151]">{formatTierLabel(tier)}</span>
-                <span className="font-heading font-bold text-[#1E3A5F]">{formatTierRate(tier)}</span>
+                <span className="font-heading font-bold text-[#1D4ED8]">{formatTierRate(tier)}</span>
               </li>
             ))}
           </ul>
@@ -265,8 +265,8 @@ export function CoachPublicPage({
             <ul className="space-y-3">
               {courts.map((court) => (
                 <li key={court.id} className="coach-card flex gap-4 p-5">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FDEEE9]">
-                    <MapPin className="h-5 w-5 text-[#8B4D3A]" />
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF]">
+                    <MapPin className="h-5 w-5 text-[#1D4ED8]" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-heading font-semibold text-[#111827]">{court.name}</p>
@@ -278,7 +278,7 @@ export function CoachPublicPage({
                         href={court.mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-2 inline-block text-xs font-semibold text-[#E07A5F] hover:underline"
+                        className="mt-2 inline-block text-xs font-semibold text-[#4F8FF7] hover:underline"
                       >
                         Open in Maps →
                       </a>
@@ -299,7 +299,7 @@ export function CoachPublicPage({
             <ul className="space-y-2">
               {achievements.map((achievement) => (
                 <li key={achievement.id} className="coach-card flex items-start gap-3 p-4">
-                  <Award className="mt-0.5 h-4 w-4 shrink-0 text-[#E07A5F]" strokeWidth={2} />
+                  <Award className="mt-0.5 h-4 w-4 shrink-0 text-[#4F8FF7]" strokeWidth={2} />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-heading text-sm font-semibold text-[#111827]">{achievement.title}</p>
@@ -323,10 +323,10 @@ export function CoachPublicPage({
                   <li>
                     <a
                       href={`tel:${coach.mobile}`}
-                      className="flex items-center gap-3 font-medium text-[#374151] hover:text-[#E07A5F]"
+                      className="flex items-center gap-3 font-medium text-[#374151] hover:text-[#4F8FF7]"
                     >
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDEEE9]">
-                        <Phone className="h-4 w-4 text-[#8B4D3A]" />
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EFF6FF]">
+                        <Phone className="h-4 w-4 text-[#1D4ED8]" />
                       </span>
                       {coach.mobile}
                     </a>
@@ -338,10 +338,10 @@ export function CoachPublicPage({
                       href={instagramProfileUrl(coach.instagram)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 font-medium text-[#374151] hover:text-[#E07A5F]"
+                      className="flex items-center gap-3 font-medium text-[#374151] hover:text-[#4F8FF7]"
                     >
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDEEE9]">
-                        <InstagramIcon className="text-[#8B4D3A]" />
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EFF6FF]">
+                        <InstagramIcon className="text-[#1D4ED8]" />
                       </span>
                       {displayInstagram(coach.instagram)}
                     </a>
@@ -353,10 +353,10 @@ export function CoachPublicPage({
                       href={facebookProfileUrl(coach.facebook)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-3 font-medium text-[#374151] hover:text-[#E07A5F]"
+                      className="flex items-center gap-3 font-medium text-[#374151] hover:text-[#4F8FF7]"
                     >
-                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDEEE9]">
-                        <FacebookIcon className="text-[#8B4D3A]" />
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EFF6FF]">
+                        <FacebookIcon className="text-[#1D4ED8]" />
                       </span>
                       {displayFacebook(coach.facebook)}
                     </a>

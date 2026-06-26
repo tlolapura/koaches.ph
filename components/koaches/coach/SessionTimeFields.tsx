@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import {
   addMinutesToTimeValue,
   formatTimeDisplay,
@@ -30,6 +30,8 @@ export function SessionTimeFields({
   onStartTimeChange,
   onEndTimeChange,
 }: SessionTimeFieldsProps) {
+  const startId = useId();
+  const endId = useId();
   const isControlled = startProp !== undefined && endProp !== undefined;
   const [internalStart, setInternalStart] = useState(defaultStart);
   const duration = fixedDurationMinutes ?? defaultDurationMinutes;
@@ -63,31 +65,37 @@ export function SessionTimeFields({
   return (
     <div className={fixedDurationMinutes ? "space-y-3" : "grid grid-cols-2 gap-3"}>
       <div>
-        <label className="text-xs font-medium text-[#6B7280]">Start time</label>
+        <label className="coach-label" htmlFor={startId}>
+          Start time
+        </label>
         <CoachTimePicker
+          id={startId}
           className="mt-1"
           name="startTime"
           required
           value={startTime}
           onChange={setStart}
-          placeholder="Start"
+          placeholder="8:00 AM"
         />
       </div>
       {fixedDurationMinutes ? (
         <p className="text-sm text-[#374151]">
-          <span className="text-xs font-medium text-[#6B7280]">Duration · </span>
+          <span className="coach-label">Duration · </span>
           1 hr · ends {formatTimeDisplay(endTime)}
         </p>
       ) : (
         <div>
-          <label className="text-xs font-medium text-[#6B7280]">End time</label>
+          <label className="coach-label" htmlFor={endId}>
+            End time
+          </label>
           <CoachTimePicker
+            id={endId}
             className="mt-1"
             name="endTime"
             required
             value={endTime}
             onChange={setEnd}
-            placeholder="End"
+            placeholder="9:00 AM"
           />
         </div>
       )}

@@ -2,20 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { endOfWeek, format, isWithinInterval, parseISO, startOfWeek } from "date-fns";
 import {
-  CalendarDays,
   ChevronRight,
-  ClipboardList,
-  FileText,
   Plus,
   TrendingUp,
   UserPlus,
-  Users,
   Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
+import { useCoachAuth, usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { pendingIntakeCountAction } from "@/lib/koaches/actions/intake";
 import { parseDisplayTime, sessionStartsAt } from "@/lib/koaches/session-time";
@@ -29,9 +26,11 @@ import {
   DashboardMySessionsToday,
   DashboardUpNextAway,
 } from "@/components/koaches/coach/CoachDashboardToday";
+import { CoachBillingAlertBanner } from "@/components/koaches/coach/CoachBillingAlertBanner";
 import { CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachDashboardSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { isCollectedSession } from "@/lib/koaches/session-payment";
+import { shouldShowCoachOnboarding } from "@/lib/koaches/coach-onboarding";
 import type { Session } from "@/lib/koaches/types";
 
 function getGreeting() {
@@ -45,12 +44,6 @@ function sortByTime(sessions: Session[]) {
   return [...sessions].sort((a, b) => parseDisplayTime(a.time) - parseDisplayTime(b.time));
 }
 
-const quickActions = [
-  { href: "/coach/sessions", label: "Schedule", icon: CalendarDays },
-  { href: "/coach/students", label: "Students", icon: Users },
-  { href: "/coach/programs", label: "Programs", icon: FileText },
-] as const;
-
 type AttentionItem = {
   key: string;
   href: string;
@@ -61,7 +54,9 @@ type AttentionItem = {
 };
 
 export function CoachDashboard() {
+  const router = useRouter();
   const coachId = usePortalCoachId();
+  const { loading: authLoading } = useCoachAuth();
   const { coach, loading: profileLoading } = useCoachProfile(coachId);
   const today = new Date();
   const todayKey = format(today, "yyyy-MM-dd");
@@ -71,8 +66,12 @@ export function CoachDashboard() {
   const [pendingSignups, setPendingSignups] = useState(0);
 
   useEffect(() => {
+    if (!coachId || authLoading) return;
+
     const refresh = () => {
-      void pendingIntakeCountAction(coachId).then(setPendingSignups);
+      void pendingIntakeCountAction()
+        .then(setPendingSignups)
+        .catch(() => setPendingSignups(0));
     };
     refresh();
     window.addEventListener("koaches-intake-updated", refresh);
@@ -81,7 +80,13 @@ export function CoachDashboard() {
       window.removeEventListener("koaches-intake-updated", refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [coachId]);
+  }, [coachId, authLoading]);
+
+  useEffect(() => {
+    if (coach && shouldShowCoachOnboarding(coach)) {
+      router.replace("/coach/onboarding");
+    }
+  }, [coach, router]);
 
   const weekInterval = useMemo(() => {
     const start = startOfWeek(today, { weekStartsOn: 1 });
@@ -167,12 +172,12 @@ export function CoachDashboard() {
 
   const toneStyles = {
     coral: {
-      card: "border-[#F4C4B8] bg-gradient-to-br from-[#FDEEE9] to-white",
-      icon: "bg-[#E07A5F] text-white",
+      card: "border-[#BBF7D0] bg-gradient-to-br from-[#F0FDF4] to-white",
+      icon: "bg-[#16A34A] text-white",
     },
     navy: {
-      card: "border-[#C5D4E8] bg-gradient-to-br from-[#EDF2F7] to-white",
-      icon: "bg-[#1E3A5F] text-white",
+      card: "border-[#BFDBFE] bg-gradient-to-br from-[#EFF6FF] to-white",
+      icon: "bg-[#4F8FF7] text-white",
     },
     amber: {
       card: "border-[#FDE68A] bg-gradient-to-br from-[#FFFBEB] to-white",
@@ -185,71 +190,54 @@ export function CoachDashboard() {
   return (
     <CoachPageShell className="px-0 pb-6 pt-0 md:px-4 md:pt-6">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1E3A5F] via-[#264a73] to-[#1a3352] px-5 pb-6 pt-5 text-white md:mx-0 md:rounded-2xl md:shadow-[0_12px_40px_rgba(30,58,95,0.22)]">
-        <div
-          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#E07A5F]/20 blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-20 -left-10 h-40 w-40 rounded-full bg-[#6B9E78]/25 blur-3xl"
-          aria-hidden
-        />
+      <div className="md:overflow-hidden md:rounded-2xl md:shadow-[0_12px_40px_rgba(22,163,74,0.12)]">
+        <section className="relative overflow-hidden bg-gradient-to-br from-[#16A34A] via-[#1a8f48] to-[#4F8FF7] px-5 pb-5 pt-5 text-white">
+          <div
+            className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#4F8FF7]/30 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -bottom-20 -left-10 h-40 w-40 rounded-full bg-[#16A34A]/25 blur-3xl"
+            aria-hidden
+          />
 
-        <div className="relative">
-          <p className="text-sm font-medium text-white/70">{todayLabel}</p>
-          <h1 className="font-heading mt-1 text-2xl font-bold tracking-tight sm:text-[1.75rem]">
-            {getGreeting()}, {firstName}
-          </h1>
-          <p className="mt-1.5 text-sm text-white/60">
-            {todayStats.sessionCount > 0
-              ? `${todayStats.sessionCount} session${todayStats.sessionCount === 1 ? "" : "s"} on your court today`
-              : "Your court is clear today"}
-          </p>
-
-          <div className="mt-5 grid grid-cols-3 gap-2">
-            {[
-              { value: String(todayStats.upcomingCount), label: "Upcoming" },
-              { value: formatCurrency(todayStats.booked), label: "Expected" },
-              { value: String(todayStats.weekSessions), label: "This week" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-xl border border-white/10 bg-white/10 px-2 py-2.5 text-center backdrop-blur-sm"
-              >
-                <p className="font-heading text-base font-bold leading-none sm:text-lg">{stat.value}</p>
-                <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-white/55">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
+          <div className="relative">
+            <p className="text-sm font-medium text-white/70">{todayLabel}</p>
+            <h1 className="font-heading mt-1 text-2xl font-bold tracking-tight sm:text-[1.75rem]">
+              {getGreeting()}, {firstName}
+            </h1>
+            <p className="mt-1.5 text-sm text-white/60">
+              {todayStats.sessionCount > 0
+                ? `${todayStats.sessionCount} session${todayStats.sessionCount === 1 ? "" : "s"} on your court today`
+                : "Your court is clear today"}
+            </p>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Quick actions */}
-      <section className="mt-4 px-4">
-        <div className="grid grid-cols-3 gap-2">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <Link
-                key={action.href}
-                href={action.href}
-                className="coach-card flex flex-col items-center gap-1.5 px-2 py-3.5 text-center transition-transform active:scale-[0.98]"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#FDEEE9]">
-                  <Icon className="h-4 w-4 text-[#E07A5F]" strokeWidth={2.25} />
-                </span>
-                <span className="font-heading text-[11px] font-semibold text-[#374151]">
-                  {action.label}
-                </span>
-              </Link>
-            );
-          })}
+        <div className="grid grid-cols-3 divide-x divide-[#E5E7EB] border-t border-[#E5E7EB] bg-white">
+          {[
+            { value: String(todayStats.upcomingCount), label: "Upcoming", color: "text-[#16A34A]" },
+            { value: formatCurrency(todayStats.booked), label: "Expected", color: "text-[#4F8FF7]" },
+            { value: String(todayStats.weekSessions), label: "This week", color: "text-[#111827]" },
+          ].map((stat) => (
+            <div key={stat.label} className="px-2 py-3.5 text-center">
+              <p className={cn("font-heading text-lg font-bold leading-none sm:text-xl", stat.color)}>
+                {stat.value}
+              </p>
+              <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">
+                {stat.label}
+              </p>
+            </div>
+          ))}
         </div>
+      </div>
+
+      <CoachBillingAlertBanner coach={coach} className="mt-4" />
+
+      <section className="mt-4 px-4">
         <Link
           href="/coach/sessions"
-          className="coach-btn-primary mt-3 gap-2 shadow-[0_4px_14px_rgba(224,122,95,0.28)]"
+          className="coach-btn-primary gap-2 shadow-[0_4px_14px_rgba(22,163,74,0.28)]"
         >
           <Plus className="h-4 w-4" strokeWidth={2.5} />
           Book a session
@@ -304,7 +292,7 @@ export function CoachDashboard() {
           </div>
           <Link
             href="/coach/sessions"
-            className="shrink-0 text-xs font-semibold text-[#E07A5F] hover:underline"
+            className="shrink-0 text-xs font-semibold text-[#4F8FF7] hover:underline"
           >
             Full schedule
           </Link>

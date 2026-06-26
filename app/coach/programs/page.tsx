@@ -43,9 +43,9 @@ export default function ProgramsPage() {
         <button
           type="button"
           onClick={() => openCreate("custom")}
-          className="flex min-h-[72px] items-center gap-3 rounded-2xl border-2 border-[#E07A5F] bg-[#FDEEE9]/30 p-4 text-left"
+          className="flex min-h-[72px] items-center gap-3 rounded-2xl border-2 border-[#16A34A] bg-[#F0FDF4]/30 p-4 text-left"
         >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#E07A5F] text-white">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#16A34A] text-white">
             <PenLine className="h-5 w-5" />
           </div>
           <div>
@@ -58,7 +58,7 @@ export default function ProgramsPage() {
           onClick={() => openCreate("home")}
           className="coach-card flex min-h-[72px] items-center gap-3 p-4 text-left"
         >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1E3A5F] text-white">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#14532D] text-white">
             <Plus className="h-5 w-5" />
           </div>
           <div>
@@ -97,13 +97,13 @@ export default function ProgramsPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-heading text-lg font-bold">{p.name}</p>
                         {isCustom && (
-                          <span className="rounded-full bg-[#1E3A5F] px-2 py-0.5 text-[10px] font-semibold text-white">
+                          <span className="rounded-full bg-[#14532D] px-2 py-0.5 text-[10px] font-semibold text-white">
                             Custom
                           </span>
                         )}
                       </div>
                       <p className="mt-1 text-sm text-[#6B7280]">{p.description}</p>
-                      <p className="font-heading mt-2 text-sm font-semibold text-[#E07A5F]">
+                      <p className="font-heading mt-2 text-sm font-semibold text-[#4F8FF7]">
                         {formatProgramBundleSummary(p)}
                       </p>
                       <p className="mt-1 text-xs text-[#9CA3AF]">

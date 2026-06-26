@@ -67,7 +67,7 @@ export default function ProgressInboxPage() {
                 {c.studentId && (
                   <Link
                     href={`/coach/students/${c.studentId}`}
-                    className="mt-1 inline-block text-xs font-semibold text-[#E07A5F]"
+                    className="mt-1 inline-block text-xs font-semibold text-[#4F8FF7]"
                   >
                     View student progress →
                   </Link>
@@ -76,7 +76,7 @@ export default function ProgressInboxPage() {
               <div className="flex shrink-0 flex-col gap-2">
                 <button
                   type="button"
-                  className="rounded-full bg-[#E07A5F] px-3 py-2 text-xs font-semibold text-white"
+                  className="rounded-full bg-[#16A34A] px-3 py-2 text-xs font-semibold text-white"
                   onClick={() =>
                     setGenerateTarget({
                       sessionId: c.session.id,

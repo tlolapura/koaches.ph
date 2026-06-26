@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, MapPin } from "lucide-react";
+import { AdminSignOutButton } from "@/components/koaches/admin/AdminSignOutButton";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
 
 const links = [
@@ -24,8 +25,8 @@ export default function AdminMorePage() {
               href={l.href}
               className="coach-card flex min-h-[64px] items-center gap-4 p-4 transition-colors hover:bg-[#F9FAFB]"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FDEEE9]">
-                <Icon className="h-5 w-5 text-[#8B4D3A]" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0FDF4]">
+                <Icon className="h-5 w-5 text-[#166534]" />
               </div>
               <div className="flex-1">
                 <p className="font-heading font-semibold">{l.label}</p>
@@ -36,6 +37,8 @@ export default function AdminMorePage() {
           );
         })}
       </div>
+
+      <AdminSignOutButton className="coach-btn-ghost-danger mt-8 w-full" />
     </AdminPageShell>
   );
 }

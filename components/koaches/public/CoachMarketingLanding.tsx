@@ -15,6 +15,7 @@ import {
   PublicStatGrid,
 } from "@/components/koaches/public/LandingHero";
 import { BRAND_NAME } from "@/lib/koaches/constants";
+import { cn } from "@/lib/utils";
 
 const FEATURES = [
   {
@@ -122,9 +123,14 @@ export function CoachMarketingLanding() {
         <div className="mx-auto max-w-3xl px-4 py-8">
           <h2 className="font-heading text-lg font-semibold text-[#111827]">How it works</h2>
           <ol className="mt-5 space-y-5">
-            {STEPS.map((item) => (
+            {STEPS.map((item, i) => (
               <li key={item.step} className="flex gap-4">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1E3A5F] font-heading text-sm font-bold text-white">
+                <span
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-heading text-sm font-bold text-white",
+                    i % 2 === 0 ? "bg-[#16A34A]" : "bg-[#4F8FF7]"
+                  )}
+                >
                   {item.step}
                 </span>
                 <div>
@@ -138,7 +144,7 @@ export function CoachMarketingLanding() {
       </section>
 
       <section className="mx-auto w-full max-w-3xl px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-2">
-        <div className="coach-card overflow-hidden border-[#C5D9CC] bg-gradient-to-br from-[#E5EFE8] via-white to-[#FDEEE9] p-6 text-center sm:p-8">
+        <div className="coach-card overflow-hidden border-[#C5D9CC] bg-gradient-to-br from-[#E5EFE8] via-white to-[#EFF6FF] p-6 text-center sm:p-8">
           <UserPlus className="mx-auto h-8 w-8 text-[#6B9E78]" strokeWidth={2} />
           <h2 className="font-heading mt-3 text-xl font-bold text-[#111827]">Ready to join the court?</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-[#6B7280]">

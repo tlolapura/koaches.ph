@@ -24,6 +24,7 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
   const [mobile, setMobile] = useState("");
   const [instagram, setInstagram] = useState("");
   const [facebook, setFacebook] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setMobile(coach.mobile ?? "");
@@ -43,7 +44,7 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
           </div>
           <button
             type="button"
-            className="shrink-0 text-sm font-semibold text-[#E07A5F]"
+            className="shrink-0 text-sm font-semibold text-[#4F8FF7]"
             onClick={() => setOpen(true)}
           >
             Edit
@@ -54,24 +55,24 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
           <ul className="mt-4 space-y-2.5 text-sm">
             {coach.mobile ? (
               <li className="flex items-center gap-2.5 text-[#374151]">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FDEEE9]">
-                  <Phone className="h-4 w-4 text-[#8B4D3A]" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDF4]">
+                  <Phone className="h-4 w-4 text-[#166534]" />
                 </span>
                 {coach.mobile}
               </li>
             ) : null}
             {coach.instagram ? (
               <li className="flex items-center gap-2.5 text-[#374151]">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FDEEE9]">
-                  <InstagramIcon className="text-[#8B4D3A]" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDF4]">
+                  <InstagramIcon className="text-[#166534]" />
                 </span>
                 {displayInstagram(coach.instagram)}
               </li>
             ) : null}
             {coach.facebook ? (
               <li className="flex items-center gap-2.5 text-[#374151]">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#FDEEE9]">
-                  <FacebookIcon className="text-[#8B4D3A]" />
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDF4]">
+                  <FacebookIcon className="text-[#166534]" />
                 </span>
                 {displayFacebook(coach.facebook)}
               </li>
@@ -91,8 +92,8 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
         subtitle="These appear on your public coach page"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={CONTACT_FORM_ID} className="coach-btn-primary">
-              Save
+            <button type="submit" form={CONTACT_FORM_ID} className="coach-btn-primary" disabled={saving}>
+              {saving ? "Saving…" : "Save"}
             </button>
           </CoachSheetFooter>
         }
@@ -102,10 +103,17 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
           className="space-y-4"
           onSubmit={async (e) => {
             e.preventDefault();
-            await updateCoachContactAction(coachId, { mobile, instagram, facebook });
-            onSaved?.();
-            showToast("Contact info updated!");
-            setOpen(false);
+            setSaving(true);
+            try {
+              await updateCoachContactAction(coachId, { mobile, instagram, facebook });
+              onSaved?.();
+              showToast("Contact info updated!");
+              setOpen(false);
+            } catch (err) {
+              showToast(err instanceof Error ? err.message : "Could not save contact info", "error");
+            } finally {
+              setSaving(false);
+            }
           }}
         >
           <CoachSheetField label="Mobile" hint="For calls and Viber">

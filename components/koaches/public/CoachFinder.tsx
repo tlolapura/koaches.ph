@@ -178,7 +178,7 @@ export function CoachFinder({ open, onClose, coaches, onApply }: CoachFinderProp
                           className="h-12 w-12 rounded-lg object-cover"
                         />
                       ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#FDEEE9] text-xs font-bold text-[#8B4D3A]">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#EFF6FF] text-xs font-bold text-[#1D4ED8]">
                           {coach.name.slice(0, 2).toUpperCase()}
                         </div>
                       )}

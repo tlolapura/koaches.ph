@@ -45,10 +45,10 @@ function ParticipantProgressPanel({
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <span className="rounded-full bg-[#FDEEE9] px-3 py-1 text-[11px] font-semibold text-[#8B4D3A]">
+        <span className="rounded-full bg-[#F0FDF4] px-3 py-1 text-[11px] font-semibold text-[#166534]">
           {formatParticipantProgramLabel(ctx)}
           {ctx.sessionNumber != null && ctx.totalSessions != null && (
-            <span className="font-medium text-[#8B4D3A]/80">
+            <span className="font-medium text-[#166534]/80">
               {" "}
               · Session {ctx.sessionNumber}/{ctx.totalSessions}
             </span>
@@ -57,7 +57,7 @@ function ParticipantProgressPanel({
         {participant.studentId && (
           <Link
             href={`/coach/students/${participant.studentId}`}
-            className="text-xs font-semibold text-[#E07A5F]"
+            className="text-xs font-semibold text-[#4F8FF7]"
           >
             Full progress →
           </Link>
@@ -143,7 +143,7 @@ export function SessionSkillRatingsSection({ session }: SessionSkillRatingsSecti
                 className={cn(
                   "font-heading flex shrink-0 flex-col items-start rounded-2xl px-4 py-2.5 text-left min-h-[44px] transition-all",
                   active.id === p.id
-                    ? "bg-[#E07A5F] text-white shadow-sm"
+                    ? "bg-[#16A34A] text-white shadow-sm"
                     : "border border-[#E5E7EB] bg-white text-[#374151]"
                 )}
               >

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const SIZE_CLASS = {
@@ -6,13 +7,27 @@ const SIZE_CLASS = {
   lg: "text-2xl",
 } as const;
 
-const MARK_SIZE_CLASS = {
-  sm: "text-sm",
-  md: "text-base",
-  lg: "text-lg",
+const MASCOT_SIZE_CLASS = {
+  sm: "h-9 w-9",
+  md: "h-11 w-11",
+  lg: "h-14 w-14",
 } as const;
 
 type LogoSize = keyof typeof SIZE_CLASS;
+
+function KoachaMascot({ size, className }: { size: LogoSize; className?: string }) {
+  return (
+    <Image
+      src="/illustrations/mascot.png"
+      alt=""
+      width={96}
+      height={96}
+      className={cn("shrink-0 object-contain", MASCOT_SIZE_CLASS[size], className)}
+      aria-hidden
+      priority
+    />
+  );
+}
 
 function WordmarkText({
   size,
@@ -27,8 +42,8 @@ function WordmarkText({
     <span
       className={cn("font-heading font-bold leading-none tracking-tight", SIZE_CLASS[size], className)}
     >
-      <span className="text-[#E07A5F]">Koaches</span>
-      <span className={light ? "text-white" : "text-[#1E3A5F]"}>PH</span>
+      <span className="text-[#16A34A]">Koaches</span>
+      <span className={light ? "text-white" : "text-[#4F8FF7]"}>PH</span>
     </span>
   );
 }
@@ -40,26 +55,32 @@ type KoachesLogoProps = {
   className?: string;
 };
 
-/** KoachesPH wordmark */
+/** KoachesPH wordmark with mascot */
 export function KoachesLogo({
   size = "md",
   showText = true,
   light = false,
   className,
 }: KoachesLogoProps) {
-  if (!showText) return null;
+  if (!showText) {
+    return (
+      <div className={cn("inline-flex", className)} aria-label="KoachesPH">
+        <KoachaMascot size={size} />
+      </div>
+    );
+  }
 
   return (
-    <div className={cn("inline-flex", className)} aria-label="KoachesPH">
+    <div className={cn("inline-flex items-center gap-2", className)} aria-label="KoachesPH">
+      <KoachaMascot size={size} />
       <WordmarkText size={size} light={light} />
     </div>
   );
 }
 
-/** Compact wordmark for collapsed nav */
+/** Compact mascot mark for collapsed nav */
 export function KoachesMark({
   size = "md",
-  light = false,
   className,
 }: {
   size?: LogoSize;
@@ -67,12 +88,8 @@ export function KoachesMark({
   className?: string;
 }) {
   return (
-    <span
-      className={cn("font-heading font-bold leading-none", MARK_SIZE_CLASS[size], className)}
-      aria-label="KoachesPH"
-    >
-      <span className="text-[#E07A5F]">K</span>
-      <span className={light ? "text-white" : "text-[#1E3A5F]"}>PH</span>
+    <span className={cn("inline-flex items-center justify-center", className)} aria-label="KoachesPH">
+      <KoachaMascot size={size} />
     </span>
   );
 }

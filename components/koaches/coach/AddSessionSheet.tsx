@@ -306,7 +306,7 @@ export function AddSessionSheet({
                 className={cn(
                   "font-heading flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold capitalize transition-all min-h-[44px]",
                   sessionType === t
-                    ? "bg-[#E07A5F] text-white shadow-sm"
+                    ? "bg-[#16A34A] text-white shadow-sm"
                     : "text-[#6B7280] hover:bg-white/70"
                 )}
               >
@@ -337,8 +337,8 @@ export function AddSessionSheet({
             </CoachSheetField>
 
             {nextSessionNumber ? (
-              <div className="rounded-xl bg-[#FDEEE9] px-3 py-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#8B4D3A]">
+              <div className="rounded-xl bg-[#F0FDF4] px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#166534]">
                   {isFirstProgramSession ? "First program session" : "Next session"}
                 </p>
                 <p className="font-heading mt-0.5 text-sm font-semibold text-[#111827]">
@@ -423,7 +423,7 @@ export function AddSessionSheet({
                 {sessionType === "program" && !isFirstProgramSession && date && (
                   <button
                     type="button"
-                    className="text-xs font-semibold text-[#E07A5F]"
+                    className="text-xs font-semibold text-[#4F8FF7]"
                     onClick={() => setDate("")}
                   >
                     Clear date — schedule later
@@ -433,15 +433,13 @@ export function AddSessionSheet({
             </CoachSheetField>
 
             {date && (
-              <CoachSheetField label="Time">
-                <SessionTimeFields
-                  startTime={startTime}
-                  endTime={endTime}
-                  fixedDurationMinutes={60}
-                  onStartTimeChange={setStartTime}
-                  onEndTimeChange={setEndTime}
-                />
-              </CoachSheetField>
+              <SessionTimeFields
+                startTime={startTime}
+                endTime={endTime}
+                fixedDurationMinutes={60}
+                onStartTimeChange={setStartTime}
+                onEndTimeChange={setEndTime}
+              />
             )}
           </>
         )}
@@ -457,8 +455,12 @@ export function AddSessionSheet({
           />
         </CoachSheetField>
 
-        <CoachSheetField label="Notes (optional)">
-          <textarea className="coach-input min-h-[80px] resize-none" />
+        <CoachSheetField label="Notes (optional)" htmlFor="session-notes">
+          <textarea
+            id="session-notes"
+            className="coach-input min-h-[80px] resize-none"
+            placeholder="Focus areas, equipment, or reminders for this session"
+          />
         </CoachSheetField>
       </form>
     </CoachBottomSheet>

@@ -43,7 +43,7 @@ export default function MorePage() {
 
   return (
     <CoachPageShell className="pb-8">
-      <CoachPageHeader title="More" subtitle="Progress, social, and account" mobileTitle />
+      <CoachPageHeader title="More" subtitle="Progress, social, and account" />
 
       <div className="mt-6 space-y-2">
         {links.map((l) => {
@@ -57,17 +57,17 @@ export default function MorePage() {
               href={l.href}
               className={cn(
                 "coach-card flex min-h-[64px] items-center gap-4 p-4 transition-colors",
-                active && "ring-2 ring-[#E07A5F]/30"
+                active && "ring-2 ring-[#16A34A]/30"
               )}
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDEEE9]">
-                <Icon className="h-5 w-5 text-[#8B4D3A]" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+                <Icon className="h-5 w-5 text-[#166534]" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="font-heading font-semibold text-[#111827]">{l.label}</p>
                   {badge != null && (
-                    <span className="rounded-full bg-[#E07A5F] px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span className="rounded-full bg-[#16A34A] px-2 py-0.5 text-[10px] font-bold text-white">
                       {badge}
                     </span>
                   )}

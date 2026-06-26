@@ -68,7 +68,7 @@ function SlotLegend({ compact, blockMode }: { compact?: boolean; blockMode?: boo
       )}
     >
       <span className="flex items-center gap-1.5">
-        <span className="h-2 w-5 rounded-full border border-[#E07A5F] bg-[#FDEEE9] sm:h-2.5 sm:w-6" />
+        <span className="h-2 w-5 rounded-full border border-[#4F8FF7] bg-[#EFF6FF] sm:h-2.5 sm:w-6" />
         Open
       </span>
       <span className="flex items-center gap-1.5">
@@ -80,7 +80,7 @@ function SlotLegend({ compact, blockMode }: { compact?: boolean; blockMode?: boo
         Blocked
       </span>
       {blockMode && (
-        <span className="rounded-full bg-[#1E3A5F] px-2 py-0.5 text-[9px] text-white normal-case">
+        <span className="rounded-full bg-[#4F8FF7] px-2 py-0.5 text-[9px] text-white normal-case">
           Tap open slots to block
         </span>
       )}
@@ -104,13 +104,13 @@ function DayNavigator({
       <button
         type="button"
         onClick={onPrevDay}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] text-[#1E3A5F] hover:bg-[#F9FAFB] sm:h-10 sm:w-10"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] text-[#1D4ED8] hover:bg-[#EFF6FF] sm:h-10 sm:w-10"
         aria-label="Previous day"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
       <div className="min-w-0 flex-1 text-center">
-        <p className="font-heading truncate text-sm font-bold text-[#1E3A5F]">
+        <p className="font-heading truncate text-sm font-bold text-[#1D4ED8]">
           {isToday(d) ? "Today" : format(d, "EEEE")}
         </p>
         <p className="text-xs text-[#6B7280]">{format(d, "MMMM d, yyyy")}</p>
@@ -118,7 +118,7 @@ function DayNavigator({
       <button
         type="button"
         onClick={onNextDay}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] text-[#1E3A5F] hover:bg-[#F9FAFB] sm:h-10 sm:w-10"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] text-[#1D4ED8] hover:bg-[#EFF6FF] sm:h-10 sm:w-10"
         aria-label="Next day"
       >
         <ChevronRight className="h-5 w-5" />
@@ -144,13 +144,13 @@ function WeekNavigator({
       <button
         type="button"
         onClick={onPrevWeek}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] text-[#1E3A5F] hover:bg-[#F9FAFB] sm:h-10 sm:w-10"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] text-[#1D4ED8] hover:bg-[#EFF6FF] sm:h-10 sm:w-10"
         aria-label="Previous week"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
       <div className="min-w-0 flex-1 text-center">
-        <p className="font-heading truncate text-xs font-bold text-[#1E3A5F] sm:text-sm">
+        <p className="font-heading truncate text-xs font-bold text-[#1D4ED8] sm:text-sm">
           <span className="sm:hidden">
             {format(start, "MMM d")} – {format(end, "d")}
           </span>
@@ -164,7 +164,7 @@ function WeekNavigator({
       <button
         type="button"
         onClick={onNextWeek}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] text-[#1E3A5F] hover:bg-[#F9FAFB] sm:h-10 sm:w-10"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] text-[#1D4ED8] hover:bg-[#EFF6FF] sm:h-10 sm:w-10"
         aria-label="Next week"
       >
         <ChevronRight className="h-5 w-5" />
@@ -195,13 +195,13 @@ function DayHeaderButton({
       className={cn(
         "box-border w-full min-w-0 rounded-lg px-0.5 py-1.5 text-center transition-colors sm:rounded-xl sm:px-1 sm:py-2",
         compact ? "min-h-[44px]" : "min-h-[40px] lg:min-h-[44px]",
-        active ? "bg-[#1E3A5F] text-white shadow-sm" : today ? "bg-[#FDEEE9]" : "bg-[#F9FAFB]"
+        active ? "bg-[#4F8FF7] text-white shadow-sm" : today ? "bg-[#F0FDF4]" : "bg-[#F9FAFB]"
       )}
     >
       <p
         className={cn(
           "text-[8px] font-bold uppercase leading-none sm:text-[9px]",
-          active ? "text-white/80" : today ? "text-[#8B4D3A]" : "text-[#6B7280]"
+          active ? "text-white/80" : today ? "text-[#166534]" : "text-[#6B7280]"
         )}
       >
         {compact ? format(d, "EEEEE") : today ? "Today" : format(d, "EEE")}
@@ -209,7 +209,7 @@ function DayHeaderButton({
       <p
         className={cn(
           "font-heading mt-0.5 text-xs font-bold leading-none sm:text-sm",
-          active ? "text-white" : today ? "text-[#1E3A5F]" : "text-[#374151]"
+          active ? "text-white" : today ? "text-[#16A34A]" : "text-[#374151]"
         )}
       >
         {format(d, "d")}
@@ -250,7 +250,7 @@ function OpenCell({
         slotCellBase,
         blockMode
           ? "items-center justify-center border border-[#9CA3AF] bg-[#F3F4F6] font-bold text-[#6B7280] transition-all hover:border-[#6B7280] hover:bg-[#E5E7EB] active:scale-[0.98]"
-          : "items-center justify-center border border-[#E07A5F] bg-[#FDEEE9] font-bold text-[#E07A5F] transition-all hover:border-[#C96A52] hover:bg-[#FCE4DC] active:scale-[0.98]",
+          : "items-center justify-center border border-[#4F8FF7] bg-[#EFF6FF] font-bold text-[#4F8FF7] transition-all hover:border-[#3B82F6] hover:bg-[#DBEAFE] active:scale-[0.98]",
         compact ? "gap-1 px-2 text-xs" : "px-0.5 text-[8px] sm:text-[9px] lg:text-[10px]"
       )}
     >
@@ -259,7 +259,7 @@ function OpenCell({
           {blockMode ? (
             <Ban className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
           ) : (
-            <Plus className="h-3.5 w-3.5 shrink-0 text-[#E07A5F]" strokeWidth={2.5} />
+            <Plus className="h-3.5 w-3.5 shrink-0 text-[#4F8FF7]" strokeWidth={2.5} />
           )}
           {label}
         </>
@@ -324,7 +324,7 @@ function BookedCell({
     >
       <span
         className={cn(
-          "line-clamp-1 w-full text-center font-bold leading-tight text-[#1E3A5F]",
+          "line-clamp-1 w-full text-center font-bold leading-tight text-[#14532D]",
           compact ? "text-[10px]" : "text-[9px] sm:text-[10px]"
         )}
       >
@@ -409,7 +409,7 @@ function MobileDayGrid({
         {rows.map((cell) => (
           <div key={cell.startValue} className="grid grid-cols-[52px_1fr] items-stretch gap-2">
             <div className="flex flex-col justify-center py-1 text-right">
-              <span className="font-heading text-xs font-bold tabular-nums text-[#1E3A5F]">
+              <span className="font-heading text-xs font-bold tabular-nums text-[#14532D]">
                 {formatTimeDisplay(cell.startValue).replace(":00", "")}
               </span>
             </div>
@@ -498,7 +498,7 @@ function DesktopWeekGrid({
       {hourRows.map((hourRow) => (
         <div key={hourRow.startValue} className="contents">
           <div className="flex items-center justify-end self-stretch py-0.5 pr-0.5 lg:pr-1">
-            <span className="font-heading text-[10px] font-bold tabular-nums text-[#1E3A5F] lg:text-xs">
+            <span className="font-heading text-[10px] font-bold tabular-nums text-[#14532D] lg:text-xs">
               <span className="lg:hidden">{compactTime(hourRow.startValue)}</span>
               <span className="hidden lg:inline">
                 {formatTimeDisplay(hourRow.startValue).replace(":00", "")}
@@ -586,7 +586,7 @@ export function CoachScheduleGrid({
           className={cn(
             "inline-flex min-h-[32px] items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-semibold transition-colors sm:text-xs",
             blockMode
-              ? "bg-[#1E3A5F] text-white"
+              ? "bg-[#4F8FF7] text-white"
               : "border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]"
           )}
         >
@@ -633,11 +633,11 @@ export function CoachScheduleGrid({
           </>
         ) : (
           <>
-            Tap <span className="font-semibold text-[#E07A5F]">Open</span> to schedule · tap booked for details
+            Tap <span className="font-semibold text-[#4F8FF7]">Open</span> to schedule · tap booked for details
           </>
         )}{" "}
         · {HOURLY_SESSION_MINUTES}-min blocks · hours set in{" "}
-        <Link href="/coach/profile" className="font-semibold text-[#E07A5F]">
+        <Link href="/coach/profile" className="font-semibold text-[#4F8FF7]">
           profile
         </Link>
       </p>

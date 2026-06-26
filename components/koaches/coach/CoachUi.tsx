@@ -38,7 +38,7 @@ export function CoachToastProvider({ children }: { children: React.ReactNode }) 
             role="status"
             className={cn(
               "pointer-events-auto flex max-w-sm items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-white shadow-md",
-              t.type === "success" ? "bg-[#E07A5F]" : "bg-[#EF4444]"
+              t.type === "success" ? "bg-[#16A34A]" : "bg-[#EF4444]"
             )}
           >
             {t.type === "success" ? (
@@ -81,10 +81,10 @@ export function InitialsAvatar({
 
   const sizes = { sm: "h-9 w-9 text-xs", md: "h-11 w-11 text-sm", lg: "h-16 w-16 text-lg", xl: "h-20 w-20 text-xl" };
   const variants = {
-    coral: "bg-[#E07A5F] text-white",
-    lime: "bg-[#E07A5F] text-white",
-    navy: "bg-[#1E3A5F] text-white",
-    alt: "bg-[#FDEEE9] text-[#8B4D3A]",
+    coral: "bg-[#16A34A] text-white",
+    lime: "bg-[#FACC15] text-[#14532D]",
+    navy: "bg-[#4F8FF7] text-white",
+    alt: "bg-[#EFF6FF] text-[#1D4ED8]",
   };
 
   return (
@@ -92,7 +92,7 @@ export function InitialsAvatar({
       className={cn(
         "font-heading flex shrink-0 items-center justify-center rounded-full font-semibold",
         sizes[size],
-        variants[variant === "lime" ? "coral" : variant],
+        variants[variant === "lime" ? "lime" : variant],
         className
       )}
     >
@@ -107,7 +107,7 @@ export function SessionTypeBadge({ type }: { type: "drop-in" | "program" | strin
     <span
       className={cn(
         "font-heading rounded-full px-2.5 py-0.5 text-xs font-semibold",
-        isDropIn ? "bg-[#FDE047] text-[#1E3A5F]" : "bg-[#1E3A5F] text-white"
+        isDropIn ? "bg-[#FACC15] text-[#14532D]" : "bg-[#4F8FF7] text-white"
       )}
     >
       {isDropIn ? "Drop-in" : "Program"}
@@ -131,7 +131,7 @@ export function SessionPaymentBadge({ status }: { status: SessionPaymentStatus }
 
 export function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    upcoming: "bg-[#FDEEE9] text-[#8B4D3A]",
+    upcoming: "bg-[#EFF6FF] text-[#1D4ED8]",
     done: "bg-[#6B9E78] text-white",
     canceled: "bg-[#E5E7EB] text-[#6B7280]",
     active: "bg-[#E5EFE8] text-[#3D5C47]",
@@ -151,11 +151,11 @@ export function StatusBadge({ status }: { status: string }) {
 }
 
 const sessionDisplayStyles: Record<SessionDisplayStatus, string> = {
-  upcoming: "bg-[#FDEEE9] text-[#8B4D3A]",
+  upcoming: "bg-[#EFF6FF] text-[#1D4ED8]",
   done: "bg-[#6B9E78] text-white",
   canceled: "bg-[#E5E7EB] text-[#6B7280]",
-  pending_progress_review: "bg-[#FEF3C7] text-[#92400E]",
-  ready_to_share: "bg-[#FDEEE9] text-[#E07A5F] ring-1 ring-[#E07A5F]/30",
+  pending_progress_review: "bg-[#FEFCE8] text-[#854D0E]",
+  ready_to_share: "bg-[#FEFCE8] text-[#14532D] ring-1 ring-[#FACC15]/60",
 };
 
 export function SessionDisplayStatusBadge({ status }: { status: SessionDisplayStatus }) {
@@ -218,7 +218,7 @@ export function MilestoneBadges({ current, total }: { current: number; total: nu
           key={m}
           className={cn(
             "font-heading rounded-full px-2.5 py-1 text-xs font-semibold",
-            current >= m ? "bg-[#E07A5F] text-white" : "bg-[#D1D5DB] text-[#6B7280]"
+            current >= m ? "bg-[#FACC15] text-[#14532D]" : "bg-[#D1D5DB] text-[#6B7280]"
           )}
         >
           Session {m}
@@ -230,7 +230,7 @@ export function MilestoneBadges({ current, total }: { current: number; total: nu
 }
 
 const fabClassName =
-  "fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#E07A5F] text-white shadow-lg transition-colors hover:bg-[#C96A52] md:bottom-8";
+  "coach-portal-fab fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#16A34A] text-white shadow-lg transition-colors hover:bg-[#15803D] md:bottom-8";
 
 export function CoachFab({
   onClick,
@@ -269,8 +269,8 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center py-12 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FDEEE9]">
-        <Icon className="h-7 w-7 text-[#8B4D3A]" strokeWidth={1.75} />
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDF4]">
+        <Icon className="h-7 w-7 text-[#166534]" strokeWidth={1.75} />
       </div>
       <p className="font-heading mt-4 text-base font-semibold text-[#111827]">{title}</p>
       {description && <p className="mt-1 max-w-xs text-sm text-[#6B7280]">{description}</p>}

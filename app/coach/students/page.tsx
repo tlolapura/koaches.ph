@@ -19,7 +19,7 @@ import {
   SessionTypeBadge,
   useCoachToast,
 } from "@/components/koaches/coach/CoachUi";
-import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { CoachBottomSheet, ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSearchInput } from "@/components/koaches/coach/CoachSearchInput";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
@@ -41,6 +41,7 @@ export default function StudentsPage() {
   const { showToast } = useCoachToast();
   const { students: rosterStudents, loading } = useCoachStudents(coachId, true);
   const [savingStudent, setSavingStudent] = useState(false);
+  const [declineTarget, setDeclineTarget] = useState<{ id: string; name: string } | null>(null);
 
   const [pendingVersion, setPendingVersion] = useState(0);
   const refreshPending = useCallback(() => setPendingVersion((v) => v + 1), []);
@@ -65,15 +66,57 @@ export default function StudentsPage() {
 
   const pendingIntakes = pendingIntakesList;
 
-  const students = useMemo(() => {
+  const rosterForFilter = useMemo(() => {
     if (filter === "pending") return [];
     return rosterStudents.filter((s) => {
       if (filter === "active" && s.isArchived) return false;
       if (filter === "archived" && !s.isArchived) return false;
-      if (search && !s.name.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [filter, search, rosterStudents]);
+  }, [filter, rosterStudents]);
+
+  const students = useMemo(() => {
+    if (filter === "pending") return [];
+    const q = search.trim().toLowerCase();
+    return rosterForFilter.filter((s) => !q || s.name.toLowerCase().includes(q));
+  }, [filter, search, rosterForFilter]);
+
+  const emptyRosterState = useMemo(() => {
+    if (filter === "pending") return null;
+    const q = search.trim();
+    if (q && rosterForFilter.length > 0 && students.length === 0) {
+      return {
+        title: "No matches",
+        description: `No students match "${search}".`,
+        action: (
+          <button type="button" onClick={() => setSearch("")} className="coach-btn-outline max-w-xs">
+            Clear search
+          </button>
+        ),
+      };
+    }
+    if (filter === "archived") {
+      return {
+        title: "No archived students",
+        description: "Students you archive will appear here.",
+      };
+    }
+    if (filter === "active" && rosterStudents.length > 0 && rosterForFilter.length === 0) {
+      return {
+        title: "No active students",
+        description: "All students on your roster are archived.",
+      };
+    }
+    return {
+      title: "No students yet",
+      description: "Add a student manually to get started.",
+      action: (
+        <button type="button" onClick={() => setAddOpen(true)} className="coach-btn-outline max-w-xs">
+          Add manually
+        </button>
+      ),
+    };
+  }, [filter, search, rosterForFilter.length, rosterStudents.length, students.length]);
 
   const { programs } = useCoachPrograms(coachId);
   const { sessions: allSessions } = useCoachSessions(coachId);
@@ -101,7 +144,7 @@ export default function StudentsPage() {
               onClick={() => setFilter(f)}
               className={cn(
                 "font-heading shrink-0 rounded-full px-4 py-2 text-xs font-semibold capitalize min-h-[36px]",
-                filter === f ? "bg-[#E07A5F] text-white" : "bg-white text-[#6B7280] border border-[#E5E7EB]"
+                filter === f ? "bg-[#16A34A] text-white" : "bg-white text-[#6B7280] border border-[#E5E7EB]"
               )}
             >
               {f}
@@ -121,10 +164,10 @@ export default function StudentsPage() {
         ) : (
           <div className="mt-4 space-y-3">
             {pendingIntakes.map((s) => (
-              <div key={s.id} className="coach-card border-[#E07A5F]/30 p-4">
+              <div key={s.id} className="coach-card border-[#16A34A]/30 p-4">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FDEEE9]">
-                    <Clock className="h-5 w-5 text-[#8B4D3A]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4]">
+                    <Clock className="h-5 w-5 text-[#166534]" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-heading font-semibold">{s.name}</p>
@@ -155,18 +198,7 @@ export default function StudentsPage() {
                       <button
                         type="button"
                         className="coach-btn-outline w-auto flex-1 gap-1 py-2 text-xs text-[#6B7280]"
-                        onClick={async () => {
-                          try {
-                            await rejectIntakeAction(coachId, s.id);
-                            refreshPending();
-                            showToast("Sign-up declined");
-                          } catch (e) {
-                            showToast(
-                              e instanceof Error ? e.message : "Could not decline sign-up",
-                              "error"
-                            );
-                          }
-                        }}
+                        onClick={() => setDeclineTarget({ id: s.id, name: s.name })}
                       >
                         <X className="h-3.5 w-3.5" />
                         Decline
@@ -178,16 +210,12 @@ export default function StudentsPage() {
             ))}
           </div>
         )
-      ) : students.length === 0 ? (
+      ) : students.length === 0 && emptyRosterState ? (
         <EmptyState
           icon={Users}
-          title="No students yet"
-          description="Add a student manually to get started."
-          action={
-            <button type="button" onClick={() => setAddOpen(true)} className="coach-btn-outline max-w-xs">
-              Add manually
-            </button>
-          }
+          title={emptyRosterState.title}
+          description={emptyRosterState.description}
+          action={emptyRosterState.action}
         />
       ) : (
         <div className="mt-4 space-y-3">
@@ -249,6 +277,7 @@ export default function StudentsPage() {
       >
         <form
           id={ADD_STUDENT_FORM_ID}
+          className="coach-form"
           onSubmit={async (e) => {
             e.preventDefault();
             setSavingStudent(true);
@@ -302,6 +331,25 @@ export default function StudentsPage() {
           </CoachSheetField>
         </form>
       </CoachBottomSheet>
+
+      <ConfirmSheet
+        open={Boolean(declineTarget)}
+        onClose={() => setDeclineTarget(null)}
+        message={declineTarget ? `Decline sign-up from ${declineTarget.name}?` : ""}
+        confirmLabel="Decline"
+        onConfirm={async () => {
+          if (!declineTarget) return;
+          try {
+            await rejectIntakeAction(coachId, declineTarget.id);
+            refreshPending();
+            showToast("Sign-up declined");
+          } catch (e) {
+            showToast(e instanceof Error ? e.message : "Could not decline sign-up", "error");
+          } finally {
+            setDeclineTarget(null);
+          }
+        }}
+      />
     </CoachPageShell>
   );
 }

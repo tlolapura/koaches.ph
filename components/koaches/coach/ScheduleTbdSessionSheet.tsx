@@ -57,6 +57,7 @@ export function ScheduleTbdSessionSheet({
     >
       <form
         id={FORM_ID}
+        className="coach-form"
         onSubmit={async (e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);

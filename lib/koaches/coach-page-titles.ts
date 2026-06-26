@@ -11,9 +11,10 @@ const SECTIONS: Array<{ prefix: string; title: string; backHref?: string; backLa
   { prefix: "/coach/sessions", title: "Schedule", backHref: "/coach/sessions", backLabel: "Schedule" },
   { prefix: "/coach/programs", title: "Programs", backHref: "/coach/programs", backLabel: "Programs" },
   { prefix: "/coach/social", title: "Social", backHref: "/coach/more", backLabel: "More" },
-  { prefix: "/coach/progress", title: "Progress cards", backHref: "/coach/more", backLabel: "More" },
+  { prefix: "/coach/progress", title: "Progress cards" },
   { prefix: "/coach/profile", title: "Profile", backHref: "/coach/more", backLabel: "More" },
   { prefix: "/coach/billing", title: "Billing", backHref: "/coach/more", backLabel: "More" },
+  { prefix: "/coach/onboarding", title: "Setup" },
   { prefix: "/coach/more", title: "More" },
 ];
 

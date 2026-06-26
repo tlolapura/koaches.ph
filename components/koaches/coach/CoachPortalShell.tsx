@@ -8,6 +8,7 @@ import { CoachSidebar, CoachSidebarCompact } from "@/components/koaches/coach/Co
 import { CoachAuthProvider } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachToastProvider } from "@/components/koaches/coach/CoachUi";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 
 export function CoachPortalShell({ children }: { children: React.ReactNode }) {
   return (
@@ -33,12 +34,13 @@ function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <CoachToastProvider>
-      <div className="coach-portal flex min-h-screen bg-[#FAFAF8]">
+      <div className="coach-portal relative flex min-h-screen bg-[#FAFAF8]">
         <CoachSidebar />
         <CoachSidebarCompact />
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
+          <PickleballBallBackdrop variant="portal" />
           <CoachMobileHeader />
-          <main className="flex-1 pb-20 md:pb-6">{children}</main>
+          <main className="relative z-[1] flex-1 pb-20 md:pb-6">{children}</main>
           <CoachBottomNav />
         </div>
       </div>

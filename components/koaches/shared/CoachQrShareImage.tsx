@@ -47,7 +47,7 @@ export const CoachQrShareImage = forwardRef<HTMLDivElement, CoachQrShareImagePro
     return (
       <div
         ref={ref}
-        className="flex flex-col overflow-hidden bg-gradient-to-b from-[#1E3A5F] via-[#243f66] to-[#1a2f4d] text-white"
+        className="flex flex-col overflow-hidden bg-gradient-to-b from-[#16A34A] via-[#1a8f48] to-[#4F8FF7] text-white"
         style={{ width: QR_SHARE_WIDTH, height: QR_SHARE_HEIGHT }}
       >
         <div className="px-8 pb-5 pt-10 text-center">
@@ -63,7 +63,7 @@ export const CoachQrShareImage = forwardRef<HTMLDivElement, CoachQrShareImagePro
               className="mx-auto mt-5 h-20 w-20 rounded-2xl object-cover ring-4 ring-white/20"
             />
           ) : (
-            <div className="mx-auto mt-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#E07A5F] font-heading text-2xl font-bold ring-4 ring-white/20">
+            <div className="mx-auto mt-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#16A34A] font-heading text-2xl font-bold ring-4 ring-white/20">
               {initials}
             </div>
           )}
@@ -85,7 +85,7 @@ export const CoachQrShareImage = forwardRef<HTMLDivElement, CoachQrShareImagePro
               level="M"
               marginSize={2}
               bgColor="#ffffff"
-              fgColor="#1E3A5F"
+              fgColor="#14532D"
             />
           </div>
           <p className="font-heading mt-5 text-center text-base font-bold">{copy.headline}</p>

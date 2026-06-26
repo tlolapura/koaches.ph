@@ -7,17 +7,29 @@ type CoachSheetFieldProps = {
   hint?: string;
   children: React.ReactNode;
   className?: string;
+  htmlFor?: string;
 };
 
-export function CoachSheetField({ label, hint, children, className }: CoachSheetFieldProps) {
+export function CoachSheetField({
+  label,
+  hint,
+  children,
+  className,
+  htmlFor,
+}: CoachSheetFieldProps) {
   return (
     <div className={cn("coach-sheet-field", className)}>
-      <label>{label}</label>
+      <label className="coach-label" htmlFor={htmlFor}>
+        {label}
+      </label>
       <div className="coach-sheet-field-control">{children}</div>
-      {hint && <p className="mt-1 text-[10px] text-[#6B7280]">{hint}</p>}
+      {hint && <p className="coach-field-hint">{hint}</p>}
     </div>
   );
 }
+
+/** Alias for forms outside bottom sheets */
+export const CoachFormField = CoachSheetField;
 
 type CoachSheetFooterProps = {
   children: React.ReactNode;
@@ -26,6 +38,16 @@ type CoachSheetFooterProps = {
 
 export function CoachSheetFooter({ children, className }: CoachSheetFooterProps) {
   return <div className={cn("flex flex-col gap-2", className)}>{children}</div>;
+}
+
+type CoachSheetStickyActionsProps = {
+  children: React.ReactNode;
+  className?: string;
+};
+
+/** Sticky CTA row inside scrollable sheet body when no footer slot is used */
+export function CoachSheetStickyActions({ children, className }: CoachSheetStickyActionsProps) {
+  return <div className={cn("coach-sheet-sticky-cta", className)}>{children}</div>;
 }
 
 type CoachSheetFooterActionsProps = {

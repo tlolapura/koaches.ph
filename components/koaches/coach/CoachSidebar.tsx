@@ -9,27 +9,31 @@ import {
   FileText,
   Share2,
   CreditCard,
+  TrendingUp,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { navActiveClass } from "@/lib/koaches/coach-colors";
 import { useCoachAuth } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
+import { CoachAvatar } from "@/components/koaches/coach/CoachAvatar";
 import { KoachesWordmark, KoachesMark } from "@/components/koaches/coach/CoachIcons";
+import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
+import { NavCountBadge } from "@/components/koaches/coach/NavCountBadge";
+import { useCoachNavBadges } from "@/hooks/useCoachNavBadges";
+import { coachBadgeForNavHref } from "@/lib/koaches/nav-badge-utils";
 
 const navItems = [
   { href: "/coach/dashboard", label: "Dashboard", icon: Home },
   { href: "/coach/sessions", label: "Schedule", icon: CalendarDays },
   { href: "/coach/students", label: "Students", icon: Users },
   { href: "/coach/programs", label: "Programs", icon: FileText },
+  { href: "/coach/progress", label: "Progress", icon: TrendingUp },
   { href: "/coach/social", label: "Social", icon: Share2 },
   { href: "/coach/billing", label: "Billing", icon: CreditCard },
   { href: "/coach/profile", label: "Profile", icon: User },
 ];
-
-function coachInitial(name: string) {
-  return name.replace(/^Coach\s+/i, "").charAt(0).toUpperCase() || "?";
-}
 
 function SidebarAccount() {
   const { coachId, email } = useCoachAuth();
@@ -42,9 +46,7 @@ function SidebarAccount() {
         href="/coach/profile"
         className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-[#F9FAFB]"
       >
-        <span className="font-heading flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1E3A5F] text-sm font-semibold text-white">
-          {coachInitial(coach?.name ?? "?")}
-        </span>
+        <CoachAvatar name={coach?.name ?? "Coach"} photo={coach?.photo} size="sm" />
         <div className="min-w-0 flex-1">
           <p className="truncate font-heading text-sm font-semibold text-[#111827]">{displayName}</p>
           <p className="truncate text-xs text-[#9CA3AF]">{email ?? "View profile"}</p>
@@ -59,27 +61,30 @@ function SidebarAccount() {
 
 export function CoachSidebar() {
   const pathname = usePathname();
+  const { counts } = useCoachNavBadges();
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col overflow-hidden border-r border-[#E5E7EB] bg-white lg:flex">
+      <CourtStripe />
       <div className="shrink-0 px-5 py-6">
         <KoachesWordmark />
       </div>
       <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3">
         {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
+          const badge = coachBadgeForNavHref(item.href, counts);
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
                 "font-heading flex min-h-[44px] items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors",
-                active ? "bg-[#E07A5F] text-white" : "text-[#6B7280] hover:bg-[#F9FAFB]"
+                navActiveClass(pathname, item.href)
               )}
             >
-              <Icon className="h-5 w-5" />
-              {item.label}
+              <Icon className="h-5 w-5 shrink-0" />
+              <span className="flex-1">{item.label}</span>
+              <NavCountBadge count={badge} />
             </Link>
           );
         })}
@@ -93,27 +98,30 @@ export function CoachSidebar() {
 
 export function CoachSidebarCompact() {
   const pathname = usePathname();
+  const { counts } = useCoachNavBadges();
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-16 shrink-0 flex-col overflow-hidden border-r border-[#E5E7EB] bg-white md:flex lg:hidden">
+      <CourtStripe />
       <div className="flex shrink-0 justify-center py-5">
         <KoachesMark size="sm" />
       </div>
       <nav className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-2">
         {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
+          const badge = coachBadgeForNavHref(item.href, counts);
           return (
             <Link
               key={item.href}
               href={item.href}
               title={item.label}
               className={cn(
-                "flex h-11 w-11 items-center justify-center rounded-xl transition-colors",
-                active ? "bg-[#E07A5F] text-white" : "text-[#6B7280] hover:bg-[#F9FAFB]"
+                "relative flex h-11 w-11 items-center justify-center rounded-xl transition-colors",
+                navActiveClass(pathname, item.href)
               )}
             >
               <Icon className="h-5 w-5" />
+              <NavCountBadge count={badge} pinned />
             </Link>
           );
         })}

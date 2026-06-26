@@ -69,8 +69,8 @@ export function CoachAchievementsCard() {
       <div className="coach-card mt-4 p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDEEE9]">
-              <Trophy className="h-5 w-5 text-[#8B4D3A]" strokeWidth={2} />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+              <Trophy className="h-5 w-5 text-[#166534]" strokeWidth={2} />
             </div>
             <div className="min-w-0">
               <p className="font-heading font-semibold">Achievements</p>
@@ -79,7 +79,7 @@ export function CoachAchievementsCard() {
               </p>
             </div>
           </div>
-          <button type="button" className="shrink-0 text-sm font-semibold text-[#E07A5F]" onClick={openEditor}>
+          <button type="button" className="shrink-0 text-sm font-semibold text-[#4F8FF7]" onClick={openEditor}>
             {achievements.length > 0 ? "Manage" : "Add"}
           </button>
         </div>
@@ -200,7 +200,7 @@ export function CoachAchievementsCard() {
           <button
             type="button"
             onClick={addDraft}
-            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#E07A5F]/50 bg-[#FDEEE9]/50 text-sm font-semibold text-[#E07A5F]"
+            className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-[#16A34A]/50 bg-[#F0FDF4]/50 text-sm font-semibold text-[#4F8FF7]"
           >
             <Plus className="h-4 w-4" strokeWidth={2.5} />
             Add another

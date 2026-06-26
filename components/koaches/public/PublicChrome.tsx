@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
+import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
 import { PublicBrand } from "@/components/koaches/public/BrandMark";
 import { BRAND_NAME, SITE_TAGLINE } from "@/lib/koaches/constants";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ export function PublicNav({ minimal = false }: { minimal?: boolean }) {
   if (minimal) {
     return (
       <header className="coach-portal shrink-0 border-b border-[#E5E7EB] bg-white">
+        <CourtStripe />
         <div className="mx-auto flex h-12 max-w-sm items-center justify-between px-4 sm:max-w-md">
           <Link href="/">
             <KoachesWordmark size="sm" />
@@ -34,7 +36,7 @@ export function PublicNav({ minimal = false }: { minimal?: boolean }) {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#111827] hover:bg-[#FDEEE9]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#111827] hover:bg-[#EFF6FF]"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -48,6 +50,7 @@ export function PublicNav({ minimal = false }: { minimal?: boolean }) {
   return (
     <>
       <header className="coach-portal sticky top-0 z-50 shrink-0 border-b border-[#E5E7EB] bg-white/95 backdrop-blur-md">
+        <CourtStripe />
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2">
             <KoachesWordmark size="sm" />
@@ -57,7 +60,7 @@ export function PublicNav({ minimal = false }: { minimal?: boolean }) {
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-[#111827] hover:bg-[#FDEEE9] md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-[#111827] hover:bg-[#EFF6FF] md:hidden"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
@@ -82,7 +85,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="text-sm font-medium text-[#6B7280] transition-colors hover:text-[#1E3A5F]"
+      className="text-sm font-medium text-[#6B7280] transition-colors hover:text-[#4F8FF7]"
     >
       {children}
     </Link>
@@ -100,7 +103,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
       <button
         type="button"
         className={cn(
-          "absolute inset-0 bg-[#1E3A5F]/40 transition-opacity",
+          "absolute inset-0 bg-[#14532D]/50 transition-opacity",
           open ? "opacity-100" : "opacity-0"
         )}
         onClick={onClose}
@@ -117,7 +120,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-[#FDEEE9]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-[#EFF6FF]"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -129,7 +132,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
               key={l.href}
               href={l.href}
               onClick={onClose}
-              className="rounded-xl px-3 py-2.5 text-sm font-semibold text-[#111827] hover:bg-[#FDEEE9]"
+              className="rounded-xl px-3 py-2.5 text-sm font-semibold text-[#111827] hover:bg-[#EFF6FF]"
             >
               {l.label}
             </Link>
@@ -147,7 +150,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
 
 export function PublicFooter() {
   return (
-    <footer className="coach-portal shrink-0 bg-[#1E3A5F] text-white">
+    <footer className="coach-portal shrink-0 bg-[#4F8FF7] text-white">
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
           <div>
@@ -177,7 +180,7 @@ export function PublicFooter() {
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="text-white/70 transition-colors hover:text-[#E07A5F]">
+    <Link href={href} className="text-white/70 transition-colors hover:text-[#FACC15]">
       {children}
     </Link>
   );

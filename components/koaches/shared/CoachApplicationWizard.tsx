@@ -267,7 +267,7 @@ export function CoachApplicationWizard({
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
-            className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#1E3A5F]"
+            className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4F8FF7]"
           >
             <Check className="h-8 w-8 text-white" strokeWidth={2.5} />
           </motion.div>
@@ -288,7 +288,7 @@ export function CoachApplicationWizard({
               transition={{ delay: 0.15 + i * 0.1 }}
               className="flex gap-3"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1E3A5F] text-white">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#4F8FF7] text-white">
                 <item.icon className="h-4 w-4" />
               </div>
               <div>
@@ -299,8 +299,8 @@ export function CoachApplicationWizard({
           ))}
         </ol>
 
-        <div className="mt-6 rounded-xl border border-[#E5E7EB] bg-[#EDF2F7]/50 p-4 text-sm">
-          <p className="font-semibold text-[#1E3A5F]">Watch for a message from us</p>
+        <div className="mt-6 rounded-xl border border-[#E5E7EB] bg-[#EFF6FF]/50 p-4 text-sm">
+          <p className="font-semibold text-[#1D4ED8]">Watch for a message from us</p>
           <p className="mt-1 text-xs text-[#6B7280]">
             We&apos;ll contact you via SMS ({review.mobile}) and email ({review.email}) for payment and onboarding.
           </p>
@@ -333,7 +333,7 @@ export function CoachApplicationWizard({
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
             <motion.div
-              className="h-full rounded-full bg-[#1E3A5F]"
+              className="h-full rounded-full bg-[#16A34A]"
               initial={false}
               animate={{ width: `${progress}%` }}
               transition={{ type: "spring", stiffness: 120, damping: 20 }}
@@ -348,8 +348,8 @@ export function CoachApplicationWizard({
                   key={s.id}
                   className={cn(
                     "flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold uppercase tracking-wide transition-colors",
-                    active && "bg-[#EDF2F7] text-[#1E3A5F]",
-                    done && !active && "text-[#1E3A5F]",
+                    active && "bg-[#EFF6FF] text-[#1D4ED8]",
+                    done && !active && "text-[#1D4ED8]",
                     !active && !done && "text-[#9CA3AF]"
                   )}
                 >
@@ -374,7 +374,7 @@ export function CoachApplicationWizard({
             className="coach-card overflow-hidden p-6 sm:p-8"
           >
             <div className="text-center sm:text-left">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#1E3A5F]">Join KoachesPH</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#1D4ED8]">Join KoachesPH</p>
               <h2 className="font-heading mt-1 text-2xl font-bold">
                 Ready to coach on the platform players trust?
               </h2>
@@ -392,7 +392,12 @@ export function CoachApplicationWizard({
                   transition={{ delay: 0.1 + i * 0.08 }}
                   className="flex gap-3 rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] p-3"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#1E3A5F] text-white">
+                  <div
+                    className={cn(
+                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white",
+                      i % 2 === 0 ? "bg-[#16A34A]" : "bg-[#4F8FF7]"
+                    )}
+                  >
                     <b.icon className="h-4 w-4" />
                   </div>
                   <div className="text-left">
@@ -415,7 +420,12 @@ export function CoachApplicationWizard({
             className="coach-card p-6 sm:p-8"
           >
             <div className="mb-6 flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1E3A5F] text-white">
+              <div
+                className={cn(
+                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white",
+                  step === "coaching" ? "bg-[#4F8FF7]" : "bg-[#16A34A]"
+                )}
+              >
                 {step === "identity" ? (
                   <User className="h-5 w-5" />
                 ) : step === "coaching" ? (
@@ -463,7 +473,7 @@ export function CoachApplicationWizard({
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-[#6B7280]">Specialization</dt>
-                <dd className="text-right font-medium text-[#1E3A5F]">{review.specialization}</dd>
+                <dd className="text-right font-medium text-[#1D4ED8]">{review.specialization}</dd>
               </div>
               <div>
                 <dt className="text-[#6B7280]">Bio</dt>

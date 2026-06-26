@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import {
   CalendarDays,
   ChevronRight,
@@ -21,6 +22,7 @@ import {
 } from "@/lib/koaches/session-time";
 import { useSessionPayment } from "@/hooks/useSessionPayment";
 import { useSessionStatus } from "@/hooks/useSessionStatus";
+import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { getSessionDisplayStatus } from "@/lib/koaches/session-lifecycle";
 import { cn, formatDisplayDate } from "@/lib/utils";
 
@@ -60,9 +62,9 @@ function Tag({
 }) {
   const tones = {
     neutral: "bg-[#F3F4F6] text-[#6B7280]",
-    navy: "bg-[#1E3A5F] text-white",
+    navy: "bg-[#4F8FF7] text-white",
     amber: "bg-[#FEF3C7] text-[#92400E]",
-    coral: "bg-[#FDEEE9] text-[#8B4D3A]",
+    coral: "bg-[#F0FDF4] text-[#166534]",
     sage: "bg-[#E5EFE8] text-[#3D5C47]",
   };
   return (
@@ -90,7 +92,7 @@ function TimeColumn({
       <p
         className={cn(
           "font-heading text-[15px] font-bold tabular-nums leading-none",
-          muted ? "text-[#9CA3AF]" : "text-[#1E3A5F]"
+          muted ? "text-[#9CA3AF]" : "text-[#4F8FF7]"
         )}
       >
         {clock}
@@ -124,7 +126,7 @@ function ProgressAction({ session }: { session: Session }) {
     return (
       <Link
         href={`/coach/sessions/${session.id}`}
-        className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#E07A5F] px-4 text-xs font-semibold text-white active:bg-[#C96A52]"
+        className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#16A34A] px-4 text-xs font-semibold text-white active:bg-[#15803D]"
       >
         <ClipboardList className="h-3.5 w-3.5" aria-hidden />
         Add progress report
@@ -136,7 +138,7 @@ function ProgressAction({ session }: { session: Session }) {
     return (
       <Link
         href="/coach/progress"
-        className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#1E3A5F] px-4 text-xs font-semibold text-white active:bg-[#2D4A6F]"
+        className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#14532D] px-4 text-xs font-semibold text-white active:bg-[#166534]"
       >
         <TrendingUp className="h-3.5 w-3.5" aria-hidden />
         Create progress card
@@ -145,6 +147,33 @@ function ProgressAction({ session }: { session: Session }) {
   }
 
   return null;
+}
+
+function DashboardMarkDoneButton({ session }: { session: Session }) {
+  const { markDone } = useSessionStatus(session);
+  const { showToast } = useCoachToast();
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <button
+      type="button"
+      disabled={busy}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          await markDone();
+          showToast("Session marked done");
+        } catch (e) {
+          showToast(e instanceof Error ? e.message : "Could not update session", "error");
+        } finally {
+          setBusy(false);
+        }
+      }}
+      className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 text-xs font-semibold text-[#92400E] active:bg-[#FEF3C7] disabled:opacity-60"
+    >
+      {busy ? "Saving…" : "Mark session done"}
+    </button>
+  );
 }
 
 type SessionRowProps = {
@@ -174,7 +203,7 @@ function SessionRow({
       className={cn(
         "overflow-hidden rounded-2xl border bg-white shadow-[0_2px_12px_rgba(30,58,95,0.06)]",
         highlight
-          ? "border-[#E07A5F]/50 ring-2 ring-[#E07A5F]/15"
+          ? "border-[#16A34A]/50 ring-2 ring-[#16A34A]/15"
           : "border-[#E5E7EB]"
       )}
     >
@@ -249,7 +278,7 @@ function FinishedRow({
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="mb-2.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
-      <span className="h-1 w-1 rounded-full bg-[#E07A5F]" aria-hidden />
+      <span className="h-1 w-1 rounded-full bg-[#16A34A]" aria-hidden />
       {children}
     </p>
   );
@@ -293,15 +322,7 @@ export function DashboardMySessionsToday({
                 session={s}
                 href={`/coach/sessions/${s.id}`}
                 courtLookup={lookup}
-                footer={
-                  <Link
-                    href={`/coach/sessions/${s.id}`}
-                    className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 text-xs font-semibold text-[#92400E] active:bg-[#FEF3C7]"
-                  >
-                    Mark session done
-                    <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-                  </Link>
-                }
+                footer={<DashboardMarkDoneButton session={s} />}
               />
             ))}
           </div>
@@ -343,10 +364,10 @@ export function DashboardMySessionsToday({
 export function DashboardEmptyDay() {
   return (
     <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-5 py-10 text-center shadow-[0_2px_12px_rgba(30,58,95,0.04)]">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#FDEEE9] to-[#E5EFE8]">
-        <Sun className="h-7 w-7 text-[#E07A5F]" aria-hidden />
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-[#E5EFE8]">
+        <Sun className="h-7 w-7 text-[#4F8FF7]" aria-hidden />
       </div>
-      <p className="font-heading mt-4 text-lg font-semibold text-[#1E3A5F]">No sessions today</p>
+      <p className="font-heading mt-4 text-lg font-semibold text-[#14532D]">No sessions today</p>
       <p className="mt-1 text-sm text-[#6B7280]">Book a session or enjoy the day off.</p>
       <Link href="/coach/sessions" className="coach-btn-primary mx-auto mt-5 max-w-xs gap-2">
         <CalendarDays className="h-4 w-4" aria-hidden />
@@ -372,7 +393,7 @@ export function DashboardUpNextAway({ session }: DashboardUpNextAwayProps) {
       <TimeColumn time={session.time} />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <CircleDot className="h-3.5 w-3.5 shrink-0 text-[#E07A5F]" aria-hidden />
+          <CircleDot className="h-3.5 w-3.5 shrink-0 text-[#4F8FF7]" aria-hidden />
           <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
             Next
           </span>

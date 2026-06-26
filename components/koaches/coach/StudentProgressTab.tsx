@@ -59,7 +59,7 @@ function SessionProgressCard({
               {formatSessionProgressLabel(session)}
             </p>
             {isLatest && (
-              <span className="rounded-full bg-[#FDEEE9] px-2 py-0.5 text-[10px] font-semibold text-[#8B4D3A]">
+              <span className="rounded-full bg-[#F0FDF4] px-2 py-0.5 text-[10px] font-semibold text-[#166534]">
                 Latest
               </span>
             )}
@@ -84,7 +84,7 @@ function SessionProgressCard({
             <ScoreLegend />
             <Link
               href={`/coach/sessions/${session.id}`}
-              className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#E07A5F]"
+              className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
             >
               Open session
               <ArrowRight className="h-3.5 w-3.5" />

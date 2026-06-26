@@ -1,6 +1,7 @@
 "use client";
 
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Student } from "@/lib/koaches/types";
@@ -39,10 +40,12 @@ function StudentSessionStatusBadge({ session }: { session: Session }) {
 }
 
 export function StudentProfileView({ student }: { student: Student }) {
+  const router = useRouter();
   const coachId = usePortalCoachId();
   const [tab, setTab] = useState<(typeof tabs)[number]>("Progress");
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [note, setNote] = useState(student.notes ?? "");
+  const [savingNote, setSavingNote] = useState(false);
   const { showToast } = useCoachToast();
 
   const { programs } = useCoachPrograms(coachId);
@@ -118,7 +121,7 @@ export function StudentProfileView({ student }: { student: Student }) {
             onClick={() => setTab(t)}
             className={cn(
               "font-heading shrink-0 px-4 py-3 text-sm font-semibold",
-              tab === t ? "border-b-2 border-[#E07A5F] text-[#111827]" : "text-[#6B7280]"
+              tab === t ? "border-b-2 border-[#16A34A] text-[#111827]" : "text-[#6B7280]"
             )}
           >
             {t}
@@ -161,23 +164,34 @@ export function StudentProfileView({ student }: { student: Student }) {
         {tab === "Notes" && (
           <div className="space-y-4">
             <div className="coach-card p-4">
+              <label className="coach-label" htmlFor="student-note">
+                Private notes
+              </label>
               <textarea
-                className="coach-input min-h-[100px] resize-none"
-                placeholder="Add a note..."
+                id="student-note"
+                className="coach-input mt-1 min-h-[100px] resize-none"
+                placeholder="Training focus, injuries, preferences…"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />
               <button
                 type="button"
                 className="coach-btn-primary mt-3"
+                disabled={savingNote}
                 onClick={async () => {
-                  await updateStudentNotesAction(student.id, note);
-                  notifyRosterUpdated(coachId);
-                  showToast(crudToast.saved("Note"));
-                  setNote("");
+                  setSavingNote(true);
+                  try {
+                    await updateStudentNotesAction(student.id, note);
+                    notifyRosterUpdated(coachId);
+                    showToast(crudToast.saved("Note"));
+                  } catch (e) {
+                    showToast(e instanceof Error ? e.message : "Could not save note", "error");
+                  } finally {
+                    setSavingNote(false);
+                  }
                 }}
               >
-                Save Note
+                {savingNote ? "Saving…" : "Save Note"}
               </button>
             </div>
             {completed
@@ -202,6 +216,7 @@ export function StudentProfileView({ student }: { student: Student }) {
           notifyRosterUpdated(coachId);
           showToast(crudToast.deleted("Student"));
           setArchiveOpen(false);
+          router.push("/coach/students");
         }}
       />
     </CoachPageShell>

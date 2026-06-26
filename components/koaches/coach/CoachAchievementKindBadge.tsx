@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 const kindStyles: Record<CoachAchievementKind, string> = {
   certification: "bg-[#E5EFE8] text-[#3D5C47]",
   education: "bg-[#EDE9FE] text-[#5B21B6]",
-  tournament: "bg-[#FDEEE9] text-[#8B4D3A]",
+  tournament: "bg-[#F0FDF4] text-[#166534]",
   competition: "bg-[#FEF3C7] text-[#92400E]",
-  league: "bg-[#EDF2F7] text-[#1E3A5F]",
+  league: "bg-[#EFF6FF] text-[#14532D]",
 };
 
 export function CoachAchievementKindBadge({

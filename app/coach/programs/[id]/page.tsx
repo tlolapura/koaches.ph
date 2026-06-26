@@ -54,9 +54,9 @@ export default function ProgramDetailPage({
           {preset && <PresetIcon icon={preset.icon} className="h-12 w-12 rounded-xl" iconClassName="h-6 w-6" />}
           <div>
             <CoachEntityTitle>{program.name}</CoachEntityTitle>
-            {preset && <p className="text-sm text-[#E07A5F]">{preset.tagline}</p>}
+            {preset && <p className="text-sm text-[#4F8FF7]">{preset.tagline}</p>}
             <p className="mt-2 text-sm text-[#6B7280]">{program.description}</p>
-            <p className="font-heading mt-3 text-lg font-semibold text-[#E07A5F]">
+            <p className="font-heading mt-3 text-lg font-semibold text-[#4F8FF7]">
               {formatProgramBundleSummary(program)}
             </p>
             <p className="mt-1 text-sm text-[#6B7280]">
@@ -88,7 +88,7 @@ export default function ProgramDetailPage({
                   {s.sessionsCompleted} of {program.sessionCount} sessions
                 </p>
               </div>
-              <span className="text-xs font-semibold text-[#E07A5F]">View →</span>
+              <span className="text-xs font-semibold text-[#4F8FF7]">View →</span>
             </div>
           </Link>
         ))}

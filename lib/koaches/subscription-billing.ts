@@ -152,7 +152,7 @@ export const BILLING_STATUS_STYLES: Record<
   inactive: { badge: "bg-[#F3F4F6] text-[#6B7280]", panel: "bg-[#F9FAFB] text-[#6B7280]" },
   not_set: { badge: "bg-[#FEF3C7] text-[#92400E]", panel: "bg-[#FFFBEB] text-[#92400E]" },
   active: { badge: "bg-[#E5EFE8] text-[#3D5C47]", panel: "bg-[#F5FAF6] text-[#3D5C47]" },
-  send_invoice: { badge: "bg-[#FDEEE9] text-[#8B4D3A]", panel: "bg-[#FFF7F4] text-[#8B4D3A]" },
+  send_invoice: { badge: "bg-[#F0FDF4] text-[#166534]", panel: "bg-[#FFF7F4] text-[#166534]" },
   payment_due: { badge: "bg-[#FEF3C7] text-[#92400E]", panel: "bg-[#FFFBEB] text-[#92400E]" },
   overdue: { badge: "bg-[#FEE2E2] text-[#B91C1C]", panel: "bg-[#FEF2F2] text-[#B91C1C]" },
   lapsed: { badge: "bg-[#FEE2E2] text-[#991B1B]", panel: "bg-[#FEF2F2] text-[#991B1B]" },

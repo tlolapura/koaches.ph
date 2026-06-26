@@ -34,11 +34,11 @@ export function PresetIcon({
   return (
     <div
       className={cn(
-        "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#FDEEE9]",
+        "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]",
         className
       )}
     >
-      <Icon className={cn("h-5 w-5 text-[#8B4D3A]", iconClassName)} strokeWidth={2} />
+      <Icon className={cn("h-5 w-5 text-[#166534]", iconClassName)} strokeWidth={2} />
     </div>
   );
 }
@@ -52,7 +52,7 @@ export function ProgramListIcon({
 }) {
   if (isCustom) {
     return (
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1E3A5F]">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#4F8FF7]">
         <PenLine className="h-5 w-5 text-white" />
       </div>
     );

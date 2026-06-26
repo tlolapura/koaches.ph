@@ -29,7 +29,7 @@ export function SessionPriceFields({
     return (
       <div className="space-y-3">
         <CoachSheetField label="Program bundle" hint="Per player — set on each program, not drop-in rates">
-          <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 text-sm font-semibold text-[#1E3A5F]">
+          <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2.5 text-sm font-semibold text-[#14532D]">
             {formatProgramBundleSummary(program)}
           </div>
         </CoachSheetField>

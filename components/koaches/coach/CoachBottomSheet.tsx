@@ -1,8 +1,12 @@
 "use client";
 
+import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CoachSheetFooterActions } from "@/components/koaches/coach/CoachSheet";
+
+const SHEET_OPEN_ATTR = "data-coach-sheet-open";
 
 type CoachBottomSheetProps = {
   open: boolean;
@@ -15,6 +19,21 @@ type CoachBottomSheetProps = {
   wide?: boolean;
 };
 
+function useSheetBodyLock(open: boolean) {
+  useEffect(() => {
+    if (!open) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.body.setAttribute(SHEET_OPEN_ATTR, "true");
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.removeAttribute(SHEET_OPEN_ATTR);
+    };
+  }, [open]);
+}
+
 /** Mobile: bottom sheet above nav. Desktop (md+): centered modal. */
 export function CoachBottomSheet({
   open,
@@ -25,14 +44,20 @@ export function CoachBottomSheet({
   footer,
   wide,
 }: CoachBottomSheetProps) {
-  if (!open) return null;
+  const [mounted, setMounted] = useState(false);
+  const titleId = useId();
 
-  return (
+  useEffect(() => setMounted(true), []);
+  useSheetBodyLock(open);
+
+  if (!open || !mounted) return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center md:items-center md:p-6"
+      className="coach-bottom-sheet-overlay fixed inset-0 z-[100] flex items-end justify-center md:items-center md:p-6"
       role="dialog"
       aria-modal="true"
-      aria-labelledby={title ? "coach-overlay-title" : undefined}
+      aria-labelledby={title ? titleId : undefined}
     >
       <button
         type="button"
@@ -43,10 +68,9 @@ export function CoachBottomSheet({
 
       <div
         className={cn(
-          "relative flex w-full flex-col bg-white shadow-xl",
-          "max-h-[min(90vh,calc(100dvh-4rem-env(safe-area-inset-bottom)))] rounded-t-2xl",
-          "animate-in slide-in-from-bottom duration-300",
-          "pb-[env(safe-area-inset-bottom,0px)]",
+          "coach-portal coach-sheet-panel relative flex w-full min-h-0 flex-col bg-white shadow-xl",
+          "max-h-[min(92dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)))]",
+          "rounded-t-2xl animate-in slide-in-from-bottom duration-300",
           "md:max-h-[min(85vh,720px)] md:rounded-2xl md:animate-none",
           wide ? "md:max-w-2xl" : "md:max-w-lg"
         )}
@@ -58,15 +82,10 @@ export function CoachBottomSheet({
         {title && (
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#F3F4F6] px-4 pt-2 pb-3 md:px-6 md:pt-5">
             <div className="min-w-0 flex-1">
-              <h2
-                id="coach-overlay-title"
-                className="font-heading text-lg font-semibold text-[#111827]"
-              >
+              <h2 id={titleId} className="font-heading text-lg font-semibold text-[#111827]">
                 {title}
               </h2>
-              {subtitle && (
-                <p className="mt-0.5 text-sm text-[#6B7280]">{subtitle}</p>
-              )}
+              {subtitle && <p className="mt-0.5 text-sm text-[#6B7280]">{subtitle}</p>}
             </div>
             <button
               type="button"
@@ -79,17 +98,14 @@ export function CoachBottomSheet({
           </div>
         )}
 
-        <div className="coach-sheet-body flex-1 overflow-y-auto overscroll-contain px-4 py-4 md:px-6">
+        <div className="coach-sheet-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 md:px-6">
           {children}
         </div>
 
-        {footer && (
-          <div className="shrink-0 border-t border-[#E5E7EB] bg-white px-4 py-4 md:px-6">
-            {footer}
-          </div>
-        )}
+        {footer && <div className="coach-sheet-footer shrink-0">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

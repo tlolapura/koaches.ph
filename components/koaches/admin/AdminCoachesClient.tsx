@@ -190,7 +190,7 @@ export function AdminCoachesClient({
                   )}
                 </div>
                 <div className="text-right text-sm">
-                  <p className="font-semibold text-[#1E3A5F]">
+                  <p className="font-semibold text-[#14532D]">
                     {formatCurrency(billing.amount)}
                     <span className="text-xs font-normal text-[#6B7280]"> / mo</span>
                   </p>
@@ -223,7 +223,7 @@ export function AdminCoachesClient({
                   {courtEditId !== c.id ? (
                     <button
                       type="button"
-                      className="text-xs font-semibold text-[#E07A5F] hover:underline"
+                      className="text-xs font-semibold text-[#4F8FF7] hover:underline"
                       onClick={() => startCourtEdit(c)}
                     >
                       Edit
@@ -240,7 +240,7 @@ export function AdminCoachesClient({
                       <button
                         type="button"
                         disabled={isBusy}
-                        className="text-xs font-semibold text-[#E07A5F] hover:underline"
+                        className="text-xs font-semibold text-[#4F8FF7] hover:underline"
                         onClick={() => void saveCourtEdit(c.id)}
                       >
                         Save
@@ -260,7 +260,7 @@ export function AdminCoachesClient({
                           className={cn(
                             "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
                             selected
-                              ? "bg-[#1E3A5F] text-white"
+                              ? "bg-[#4F8FF7] text-white"
                               : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
                           )}
                         >

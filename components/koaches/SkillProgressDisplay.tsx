@@ -30,8 +30,8 @@ export function SkillLevelDots({
             "h-2 w-3.5 rounded-full sm:w-4",
             n <= filled
               ? variant === "after"
-                ? "bg-[#E07A5F]"
-                : "bg-[#1E3A5F]/35"
+                ? "bg-[#16A34A]"
+                : "bg-[#4F8FF7]/35"
               : "bg-[#E5E7EB]"
           )}
         />
@@ -82,7 +82,7 @@ export function SkillProgressList({
   const sections = [
     { title: "Leveled up", items: improved, tone: "text-[#3D5C47]" },
     { title: "Held steady", items: same, tone: "text-[#6B7280]" },
-    { title: "Focus next time", items: slipped, tone: "text-[#8B4D3A]" },
+    { title: "Focus next time", items: slipped, tone: "text-[#1D4ED8]" },
   ].filter((s) => s.items.length > 0);
 
   let shown = 0;

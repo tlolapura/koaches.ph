@@ -35,7 +35,7 @@ export function AdminRevenueChart({ data }: AdminRevenueChartProps) {
             tickFormatter={(v) => `₱${(v / 1000).toFixed(0)}k`}
           />
           <Tooltip
-            cursor={{ fill: "rgba(224, 122, 95, 0.08)" }}
+            cursor={{ fill: "rgba(22, 163, 74, 0.08)" }}
             content={({ active, payload }) => {
               if (!active || !payload?.length) return null;
               const row = payload[0].payload as MonthlyMetric;
@@ -43,12 +43,12 @@ export function AdminRevenueChart({ data }: AdminRevenueChartProps) {
                 <div className="rounded-xl border border-[#E4E4E7] bg-white px-3 py-2 text-sm shadow-md">
                   <p className="font-bold">{row.month}</p>
                   <p className="text-text-muted">{row.sessions} sessions</p>
-                  <p className="font-heading font-semibold text-[#E07A5F]">{formatCurrency(row.revenue)}</p>
+                  <p className="font-heading font-semibold text-[#4F8FF7]">{formatCurrency(row.revenue)}</p>
                 </div>
               );
             }}
           />
-          <Bar dataKey="revenue" fill="#E07A5F" radius={[6, 6, 0, 0]} maxBarSize={40} />
+          <Bar dataKey="revenue" fill="#4F8FF7" radius={[6, 6, 0, 0]} maxBarSize={40} />
         </BarChart>
       </ResponsiveContainer>
     </div>

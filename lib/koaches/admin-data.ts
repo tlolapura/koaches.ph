@@ -56,4 +56,5 @@ export type AdminDashboardData = {
     appliedAt: string;
     status: string;
   }>;
+  pendingPaymentCount: number;
 };

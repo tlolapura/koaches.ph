@@ -2,22 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutDashboard, Menu, Users } from "lucide-react";
+import { FileText, LayoutDashboard, MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { bottomNavActiveClass } from "@/lib/koaches/coach-colors";
+import { NavCountBadge } from "@/components/koaches/coach/NavCountBadge";
+import { useAdminNavBadges } from "@/hooks/useAdminNavBadges";
+import { adminBadgeForNavHref } from "@/lib/koaches/nav-badge-utils";
 
 const tabs = [
   { href: "/admin", label: "Home", icon: LayoutDashboard, exact: true },
   { href: "/admin/coaches", label: "Coaches", icon: Users },
-  { href: "/admin/applications", label: "Applications", icon: FileText },
-  { href: "/admin/more", label: "More", icon: Menu },
+  { href: "/admin/applications", label: "Apps", icon: FileText },
+  { href: "/admin/courts", label: "Courts", icon: MapPin },
 ];
 
 export function AdminBottomNav() {
   const pathname = usePathname();
+  const { counts } = useAdminNavBadges();
 
   return (
     <nav
-      className="fixed right-0 bottom-0 left-0 z-40 border-t border-[#E5E7EB] bg-white md:hidden"
+      className="admin-bottom-nav fixed right-0 bottom-0 left-0 z-40 border-t border-[#E5E7EB] bg-white md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <div className="flex justify-around py-2">
@@ -25,20 +30,22 @@ export function AdminBottomNav() {
           const active =
             tab.exact
               ? pathname === tab.href
-              : pathname === tab.href ||
-                pathname.startsWith(`${tab.href}/`) ||
-                (tab.href === "/admin/more" && pathname.startsWith("/admin/courts"));
+              : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
           const Icon = tab.icon;
+          const badge = adminBadgeForNavHref(tab.href, counts);
           return (
             <Link
               key={tab.href}
               href={tab.href}
               className={cn(
-                "font-heading flex min-h-[44px] min-w-[64px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold",
-                active ? "text-[#E07A5F]" : "text-[#6B7280]"
+                "font-heading relative flex min-h-[44px] min-w-[64px] flex-1 flex-col items-center justify-center gap-0.5 text-[10px] font-semibold",
+                bottomNavActiveClass(pathname, tab.href, active)
               )}
             >
-              <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+              <span className="relative">
+                <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+                <NavCountBadge count={badge} pinned />
+              </span>
               {tab.label}
             </Link>
           );

@@ -7,6 +7,7 @@ import {
   type ApproveCoachApplicationResult,
 } from "@/lib/koaches/actions/applications";
 import { ApproveCoachApplicationSheet } from "@/components/koaches/admin/ApproveCoachApplicationSheet";
+import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
 import { AdminApplicationListSkeleton } from "@/components/koaches/admin/AdminSkeletons";
 import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
@@ -25,6 +26,7 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [approveTarget, setApproveTarget] = useState<CoachApplication | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [rejectTarget, setRejectTarget] = useState<CoachApplication | null>(null);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -84,7 +86,7 @@ export default function ApplicationsPage() {
             }}
             className={cn(
               "font-heading min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold capitalize",
-              tab === t ? "bg-[#E07A5F] text-white" : "border border-[#E5E7EB] bg-white text-[#6B7280]"
+              tab === t ? "bg-[#16A34A] text-white" : "border border-[#E5E7EB] bg-white text-[#6B7280]"
             )}
           >
             {t}
@@ -101,10 +103,10 @@ export default function ApplicationsPage() {
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
                 <p className="font-heading font-semibold">{a.fullName}</p>
-                <p className="text-sm text-[#E07A5F]">{a.specialization}</p>
+                <p className="text-sm text-[#4F8FF7]">{a.specialization}</p>
               </div>
               {a.coachingLevels.length > 0 && (
-                <span className="rounded-full bg-[#1E3A5F] px-3 py-1 text-xs font-semibold text-white">
+                <span className="rounded-full bg-[#14532D] px-3 py-1 text-xs font-semibold text-white">
                   {a.coachingLevels.map((id) => SKILL_RUBRICS[id as keyof typeof SKILL_RUBRICS]?.name ?? id).join(" · ")}
                 </span>
               )}
@@ -145,7 +147,7 @@ export default function ApplicationsPage() {
                 {socialLinks(a).map((link, i) => (
                   <span key={link}>
                     {i > 0 && " · "}
-                    <a href={link.startsWith("http") ? link : `https://${link}`} className="text-[#E07A5F]">
+                    <a href={link.startsWith("http") ? link : `https://${link}`} className="text-[#4F8FF7]">
                       {link}
                     </a>
                   </span>
@@ -168,7 +170,7 @@ export default function ApplicationsPage() {
                   type="button"
                   className="coach-btn-outline w-auto px-4 py-2 text-sm"
                   disabled={rejectingId === a.id}
-                  onClick={() => void handleReject(a.id)}
+                  onClick={() => setRejectTarget(a)}
                 >
                   {rejectingId === a.id ? "Rejecting…" : "Reject"}
                 </button>
@@ -182,6 +184,18 @@ export default function ApplicationsPage() {
         application={approveTarget}
         onClose={() => setApproveTarget(null)}
         onApproved={handleApproved}
+      />
+
+      <ConfirmSheet
+        open={Boolean(rejectTarget)}
+        onClose={() => setRejectTarget(null)}
+        message={rejectTarget ? `Reject application from ${rejectTarget.fullName}?` : ""}
+        confirmLabel="Reject"
+        onConfirm={async () => {
+          if (!rejectTarget) return;
+          await handleReject(rejectTarget.id);
+          setRejectTarget(null);
+        }}
       />
     </AdminPageShell>
   );

@@ -10,6 +10,7 @@ import {
   updateCourtActiveAction,
 } from "@/lib/koaches/actions/courts";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
+import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { cn } from "@/lib/utils";
 
 type AdminCourtsClientProps = {
@@ -122,35 +123,61 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
       )}
 
       {addOpen && (
-        <form className="coach-card mt-6 space-y-4 p-4" onSubmit={(e) => void handleAdd(e)}>
+        <form className="coach-card coach-form mt-6 p-5 sm:p-6" onSubmit={(e) => void handleAdd(e)}>
           <p className="font-heading font-semibold">New court</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className="text-xs font-medium text-[#6B7280]">Court name</label>
-              <input className="coach-input mt-1" value={name} onChange={(e) => setName(e.target.value)} required />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="text-xs font-medium text-[#6B7280]">Address</label>
-              <input className="coach-input mt-1" value={address} onChange={(e) => setAddress(e.target.value)} required />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-[#6B7280]">City</label>
-              <input className="coach-input mt-1" value={city} onChange={(e) => setCity(e.target.value)} />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-[#6B7280]">Region</label>
-              <input className="coach-input mt-1" value={region} onChange={(e) => setRegion(e.target.value)} />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="text-xs font-medium text-[#6B7280]">Google Maps link (optional)</label>
+            <CoachSheetField label="Court name" htmlFor="court-name" className="sm:col-span-2">
               <input
-                className="coach-input mt-1"
+                id="court-name"
+                className="coach-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Ayala Malls Pickleball Courts"
+                required
+              />
+            </CoachSheetField>
+            <CoachSheetField label="Address" htmlFor="court-address" className="sm:col-span-2">
+              <input
+                id="court-address"
+                className="coach-input"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Street, building, or court complex"
+                required
+              />
+            </CoachSheetField>
+            <CoachSheetField label="City" htmlFor="court-city">
+              <input
+                id="court-city"
+                className="coach-input"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Makati"
+              />
+            </CoachSheetField>
+            <CoachSheetField label="Region" htmlFor="court-region">
+              <input
+                id="court-region"
+                className="coach-input"
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                placeholder="NCR"
+              />
+            </CoachSheetField>
+            <CoachSheetField
+              label="Google Maps link (optional)"
+              htmlFor="court-maps"
+              className="sm:col-span-2"
+            >
+              <input
+                id="court-maps"
+                className="coach-input"
                 type="url"
                 value={mapsUrl}
                 onChange={(e) => setMapsUrl(e.target.value)}
                 placeholder="https://maps.google.com/..."
               />
-            </div>
+            </CoachSheetField>
           </div>
           <div className="flex gap-2">
             <button type="submit" className="coach-btn-primary w-auto px-5" disabled={saving}>
@@ -178,8 +205,8 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
             <div key={c.id} className={cn("coach-card p-4", c.isActive === false && "opacity-60")}>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FDEEE9]">
-                    <MapPin className="h-5 w-5 text-[#8B4D3A]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+                    <MapPin className="h-5 w-5 text-[#166534]" />
                   </div>
                   <div>
                     <p className="font-heading font-semibold">{c.name}</p>
@@ -190,7 +217,7 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
                   </div>
                 </div>
                 {c.mapsUrl && (
-                  <a href={c.mapsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[#E07A5F]">
+                  <a href={c.mapsUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[#4F8FF7]">
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 )}
@@ -206,7 +233,7 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
                 </span>
                 <button
                   type="button"
-                  className="text-xs font-semibold text-[#6B7280] hover:text-[#E07A5F]"
+                  className="text-xs font-semibold text-[#6B7280] hover:text-[#4F8FF7]"
                   onClick={() => void toggleActive(c)}
                 >
                   {c.isActive !== false ? "Deactivate" : "Activate"}

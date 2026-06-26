@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { CoachApplication } from "@/lib/koaches/types";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
-import { CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
+import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import {
   approveCoachApplicationAction,
   type ApproveCoachApplicationResult,
@@ -80,45 +80,45 @@ export function ApproveCoachApplicationSheet({
       }
     >
       {application && (
-        <form id="approve-coach-form" onSubmit={(e) => void handleSubmit(e)} className="space-y-4 px-1">
-          <div>
-            <label htmlFor="approve-email" className="coach-label">
-              Login email
-            </label>
+        <form id="approve-coach-form" onSubmit={(e) => void handleSubmit(e)} className="coach-form">
+          <CoachSheetField
+            label="Login email"
+            htmlFor="approve-email"
+            hint={
+              email.trim().toLowerCase() !== application.email.trim().toLowerCase()
+                ? `Application email: ${application.email} · you are using a different login email`
+                : `Application email: ${application.email}`
+            }
+          >
             <input
               id="approve-email"
               type="email"
               autoComplete="off"
-              className="coach-input mt-1.5"
+              className="coach-input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              placeholder={application.email}
               required
             />
-            <p className="mt-1.5 text-xs text-[#6B7280]">
-              Application email: {application.email}
-              {email.trim().toLowerCase() !== application.email.trim().toLowerCase() &&
-                " · you are using a different login email"}
-            </p>
-          </div>
+          </CoachSheetField>
 
-          <div>
-            <label htmlFor="approve-password" className="coach-label">
-              Temporary password
-            </label>
+          <CoachSheetField
+            label="Temporary password"
+            htmlFor="approve-password"
+            hint="Share this with the coach. They should update it from their profile after first login."
+          >
             <input
               id="approve-password"
               type="password"
               autoComplete="new-password"
-              className="coach-input mt-1.5"
+              className="coach-input"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Min. 8 characters"
               minLength={8}
               required
             />
-            <p className="mt-1.5 text-xs text-[#6B7280]">
-              Share this with the coach. They should update it from their profile after first login.
-            </p>
-          </div>
+          </CoachSheetField>
 
           {application.preferredSlug && (
             <p className="rounded-xl bg-[#F9FAFB] px-3 py-2.5 text-xs text-[#6B7280]">

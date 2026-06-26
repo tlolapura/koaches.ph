@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertCoachAccess } from "@/lib/koaches/actions/guards";
+import { assertCoachAccess, requireAuthenticatedCoachId } from "@/lib/koaches/actions/guards";
 import { createStudentAction } from "@/lib/koaches/actions/students";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { DuprLevel, StudentIntakeSubmission } from "@/lib/koaches/types";
@@ -143,8 +143,8 @@ export async function rejectIntakeAction(coachId: string, intakeId: string) {
   revalidatePath("/coach/profile");
 }
 
-export async function pendingIntakeCountAction(coachId: string): Promise<number> {
-  await assertCoachAccess(coachId);
+export async function pendingIntakeCountAction(): Promise<number> {
+  const coachId = await requireAuthenticatedCoachId();
   const list = await fetchIntakeSubmissionsAction(coachId);
   return list.filter((s) => s.status === "pending").length;
 }

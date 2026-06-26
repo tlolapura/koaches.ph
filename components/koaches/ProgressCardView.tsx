@@ -40,29 +40,29 @@ export function ProgressCardView({ card }: ProgressCardViewProps) {
       </div>
 
       <div className="coach-card mt-8 overflow-hidden p-6 shadow-sm">
-        <h1 className="font-heading text-center text-[28px] font-bold text-[#1E3A5F]">
+        <h1 className="font-heading text-center text-[28px] font-bold text-[#16A34A]">
           {card.studentName}
         </h1>
         <p className="mt-1 text-center text-sm text-[#6B7280]">Coached by {card.coachName}</p>
         <div className="mt-4 flex justify-center">
-          <span className="rounded-full bg-[#E07A5F] px-4 py-1 text-sm font-semibold text-white">
+          <span className="rounded-full bg-[#16A34A] px-4 py-1 text-sm font-semibold text-white">
             {card.programName}
           </span>
         </div>
         <p className="mt-2 text-center text-xs font-medium text-[#6B7280]">{card.programOrSession}</p>
         <p className="mt-1 text-center text-xs text-[#9CA3AF]">{formatDate(card.dateCompleted)}</p>
 
-        <div className="mt-6 rounded-2xl bg-gradient-to-br from-[#FDEEE9] to-[#E5EFE8] px-4 py-4 text-center">
+        <div className="mt-6 rounded-2xl bg-gradient-to-br from-[#EFF6FF] to-[#E5EFE8] px-4 py-4 text-center">
           {improvedCount > 0 ? (
             <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/80">
-              <TrendingUp className="h-5 w-5 text-[#E07A5F]" />
+              <TrendingUp className="h-5 w-5 text-[#4F8FF7]" />
             </div>
           ) : (
             <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/80">
-              <PartyPopper className="h-5 w-5 text-[#1E3A5F]" />
+              <PartyPopper className="h-5 w-5 text-[#1D4ED8]" />
             </div>
           )}
-          <p className="font-heading mt-2 text-lg font-bold text-[#1E3A5F]">{headline}</p>
+          <p className="font-heading mt-2 text-lg font-bold text-[#1D4ED8]">{headline}</p>
           <p className="mt-1 text-xs text-[#6B7280]">
             {improvedCount > 0
               ? "Here’s what moved forward this session"
@@ -71,7 +71,7 @@ export function ProgressCardView({ card }: ProgressCardViewProps) {
         </div>
 
         <blockquote className="mt-6 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3">
-          <p className="text-sm italic text-[#1E3A5F]">&ldquo;{card.coachMessage}&rdquo;</p>
+          <p className="text-sm italic text-[#1D4ED8]">&ldquo;{card.coachMessage}&rdquo;</p>
           <footer className="mt-2 text-xs font-semibold text-[#6B7280]">— {card.coachName}</footer>
         </blockquote>
 

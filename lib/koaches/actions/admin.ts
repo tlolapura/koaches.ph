@@ -23,6 +23,7 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
     { data: applications, error: appsError },
     { count: courtCount, error: courtsError },
     { count: progressCardCount, error: progressError },
+    { count: pendingPaymentCount, error: paymentsError },
   ] = await Promise.all([
     supabase.from("coaches").select("*"),
     supabase.from("sessions").select("*"),
@@ -30,6 +31,10 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
     supabase.from("coach_applications").select("*").order("applied_at", { ascending: false }),
     supabase.from("courts").select("*", { count: "exact", head: true }).eq("is_active", true),
     supabase.from("progress_cards").select("*", { count: "exact", head: true }),
+    supabase
+      .from("coach_payment_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending"),
   ]);
 
   if (coachesError) throw coachesError;
@@ -38,6 +43,7 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
   if (appsError) throw appsError;
   if (courtsError) throw courtsError;
   if (progressError) throw progressError;
+  if (paymentsError) throw paymentsError;
 
   const coachRows = (coaches ?? []) as DbCoach[];
   const sessionRows = ((sessions ?? []) as DbSession[]).map(mapSession);
@@ -125,5 +131,6 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
       appliedAt: a.appliedAt,
       status: a.status,
     })),
+    pendingPaymentCount: pendingPaymentCount ?? 0,
   };
 }

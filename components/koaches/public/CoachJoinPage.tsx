@@ -16,8 +16,8 @@ export function CoachJoinPage({ coach }: CoachJoinPageProps) {
 
   return (
     <div className="coach-portal min-h-screen bg-[#FAFAF8]">
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#1E3A5F] via-[#243f66] to-[#152a45] text-white">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#E07A5F]/20 blur-3xl" aria-hidden />
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#16A34A] via-[#1a8f48] to-[#4F8FF7] text-white">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#4F8FF7]/25 blur-3xl" aria-hidden />
 
         <header className="relative mx-auto flex max-w-lg items-center justify-between px-4 py-4">
           <Link
@@ -52,8 +52,8 @@ export function CoachJoinPage({ coach }: CoachJoinPageProps) {
 
       <main className="mx-auto max-w-lg px-4 py-6 pb-12">
         <div className="mb-4 flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EDF2F7]">
-            <UserPlus className="h-5 w-5 text-[#1E3A5F]" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF]">
+            <UserPlus className="h-5 w-5 text-[#1D4ED8]" />
           </div>
           <div>
             <h2 className="font-heading text-lg font-semibold text-[#111827]">Roster sign-up</h2>

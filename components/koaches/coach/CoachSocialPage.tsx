@@ -168,8 +168,8 @@ export function CoachSocialPage() {
 
       <div className="coach-card mt-5 overflow-hidden border-[#E5EFE8] bg-gradient-to-br from-[#F4FAF6] to-white p-4">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E07A5F]/15">
-            <Sparkles className="h-5 w-5 text-[#E07A5F]" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#16A34A]/15">
+            <Sparkles className="h-5 w-5 text-[#4F8FF7]" />
           </div>
           <div>
             <p className="font-heading text-sm font-semibold text-[#111827]">Pick a template, save, post</p>
@@ -193,19 +193,19 @@ export function CoachSocialPage() {
               className={cn(
                 "coach-card relative flex min-h-[88px] flex-col items-start p-4 text-left transition-all",
                 selected
-                  ? "border-[#E07A5F] bg-[#FDEEE9] ring-2 ring-[#E07A5F]/20"
+                  ? "border-[#16A34A] bg-[#F0FDF4] ring-2 ring-[#16A34A]/20"
                   : "hover:border-[#D1D5DB]"
               )}
             >
               {selected ? (
-                <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#E07A5F]">
+                <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#16A34A]">
                   <Check className="h-3 w-3 text-white" strokeWidth={3} />
                 </span>
               ) : null}
               <div
                 className={cn(
                   "flex h-9 w-9 items-center justify-center rounded-xl",
-                  selected ? "bg-[#E07A5F] text-white" : "bg-[#E5EFE8] text-[#3D5C47]"
+                  selected ? "bg-[#16A34A] text-white" : "bg-[#E5EFE8] text-[#3D5C47]"
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -227,7 +227,7 @@ export function CoachSocialPage() {
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white transition-colors hover:bg-[#F9FAFB]"
                 aria-label="Previous day"
               >
-                <ChevronLeft className="h-5 w-5 text-[#1E3A5F]" />
+                <ChevronLeft className="h-5 w-5 text-[#14532D]" />
               </button>
               <div className="min-w-0 flex-1">
                 <CoachDatePicker value={date} onChange={setDate} />
@@ -238,7 +238,7 @@ export function CoachSocialPage() {
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white transition-colors hover:bg-[#F9FAFB]"
                 aria-label="Next day"
               >
-                <ChevronRight className="h-5 w-5 text-[#1E3A5F]" />
+                <ChevronRight className="h-5 w-5 text-[#14532D]" />
               </button>
             </div>
           ) : (
@@ -249,10 +249,10 @@ export function CoachSocialPage() {
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white"
                 aria-label="Previous week"
               >
-                <ChevronLeft className="h-5 w-5 text-[#1E3A5F]" />
+                <ChevronLeft className="h-5 w-5 text-[#14532D]" />
               </button>
               <div className="min-w-0 flex-1 text-center">
-                <p className="font-heading text-sm font-semibold text-[#1E3A5F]">{weekLabel}</p>
+                <p className="font-heading text-sm font-semibold text-[#14532D]">{weekLabel}</p>
                 <p className="text-[11px] text-[#6B7280]">Monday – Sunday</p>
               </div>
               <button
@@ -261,7 +261,7 @@ export function CoachSocialPage() {
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white"
                 aria-label="Next week"
               >
-                <ChevronRight className="h-5 w-5 text-[#1E3A5F]" />
+                <ChevronRight className="h-5 w-5 text-[#14532D]" />
               </button>
             </div>
           )}
@@ -343,11 +343,11 @@ export function CoachSocialPage() {
       <button
         type="button"
         onClick={handleCopyCaption}
-        className="coach-card mt-4 w-full p-4 text-left transition-colors hover:border-[#E07A5F]/30 hover:bg-[#FFFBFA]"
+        className="coach-card mt-4 w-full p-4 text-left transition-colors hover:border-[#16A34A]/30 hover:bg-[#FFFBFA]"
       >
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Caption</p>
-          <span className="text-[10px] font-semibold text-[#E07A5F]">Tap to copy</span>
+          <span className="text-[10px] font-semibold text-[#4F8FF7]">Tap to copy</span>
         </div>
         <p className="mt-2 text-sm leading-relaxed text-[#374151]">{caption}</p>
       </button>

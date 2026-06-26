@@ -31,7 +31,7 @@ export function CoachChangePasswordCard() {
         <p className="mt-1 text-sm text-[#6B7280]">Update your login password.</p>
         <button
           type="button"
-          className="mt-3 text-sm font-semibold text-[#E07A5F]"
+          className="mt-3 text-sm font-semibold text-[#4F8FF7]"
           onClick={() => {
             reset();
             setOpen(true);
