@@ -436,7 +436,7 @@ export function CoachApplicationWizard({
               </div>
               <div>
                 <h2 className="font-heading text-xl font-bold">{STEP_COPY[step].title}</h2>
-                <p className="mt-1 text-sm text-[#6B7280]">{STEP_COPY[step].subtitle}</p>
+                <p className="mt-1 hidden text-sm text-[#6B7280] md:block">{STEP_COPY[step].subtitle}</p>
               </div>
             </div>
 
@@ -455,7 +455,7 @@ export function CoachApplicationWizard({
           >
             <div className="mb-6">
               <h2 className="font-heading text-xl font-bold">{STEP_COPY.review.title}</h2>
-              <p className="mt-1 text-sm text-[#6B7280]">{STEP_COPY.review.subtitle}</p>
+              <p className="mt-1 hidden text-sm text-[#6B7280] md:block">{STEP_COPY.review.subtitle}</p>
             </div>
 
             <dl className="space-y-3 rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] p-4 text-sm">

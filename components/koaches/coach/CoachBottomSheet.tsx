@@ -85,7 +85,9 @@ export function CoachBottomSheet({
               <h2 id={titleId} className="font-heading text-lg font-semibold text-[#111827]">
                 {title}
               </h2>
-              {subtitle && <p className="mt-0.5 text-sm text-[#6B7280]">{subtitle}</p>}
+              {subtitle && (
+                <p className="mt-0.5 hidden text-sm text-[#6B7280] md:block">{subtitle}</p>
+              )}
             </div>
             <button
               type="button"

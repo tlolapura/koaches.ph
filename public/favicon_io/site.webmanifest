@@ -1,0 +1,22 @@
+{
+  "name": "KoachesPH",
+  "short_name": "KoachesPH",
+  "description": "Pickleball coaching platform for the Philippines",
+  "icons": [
+    {
+      "src": "/favicon_io/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon_io/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#16A34A",
+  "background_color": "#FAFAF8",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}

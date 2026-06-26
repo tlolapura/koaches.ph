@@ -273,7 +273,9 @@ export function EmptyState({
         <Icon className="h-7 w-7 text-[#166534]" strokeWidth={1.75} />
       </div>
       <p className="font-heading mt-4 text-base font-semibold text-[#111827]">{title}</p>
-      {description && <p className="mt-1 max-w-xs text-sm text-[#6B7280]">{description}</p>}
+      {description && (
+        <p className="mt-1 hidden max-w-xs text-sm text-[#6B7280] md:block">{description}</p>
+      )}
       {action && <div className="mt-4 w-full max-w-xs">{action}</div>}
     </div>
   );

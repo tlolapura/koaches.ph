@@ -1,13 +1,12 @@
 import { addDays, format, parse, startOfWeek } from "date-fns";
-import type { CoachProfile, Program, Session } from "./types";
+import type { Session } from "./types";
 import { blockedSlotsToBusyIntervals, workingHoursToIntervals } from "./coach-availability";
 import type { CoachWorkingHours } from "./coach-availability";
 import type { BlockedSlot } from "./coach-availability";
-import { getHourlySlotRows, type HourlySlotRow } from "./session-slots";
-import { formatTimeDisplay } from "./session-time";
-import { formatDisplayDate } from "@/lib/utils";
+import { getHourlySlotRows, type HourlySlotRow, type SlotCellStatus } from "./session-slots";
+import { formatTimeDisplay, minutesToHtmlValue } from "./session-time";
 
-export type SocialStoryTemplate = "daily-slots" | "weekly-slots" | "programs";
+export type SocialStoryTemplate = "daily-slots" | "week-calendar";
 
 export const SOCIAL_STORY_TEMPLATES: Array<{
   id: SocialStoryTemplate;
@@ -17,17 +16,12 @@ export const SOCIAL_STORY_TEMPLATES: Array<{
   {
     id: "daily-slots",
     label: "Today's openings",
-    description: "Share open hourly slots for one day",
+    description: "Open hourly slots for one day",
   },
   {
-    id: "weekly-slots",
-    label: "This week",
-    description: "Weekly snapshot of availability",
-  },
-  {
-    id: "programs",
-    label: "Programs",
-    description: "Promote your coaching bundles",
+    id: "week-calendar",
+    label: "Week calendar",
+    description: "Weekly grid with booked & open slots",
   },
 ];
 
@@ -35,18 +29,36 @@ export type DailyStorySlot = {
   timeLabel: string;
 };
 
-export type WeeklyStoryDay = {
-  date: string;
-  dayLabel: string;
-  dateLabel: string;
-  openSlots: DailyStorySlot[];
+export type CalendarStoryCell = {
+  status: SlotCellStatus | "off";
+  bookedLabel?: string;
 };
 
-export type ProgramStoryItem = {
-  name: string;
-  summary: string;
-  targetLevel: string;
+export type CalendarStoryHour = {
+  timeLabel: string;
 };
+
+export type CalendarStoryDay = {
+  date: string;
+  dayLabel: string;
+  dateNum: string;
+  cells: CalendarStoryCell[];
+};
+
+export type CalendarStoryWeek = {
+  weekLabel: string;
+  hours: CalendarStoryHour[];
+  days: CalendarStoryDay[];
+  openCount: number;
+  bookedCount: number;
+};
+
+const MAX_CALENDAR_HOURS = 9;
+
+function compactHour(timeValue: string): string {
+  const h = parseInt(timeValue.split(":")[0], 10);
+  return `${h % 12 || 12}${h >= 12 ? "p" : "a"}`;
+}
 
 function slotGridOptions(
   workingHours: CoachWorkingHours,
@@ -80,57 +92,62 @@ export function getDailyStorySlots(
   return openRows(rows);
 }
 
-export function getWeeklyStoryDays(
+export function getCalendarStoryWeek(
   sessions: Session[],
   anchorDate: string,
   workingHours: CoachWorkingHours,
   blockedSlots: BlockedSlot[]
-): WeeklyStoryDay[] {
+): CalendarStoryWeek {
   const weekStart = startOfWeek(parse(anchorDate, "yyyy-MM-dd", new Date()), { weekStartsOn: 1 });
-  return Array.from({ length: 7 }, (_, i) => {
-    const date = format(addDays(weekStart, i), "yyyy-MM-dd");
-    const openSlots = getDailyStorySlots(sessions, date, workingHours, blockedSlots);
+  const weekEnd = addDays(weekStart, 6);
+  const dateKeys = Array.from({ length: 7 }, (_, i) => format(addDays(weekStart, i), "yyyy-MM-dd"));
+
+  const rowsByDay = dateKeys.map((date) =>
+    getHourlySlotRows(sessions, date, 60, slotGridOptions(workingHours, blockedSlots, date))
+  );
+
+  const hourSet = new Set<number>();
+  for (const rows of rowsByDay) {
+    for (const row of rows) {
+      hourSet.add(row.startMin);
+    }
+  }
+
+  const sortedHours = [...hourSet].sort((a, b) => a - b).slice(0, MAX_CALENDAR_HOURS);
+  const hours: CalendarStoryHour[] = sortedHours.map((startMin) => ({
+    timeLabel: compactHour(minutesToHtmlValue(startMin)),
+  }));
+
+  let openCount = 0;
+  let bookedCount = 0;
+
+  const days: CalendarStoryDay[] = dateKeys.map((date, dayIndex) => {
+    const rowMap = new Map(rowsByDay[dayIndex].map((row) => [row.startMin, row]));
     const d = parse(date, "yyyy-MM-dd", new Date());
+    const cells: CalendarStoryCell[] = sortedHours.map((startMin) => {
+      const row = rowMap.get(startMin);
+      if (!row) return { status: "off" };
+      if (row.status === "open") openCount += 1;
+      if (row.status === "booked") bookedCount += 1;
+      return {
+        status: row.status,
+        bookedLabel: row.bookedLabel,
+      };
+    });
+
     return {
       date,
       dayLabel: format(d, "EEE"),
-      dateLabel: format(d, "MMM d"),
-      openSlots,
+      dateNum: format(d, "d"),
+      cells,
     };
   });
-}
 
-export function getProgramStoryItems(programs: Program[]): ProgramStoryItem[] {
-  return programs
-    .filter((p) => p.isActive)
-    .map((p) => ({
-      name: p.name,
-      summary: `${p.sessionCount} sessions · ₱${p.price.toLocaleString("en-PH")} / person`,
-      targetLevel: p.targetLevel,
-    }));
-}
-
-export function buildStoryCaption(
-  template: SocialStoryTemplate,
-  coach: CoachProfile,
-  options: {
-    date?: string;
-    dailySlots?: DailyStorySlot[];
-    weeklyDays?: WeeklyStoryDay[];
-    programs?: ProgramStoryItem[];
-    bookUrl: string;
-  }
-): string {
-  const firstName = coach.name.replace(/^Coach\s+/i, "");
-  if (template === "daily-slots" && options.date) {
-    const times = options.dailySlots?.map((s) => s.timeLabel).join(", ") || "fully booked";
-    return `Open pickleball slots with Coach ${firstName} on ${formatDisplayDate(options.date)}! ${times}. Book: ${options.bookUrl}`;
-  }
-  if (template === "weekly-slots") {
-    const openDays =
-      options.weeklyDays?.filter((d) => d.openSlots.length > 0).length ?? 0;
-    return `This week's schedule with Coach ${firstName} — ${openDays} days with openings. Book: ${options.bookUrl}`;
-  }
-  const count = options.programs?.length ?? 0;
-  return `${count} coaching program${count === 1 ? "" : "s"} with Coach ${firstName}. Bundle pricing per person. Join: ${options.bookUrl}`;
+  return {
+    weekLabel: `${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d")}`,
+    hours,
+    days,
+    openCount,
+    bookedCount,
+  };
 }

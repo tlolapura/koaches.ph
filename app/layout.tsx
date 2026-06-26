@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Fredoka, Poppins, DM_Sans } from "next/font/google";
+import { siteMetadata } from "@/lib/koaches/site-metadata";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -26,23 +27,16 @@ const dmSans = DM_Sans({
   weight: ["400", "500"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "KoachesPH — Pickleball Coaching Platform",
-    template: "%s — KoachesPH",
-  },
-  description: "Find coaches, track progress, and share your pickleball journey.",
-  openGraph: {
-    siteName: "KoachesPH",
-    locale: "en_PH",
-    type: "website",
-  },
-};
+export const metadata: Metadata = siteMetadata();
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover" as const,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#16A34A" },
+    { media: "(prefers-color-scheme: dark)", color: "#14532D" },
+  ],
 };
 
 export default function RootLayout({

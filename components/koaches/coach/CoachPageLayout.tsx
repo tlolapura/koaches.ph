@@ -10,7 +10,7 @@ export function CoachPageShell({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("mx-auto max-w-3xl px-4 py-6", className)}>{children}</div>;
+  return <div className={cn("coach-page-shell mx-auto max-w-3xl px-4 pb-6 pt-4 md:py-6", className)}>{children}</div>;
 }
 
 type CoachPageHeaderProps = {
@@ -30,33 +30,28 @@ export function CoachPageHeader({
   mobileTitle = false,
   className,
 }: CoachPageHeaderProps) {
+  const desktopOnly = !mobileTitle && !actions;
+  const titleOnDesktopOnly = !mobileTitle;
+
   return (
     <div
+      data-desktop-only={desktopOnly ? "" : undefined}
       className={cn(
+        "coach-page-header",
+        desktopOnly && "hidden md:block",
         actions
-          ? "flex flex-col gap-4 md:flex-row md:items-start md:justify-between"
+          ? cn(
+              "flex flex-col md:flex-row md:items-start md:justify-between",
+              titleOnDesktopOnly ? "gap-0 md:gap-4" : "gap-4"
+            )
           : "flex items-start justify-between gap-3",
         className
       )}
     >
-      <div className="min-w-0 flex-1">
-        <h1
-          className={cn(
-            "font-heading text-2xl font-semibold text-[#111827]",
-            !mobileTitle && "hidden md:block"
-          )}
-        >
-          {title}
-        </h1>
+      <div className={cn("min-w-0 flex-1", titleOnDesktopOnly && "hidden md:block")}>
+        <h1 className="font-heading text-2xl font-semibold text-[#111827]">{title}</h1>
         {subtitle && (
-          <p
-            className={cn(
-              "text-sm text-[#6B7280]",
-              mobileTitle ? "mt-0.5" : "mt-1"
-            )}
-          >
-            {subtitle}
-          </p>
+          <p className="mt-1 hidden text-sm text-[#6B7280] md:block">{subtitle}</p>
         )}
       </div>
       {actions ? <div className="w-full shrink-0 md:w-auto">{actions}</div> : null}
@@ -130,5 +125,5 @@ export function CoachSectionHint({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <p className={cn("mt-1 text-xs text-[#6B7280]", className)}>{children}</p>;
+  return <p className={cn("mt-1 hidden text-xs text-[#6B7280] md:block", className)}>{children}</p>;
 }

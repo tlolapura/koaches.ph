@@ -944,6 +944,13 @@ body {
   background-color: var(--coach-surface);
 }
 
+/* Mobile: page title lives in the sticky header — drop desktop header gap */
+@media (max-width: 767px) {
+  .coach-portal .coach-page-header[data-desktop-only] + * {
+    margin-top: 0 !important;
+  }
+}
+
 .coach-portal .font-heading {
   font-family: var(--font-poppins), system-ui, sans-serif;
 }

@@ -17,9 +17,37 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { coachSlug } = await params;
   const coach = await fetchCoachBySlugAction(coachSlug);
   if (!coach) return { title: "Coach not found" };
+
+  const description =
+    coach.bio?.trim() ||
+    `Book pickleball coaching with ${coach.name}. View programs, courts, and availability on KoachesPH.`;
+
   return {
     title: coach.name,
-    description: coach.bio,
+    description,
+    openGraph: {
+      title: coach.name,
+      description,
+      type: "profile",
+      ...(coach.photo
+        ? {
+            images: [
+              {
+                url: coach.photo,
+                width: 400,
+                height: 400,
+                alt: coach.name,
+              },
+            ],
+          }
+        : {}),
+    },
+    twitter: {
+      card: coach.photo ? "summary" : "summary_large_image",
+      title: coach.name,
+      description,
+      ...(coach.photo ? { images: [coach.photo] } : {}),
+    },
   };
 }
 

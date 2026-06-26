@@ -91,7 +91,7 @@ export function PublicHero({
         {subtitle ? (
           <p
             className={cn(
-              "max-w-lg leading-relaxed text-white/70",
+              "hidden max-w-lg leading-relaxed text-white/70 md:block",
               compact ? "mt-1.5 text-sm" : "mt-3 text-sm sm:text-base"
             )}
           >

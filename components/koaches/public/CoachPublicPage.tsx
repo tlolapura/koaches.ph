@@ -413,7 +413,9 @@ function PublicSection({
         </div>
         <div>
           <h2 className="font-heading text-lg font-semibold text-[#111827]">{title}</h2>
-          {subtitle ? <p className="mt-0.5 text-sm text-[#6B7280]">{subtitle}</p> : null}
+          {subtitle ? (
+            <p className="mt-0.5 hidden text-sm text-[#6B7280] md:block">{subtitle}</p>
+          ) : null}
         </div>
       </div>
       {children}

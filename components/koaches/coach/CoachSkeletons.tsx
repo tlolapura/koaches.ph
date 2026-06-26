@@ -9,7 +9,7 @@ function Bone({ className }: { className?: string }) {
 
 export function CoachPageHeaderSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("coach-page-header hidden space-y-2 md:block", className)}>
       <Bone className="h-7 w-40" />
       <Bone className="h-4 w-64 max-w-full" />
     </div>
@@ -144,18 +144,15 @@ export function CoachSocialSkeleton() {
   return (
     <CoachPageShell>
       <CoachPageHeaderSkeleton />
-      <Bone className="mt-5 h-20 w-full rounded-2xl" />
-      <div className="mt-4 flex gap-2">
-        <Bone className="h-10 w-28 rounded-full" />
-        <Bone className="h-10 w-32 rounded-full" />
-        <Bone className="h-10 w-24 rounded-full" />
+      <div className="mt-6 grid grid-cols-2 gap-3">
+        <Bone className="h-28 rounded-2xl" />
+        <Bone className="h-28 rounded-2xl" />
       </div>
       <Bone className="mt-4 h-10 w-full rounded-xl" />
       <Bone className="mt-4 aspect-[9/16] w-full max-w-sm rounded-2xl" />
-      <div className="mt-4 flex gap-2">
-        <Bone className="h-11 flex-1 rounded-xl" />
-        <Bone className="h-11 flex-1 rounded-xl" />
-        <Bone className="h-11 w-11 shrink-0 rounded-xl" />
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <Bone className="h-11 rounded-xl" />
+        <Bone className="h-11 rounded-xl" />
       </div>
     </CoachPageShell>
   );

@@ -2,45 +2,61 @@
 
 import { format, parse } from "date-fns";
 import type { CoachProfile } from "@/lib/koaches/types";
-import type { DailyStorySlot, ProgramStoryItem, WeeklyStoryDay } from "@/lib/koaches/social-stories";
+import type {
+  CalendarStoryWeek,
+  DailyStorySlot,
+} from "@/lib/koaches/social-stories";
 import {
+  SocialStoryBrandBar,
   SocialStoryFooter,
   SocialStoryHeader,
+  SocialStoryLegend,
   SocialStoryPreview,
   SocialStorySlotPill,
   SocialStoryStatBadge,
 } from "@/components/koaches/coach/social/SocialStoryFrame";
+import { cn } from "@/lib/utils";
 
 type SocialStoryCardProps = {
   coach: CoachProfile;
-  bookUrl: string;
+  profileUrl: string;
   exportRef?: React.RefObject<HTMLDivElement | null>;
+  previewWidth?: number;
 };
+
+function cellClass(status: CalendarStoryWeek["days"][0]["cells"][0]["status"]) {
+  if (status === "open") return "bg-[#EFF6FF] ring-2 ring-[#4F8FF7]";
+  if (status === "booked") return "bg-[#EDF2F7] ring-1 ring-[#D1D5DB]";
+  if (status === "blocked") return "bg-[#E5E7EB] ring-1 ring-[#9CA3AF]";
+  return "bg-transparent";
+}
 
 export function SocialStoryDailyCard({
   coach,
   date,
   slots,
-  bookUrl,
+  profileUrl,
   exportRef,
+  previewWidth,
 }: SocialStoryCardProps & { date: string; slots: DailyStorySlot[] }) {
   const d = parse(date, "yyyy-MM-dd", new Date());
   const dayName = format(d, "EEEE");
   const dateShort = format(d, "MMM d");
 
   return (
-    <SocialStoryPreview exportRef={exportRef}>
+    <SocialStoryPreview exportRef={exportRef} previewWidth={previewWidth}>
+      <SocialStoryBrandBar />
       <SocialStoryHeader
         coachName={coach.name}
         eyebrow="Open slots today"
         photo={coach.photo}
         specialization={coach.specialization}
       />
-      <div className="flex flex-1 flex-col px-6 py-5">
-        <div className="flex items-end justify-between gap-3">
+      <div className="flex flex-1 flex-col px-10 py-8">
+        <div className="flex items-end justify-between gap-6">
           <div>
-            <p className="font-heading text-3xl font-bold leading-none">{dayName}</p>
-            <p className="mt-1 text-sm font-medium text-white/70">{dateShort}</p>
+            <p className="font-heading text-[72px] font-bold leading-none text-[#14532D]">{dayName}</p>
+            <p className="mt-2 text-[32px] font-semibold text-[#6B7280]">{dateShort}</p>
           </div>
           <SocialStoryStatBadge
             label="Open"
@@ -50,124 +66,115 @@ export function SocialStoryDailyCard({
         </div>
 
         {slots.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-6 text-center">
-            <p className="font-heading text-base font-semibold text-white/90">Fully booked</p>
-            <p className="mt-2 text-sm leading-relaxed text-white/60">
+          <div className="mt-10 rounded-3xl border-2 border-dashed border-[#D1D5DB] bg-white px-8 py-12 text-center">
+            <p className="font-heading text-[36px] font-semibold text-[#14532D]">Fully booked</p>
+            <p className="mt-3 text-[28px] leading-relaxed text-[#6B7280]">
               Message me to join the waitlist or grab another day.
             </p>
           </div>
         ) : (
-          <div className="mt-6 grid grid-cols-3 gap-2">
+          <div className="mt-8 grid grid-cols-3 gap-4">
             {slots.map((slot) => (
               <SocialStorySlotPill key={slot.timeLabel} label={slot.timeLabel} />
             ))}
           </div>
         )}
 
-        <p className="mt-auto pt-6 text-xs leading-relaxed text-white/55">
+        <p className="mt-auto pt-8 text-[26px] leading-relaxed text-[#6B7280]">
           Hourly drop-in sessions · tap the link below to book your spot.
         </p>
       </div>
-      <SocialStoryFooter cta="Book a session" url={bookUrl} />
+      <SocialStoryFooter url={profileUrl} />
     </SocialStoryPreview>
   );
 }
 
-export function SocialStoryWeeklyCard({
+export function SocialStoryCalendarCard({
   coach,
-  days,
-  bookUrl,
+  week,
+  profileUrl,
   exportRef,
-}: SocialStoryCardProps & { days: WeeklyStoryDay[] }) {
-  const openDays = days.filter((d) => d.openSlots.length > 0);
-  const totalSlots = openDays.reduce((sum, day) => sum + day.openSlots.length, 0);
+  previewWidth,
+}: SocialStoryCardProps & { week: CalendarStoryWeek }) {
+  const hasGrid = week.hours.length > 0;
 
   return (
-    <SocialStoryPreview exportRef={exportRef}>
+    <SocialStoryPreview exportRef={exportRef} previewWidth={previewWidth}>
+      <SocialStoryBrandBar />
       <SocialStoryHeader
         coachName={coach.name}
-        eyebrow="This week's openings"
+        eyebrow="Week at a glance"
         photo={coach.photo}
         specialization={coach.specialization}
       />
-      <div className="flex flex-1 flex-col px-6 py-4">
-        <div className="mb-4 grid grid-cols-2 gap-2">
-          <SocialStoryStatBadge label="Open days" value={String(openDays.length)} />
-          <SocialStoryStatBadge label="Total slots" value={String(totalSlots)} />
+      <div className="flex flex-1 flex-col px-10 py-6">
+        <div className="mb-5 flex items-end justify-between gap-4">
+          <div>
+            <p className="font-heading text-[40px] font-bold text-[#14532D]">{week.weekLabel}</p>
+            <p className="mt-1 text-[24px] font-medium text-[#6B7280]">Mon – Sun schedule</p>
+          </div>
+          <div className="flex shrink-0 gap-3">
+            <SocialStoryStatBadge label="Booked" value={String(week.bookedCount)} className="!px-4 !py-3" />
+            <SocialStoryStatBadge label="Open" value={String(week.openCount)} className="!px-4 !py-3" />
+          </div>
         </div>
 
-        {openDays.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-8 text-center">
-            <p className="text-sm leading-relaxed text-white/65">
-              No open slots this week — DM me to plan ahead.
+        {!hasGrid ? (
+          <div className="flex flex-1 items-center justify-center rounded-3xl border-2 border-dashed border-[#D1D5DB] bg-white px-8 py-12 text-center">
+            <p className="text-[28px] leading-relaxed text-[#6B7280]">
+              No hours set this week — update your availability in Schedule.
             </p>
           </div>
         ) : (
-          <div className="flex flex-1 flex-col gap-2 overflow-hidden">
-            {openDays.map((day) => (
-              <div
-                key={day.date}
-                className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 backdrop-blur-sm"
-              >
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="font-heading text-sm font-bold">{day.dayLabel}</p>
-                  <p className="text-[10px] text-white/55">{day.dateLabel}</p>
+          <div className="flex flex-1 flex-col overflow-hidden rounded-3xl border-2 border-[#E5EFE8] bg-white p-4 shadow-sm">
+            <div
+              className="grid gap-1.5"
+              style={{
+                gridTemplateColumns: `56px repeat(${week.days.length}, minmax(0, 1fr))`,
+              }}
+            >
+              <div />
+              {week.days.map((day) => (
+                <div key={day.date} className="text-center">
+                  <p className="text-[20px] font-bold uppercase text-[#6B7280]">{day.dayLabel}</p>
+                  <p className="font-heading text-[28px] font-bold text-[#14532D]">{day.dateNum}</p>
                 </div>
-                <p className="mt-1.5 text-xs font-semibold leading-relaxed text-[#FACC15]">
-                  {day.openSlots.map((s) => s.timeLabel).join(" · ")}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <SocialStoryFooter cta="Grab a slot" url={bookUrl} />
-    </SocialStoryPreview>
-  );
-}
+              ))}
 
-export function SocialStoryProgramsCard({
-  coach,
-  programs,
-  bookUrl,
-  exportRef,
-}: SocialStoryCardProps & { programs: ProgramStoryItem[] }) {
-  return (
-    <SocialStoryPreview exportRef={exportRef}>
-      <SocialStoryHeader
-        coachName={coach.name}
-        eyebrow="Coaching programs"
-        photo={coach.photo}
-        specialization={coach.specialization}
-      />
-      <div className="flex flex-1 flex-col px-6 py-4">
-        {programs.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-white/20 bg-white/5 px-4 py-8 text-center">
-            <p className="text-sm leading-relaxed text-white/65">
-              Programs coming soon — DM for private coaching.
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-1 flex-col gap-2.5 overflow-hidden">
-            {programs.slice(0, 4).map((program, index) => (
-              <div
-                key={program.name}
-                className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 px-3 py-3 backdrop-blur-sm"
-              >
-                <span className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-full bg-[#16A34A]/30 text-[10px] font-bold text-[#FACC15]">
-                  {index + 1}
-                </span>
-                <p className="pr-8 font-heading text-sm font-bold leading-tight">{program.name}</p>
-                <p className="mt-1.5 text-xs font-semibold text-[#4F8FF7]">{program.summary}</p>
-                {program.targetLevel ? (
-                  <p className="mt-1 text-[10px] text-white/55">{program.targetLevel}</p>
-                ) : null}
-              </div>
-            ))}
+              {week.hours.map((hour, rowIndex) => (
+                <div key={hour.timeLabel} className="contents">
+                  <div className="flex items-center justify-end pr-2 text-[20px] font-semibold text-[#6B7280]">
+                    {hour.timeLabel}
+                  </div>
+                  {week.days.map((day) => {
+                    const cell = day.cells[rowIndex];
+                    const initial =
+                      cell?.bookedLabel?.trim().split(/\s+/)[0]?.[0]?.toUpperCase() ?? "";
+                    return (
+                      <div
+                        key={`${day.date}-${hour.timeLabel}`}
+                        className={cn(
+                          "flex min-h-[52px] items-center justify-center rounded-xl text-[18px] font-bold",
+                          cellClass(cell?.status ?? "off")
+                        )}
+                      >
+                        {cell?.status === "booked" && initial ? (
+                          <span className="text-[#374151]">{initial}</span>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        <div className="mt-5">
+          <SocialStoryLegend />
+        </div>
       </div>
-      <SocialStoryFooter cta="Join a program" url={bookUrl} />
+      <SocialStoryFooter url={profileUrl} />
     </SocialStoryPreview>
   );
 }
