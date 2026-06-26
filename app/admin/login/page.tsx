@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { adminSignInAction } from "@/lib/koaches/actions/auth";
+import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export default function AdminLoginPage() {
@@ -57,11 +58,10 @@ export default function AdminLoginPage() {
             <label htmlFor="admin-password" className="coach-label">
               Password
             </label>
-            <input
+            <PasswordInput
               id="admin-password"
-              type="password"
+              wrapperClassName="mt-1.5"
               autoComplete="current-password"
-              className="coach-input mt-1.5"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"

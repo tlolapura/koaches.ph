@@ -140,7 +140,7 @@ export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProp
                     id={`tier-${tier.id}-min`}
                     type="number"
                     min={1}
-                    className="coach-input text-sm"
+                    className="coach-input"
                     placeholder="1"
                     value={tier.minPlayers}
                     onChange={(e) =>
@@ -153,7 +153,7 @@ export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProp
                     id={`tier-${tier.id}-max`}
                     type="number"
                     min={1}
-                    className="coach-input text-sm"
+                    className="coach-input"
                     placeholder="2"
                     value={tier.maxPlayers}
                     onChange={(e) =>
@@ -167,7 +167,7 @@ export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProp
                     type="number"
                     min={0}
                     step={50}
-                    className="coach-input text-sm"
+                    className="coach-input"
                     placeholder="800"
                     value={tier.rate}
                     onChange={(e) =>

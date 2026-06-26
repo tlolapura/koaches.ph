@@ -8,6 +8,7 @@ import { LogIn } from "lucide-react";
 import { KoachesLogo } from "@/components/koaches/KoachesLogo";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { coachSignInAction } from "@/lib/koaches/actions/auth";
+import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
 
 export function CoachLoginPage() {
   const searchParams = useSearchParams();
@@ -77,10 +78,9 @@ export function CoachLoginPage() {
                 <label htmlFor="coach-password" className="font-heading text-xs font-semibold text-[#374151]">
                   Password
                 </label>
-                <input
+                <PasswordInput
                   id="coach-password"
-                  type="password"
-                  className="coach-input mt-1.5"
+                  wrapperClassName="mt-1.5"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"

@@ -109,6 +109,15 @@ body {
   }
 }
 
+/* 16px form text — iOS Safari auto-zooms when focused inputs are smaller than this */
+input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="image"]):not([type="range"]):not([type="color"]),
+textarea,
+select,
+.coach-input {
+  font-size: 1rem !important;
+  line-height: 1.5;
+}
+
 /* Cards */
 .card {
   background: var(--color-surface);
@@ -969,7 +978,8 @@ body {
   border: 1px solid #E5E7EB;
   background: #FFFFFF;
   padding: 0.75rem 1rem;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  line-height: 1.5;
   transition: border-color 0.15s;
 }
 

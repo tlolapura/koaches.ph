@@ -34,7 +34,7 @@ export function CoachFilters({ filters, onChange, onOpenQuiz, resultCount }: Coa
             value={filters.search}
             onChange={(e) => onChange({ search: e.target.value })}
             placeholder="City, area, or coach name..."
-            className="min-w-0 flex-1 bg-transparent text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-base text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none"
             aria-label="Search coaches"
           />
         </div>
