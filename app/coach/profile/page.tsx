@@ -1,0 +1,263 @@
+"use client";
+
+import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
+import { useEffect, useState } from "react";
+import { useCoachProfile } from "@/hooks/useCoachProfile";
+import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
+import { formatPricingSummary, formatTierRate, formatTierLabel, DEFAULT_SESSION_PRICING, getStartingRate } from "@/lib/koaches/pricing";
+import { useCoachToast } from "@/components/koaches/coach/CoachUi";
+import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
+import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
+import { PricingTiersEditor } from "@/components/koaches/coach/PricingTiersEditor";
+import { WorkingHoursCard } from "@/components/koaches/coach/WorkingHoursCard";
+import { CoachAchievementsCard } from "@/components/koaches/coach/CoachAchievementsCard";
+import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
+import { CoachProfileSkeleton } from "@/components/koaches/coach/CoachSkeletons";
+import {
+  updateCoachBioAction,
+  updateCoachPricingAction,
+  updateCoachSkillTemplateAction,
+} from "@/lib/koaches/actions/coach-profile";
+import { CoachContactSocialsCard } from "@/components/koaches/coach/CoachContactSocialsCard";
+import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
+import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
+import type { SkillRubricId } from "@/lib/koaches/types";
+
+const EDIT_BIO_FORM_ID = "edit-bio-form";
+
+export default function ProfilePage() {
+  const coachId = usePortalCoachId();
+  const { coach, loading, refresh } = useCoachProfile(coachId);
+  const [editOpen, setEditOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [bio, setBio] = useState("");
+  const [pricing, setPricing] = useState<import("@/lib/koaches/types").CoachSessionPricing>(DEFAULT_SESSION_PRICING);
+  const [skillTemplateId, setSkillTemplateId] = useState<SkillRubricId>("intermediate");
+  const { showToast } = useCoachToast();
+
+  useEffect(() => {
+    if (!coach) return;
+    setBio(coach.bio);
+    setPricing(coach.sessionPricing ?? DEFAULT_SESSION_PRICING);
+    setSkillTemplateId(coach.skillTemplateId);
+  }, [coach]);
+
+  if (loading || !coach) {
+    return <CoachProfileSkeleton />;
+  }
+
+  const specialization = coach.specialization?.trim() ?? "";
+  const hasPricing = pricing.tiers.length > 0 && getStartingRate(pricing) > 0;
+  const pricingSummary = hasPricing ? formatPricingSummary(pricing) : null;
+
+  return (
+    <CoachPageShell>
+      <CoachPageHeader
+        title="Profile"
+        subtitle="Public page, drop-in rates, availability, and account"
+      />
+
+      <div className="coach-card mt-6 p-6 text-center">
+        <CoachProfilePhoto
+          coachId={coachId}
+          name={coach.name}
+          defaultPhoto={coach.photo}
+          size="xl"
+          editable
+          className="mx-auto"
+        />
+        <p className="font-heading mt-4 text-xl font-bold">{coach.name}</p>
+        <div className="mt-2">
+          {bio.trim() ? (
+            <p className="text-sm leading-relaxed text-[#6B7280]">{bio.trim()}</p>
+          ) : (
+            <p className="text-sm text-[#9CA3AF]">Add a short bio for your public profile.</p>
+          )}
+          <button
+            type="button"
+            className="mt-1.5 text-sm font-semibold text-[#E07A5F]"
+            onClick={() => setEditOpen(true)}
+          >
+            {bio.trim() ? "Edit bio" : "Add bio"}
+          </button>
+        </div>
+
+        {(specialization || pricingSummary) ? (
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {specialization ? (
+              <span className="rounded-full bg-[#FDEEE9] px-3 py-1 text-xs font-semibold text-[#8B4D3A]">
+                {specialization}
+              </span>
+            ) : null}
+            {pricingSummary ? (
+              <span className="rounded-full bg-[#1E3A5F] px-3 py-1 text-xs font-semibold text-white">
+                {pricingSummary}
+              </span>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-4 text-xs text-[#9CA3AF]">
+            Set your specialization and drop-in rates so players know what you offer.
+          </p>
+        )}
+      </div>
+
+      <CoachPublicProfileLinkCard coach={coach} className="mt-4" />
+
+      <CoachContactSocialsCard coachId={coachId} coach={coach} onSaved={refresh} />
+
+      <div className="coach-card mt-4 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-heading font-semibold">Drop-in rates</p>
+            <p className="text-sm text-[#6B7280]">
+              Per session, by group size · {pricing.defaultDurationMinutes} min · {pricing.minimumPlayers}–{pricing.maximumPlayers} pax
+            </p>
+          </div>
+          <button type="button" className="text-sm font-semibold text-[#E07A5F]" onClick={() => setPricingOpen(true)}>
+            Edit
+          </button>
+        </div>
+        <ul className="mt-3 space-y-2">
+          {pricing.tiers.map((tier) => (
+            <li
+              key={tier.id}
+              className="flex items-center justify-between rounded-lg bg-[#F9FAFB] px-3 py-2 text-sm"
+            >
+              <span className="text-[#374151]">{formatTierLabel(tier)}</span>
+              <span className="font-semibold text-[#1E3A5F]">{formatTierRate(tier)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <WorkingHoursCard />
+
+      <CoachAchievementsCard />
+
+      <div className="coach-card mt-4 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-heading font-semibold">Skill Template</p>
+            <p className="text-sm text-[#6B7280]">
+              {SKILL_RUBRICS[skillTemplateId as keyof typeof SKILL_RUBRICS]?.name ?? "Custom"} rubric
+            </p>
+          </div>
+          <button type="button" className="text-sm font-semibold text-[#E07A5F]" onClick={() => setTemplateOpen(true)}>
+            Customize
+          </button>
+        </div>
+      </div>
+
+      <div className="coach-card mt-4 p-4">
+        <p className="font-heading font-semibold">Subscription</p>
+        <span className="mt-2 inline-block rounded-full bg-[#E07A5F] px-3 py-1 text-xs font-semibold text-white">
+          Early Bird — ₱299/month
+        </span>
+        <p className="mt-2 text-sm text-[#6B7280]">Valid until July 26, 2026</p>
+        <p className="mt-1 text-xs text-[#6B7280]">Renew via GCash</p>
+      </div>
+
+      <CoachSignOutButton className="coach-btn-ghost-danger mt-6 w-full" />
+
+      <CoachBottomSheet
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit bio"
+        footer={
+          <CoachSheetFooter>
+            <button type="submit" form={EDIT_BIO_FORM_ID} className="coach-btn-primary">
+              Save bio
+            </button>
+          </CoachSheetFooter>
+        }
+      >
+        <form
+          id={EDIT_BIO_FORM_ID}
+          onSubmit={async (e) => {
+            e.preventDefault();
+            await updateCoachBioAction(coachId, bio, coach.specialization);
+            showToast("Bio updated!");
+            setEditOpen(false);
+          }}
+        >
+          <CoachSheetField label="Bio">
+            <textarea
+              className="coach-input min-h-[120px] resize-none"
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+            />
+          </CoachSheetField>
+        </form>
+      </CoachBottomSheet>
+
+      <CoachBottomSheet
+        open={pricingOpen}
+        onClose={() => setPricingOpen(false)}
+        title="Drop-in rates"
+        subtitle="Rates for drop-in sessions — programs have their own bundle price per person"
+        footer={
+          <CoachSheetFooter>
+            <button
+              type="button"
+              className="coach-btn-primary"
+              onClick={async () => {
+                await updateCoachPricingAction(coachId, pricing);
+                showToast("Pricing saved!");
+                setPricingOpen(false);
+              }}
+            >
+              Save Pricing
+            </button>
+          </CoachSheetFooter>
+        }
+      >
+        <PricingTiersEditor pricing={pricing} onChange={setPricing} />
+      </CoachBottomSheet>
+
+      <CoachBottomSheet
+        open={templateOpen}
+        onClose={() => setTemplateOpen(false)}
+        title="Skill Categories"
+        subtitle="Default rubric for rating students"
+        footer={
+          <CoachSheetFooter>
+            <button
+              type="button"
+              className="coach-btn-primary"
+              onClick={async () => {
+                await updateCoachSkillTemplateAction(coachId, skillTemplateId);
+                showToast("Template saved!");
+                setTemplateOpen(false);
+              }}
+            >
+              Save Template
+            </button>
+          </CoachSheetFooter>
+        }
+      >
+        <div className="space-y-3">
+          {(Object.keys(SKILL_RUBRICS) as Array<keyof typeof SKILL_RUBRICS>).map((id) => {
+            const rubric = SKILL_RUBRICS[id];
+            return (
+              <label key={id} className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] p-3">
+                <input
+                  type="radio"
+                  name="rubric"
+                  checked={skillTemplateId === id}
+                  onChange={() => setSkillTemplateId(id)}
+                />
+                <div>
+                  <span className="text-sm font-medium">{rubric.name}</span>
+                  <p className="text-xs text-[#6B7280]">{rubric.subtitle}</p>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      </CoachBottomSheet>
+    </CoachPageShell>
+  );
+}
