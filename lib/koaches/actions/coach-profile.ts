@@ -1,12 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 import { mapCoach, type DbCoach } from "@/lib/koaches/db/mappers";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
 
 export async function fetchCoachProfileAction(coachId: string): Promise<CoachProfile> {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   const { data, error } = await supabase.from("coaches").select("*").eq("id", coachId).single();
   if (error) throw error;
@@ -22,6 +24,7 @@ export async function updateCoachProfileAction(
     >
   >
 ) {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   const row: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (patch.bio !== undefined) row.bio = patch.bio;
@@ -74,6 +77,7 @@ export async function updateCoachContactAction(
 }
 
 export async function updateCoachPhotoAction(coachId: string, photoUrl: string | null) {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   const { error } = await supabase
     .from("coaches")

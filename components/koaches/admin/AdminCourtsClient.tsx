@@ -26,6 +26,7 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
   const [region, setRegion] = useState("Metro Manila");
   const [mapsUrl, setMapsUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const resetForm = () => {
     setName("");
@@ -39,18 +40,24 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
     e.preventDefault();
     if (!name.trim() || !address.trim()) return;
     setSaving(true);
+    setError(null);
     try {
-      const id = await createCourtAction({
+      const result = await createCourtAction({
         name: name.trim(),
         address: address.trim(),
         city: city.trim(),
         region: region.trim(),
         mapsUrl: mapsUrl.trim() || undefined,
       });
+      if (!result.ok || !result.id) {
+        setError(result.ok ? "Could not create court." : result.error);
+        return;
+      }
+      const newId = result.id;
       setCourtList((prev) => [
         ...prev,
         {
-          id,
+          id: newId,
           name: name.trim(),
           address: address.trim(),
           city: city.trim(),
@@ -69,13 +76,23 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
 
   const toggleActive = async (court: Court) => {
     const next = court.isActive === false;
-    await updateCourtActiveAction(court.id, next);
+    setError(null);
+    const result = await updateCourtActiveAction(court.id, next);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
     setCourtList((prev) => prev.map((c) => (c.id === court.id ? { ...c, isActive: next } : c)));
     router.refresh();
   };
 
   const removeCourt = async (id: string) => {
-    await deleteCourtAction(id);
+    setError(null);
+    const result = await deleteCourtAction(id);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
     setCourtList((prev) => prev.filter((c) => c.id !== id));
     router.refresh();
   };
@@ -97,6 +114,12 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
           </button>
         }
       />
+
+      {error && (
+        <p className="mb-4 rounded-xl bg-[#FEF2F2] px-3 py-2 text-sm text-[#B91C1C]" role="alert">
+          {error}
+        </p>
+      )}
 
       {addOpen && (
         <form className="coach-card mt-6 space-y-4 p-4" onSubmit={(e) => void handleAdd(e)}>

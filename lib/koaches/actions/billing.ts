@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedCoachIdAction } from "@/lib/koaches/actions/auth";
 import { fetchCoachProfileAction } from "@/lib/koaches/actions/coach-profile";
+import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import {
   RECEIPT_ALLOWED_TYPES,
   RECEIPT_BUCKET,
@@ -16,13 +17,6 @@ import {
 import { getSubscriptionBillingInfo } from "@/lib/koaches/subscription-billing";
 import type { CoachBillingDashboard, CoachPaymentMethod } from "@/lib/koaches/types";
 import { createServiceClient } from "@/lib/supabase/server";
-
-async function assertCoachAccess(coachId: string) {
-  const authCoachId = await getAuthenticatedCoachIdAction();
-  if (!authCoachId || authCoachId !== coachId) {
-    throw new Error("Not authorized.");
-  }
-}
 
 export async function fetchCoachBillingDashboardAction(
   coachId: string

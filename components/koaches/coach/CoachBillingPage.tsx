@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
+  AlertTriangle,
   Building2,
   Calendar,
   CheckCircle2,
@@ -74,6 +76,8 @@ function submissionStatusLabel(status: string) {
 
 export function CoachBillingPage() {
   const coachId = usePortalCoachId();
+  const searchParams = useSearchParams();
+  const isRestricted = searchParams.get("restricted") === "1";
   const { showToast } = useCoachToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [data, setData] = useState<CoachBillingDashboard | null>(null);
@@ -150,6 +154,19 @@ export function CoachBillingPage() {
   return (
     <CoachPageShell className="pb-8">
       <CoachPageHeader title="Billing" subtitle="Subscription and payments" mobileTitle />
+
+      {isRestricted && (
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+          <div>
+            <p className="font-heading font-semibold">Account access limited</p>
+            <p className="mt-1 leading-relaxed">
+              Your subscription is inactive or lapsed. Renew below to restore full access to sessions,
+              students, and other coach tools.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className={cn("mt-6 rounded-xl px-4 py-3 text-sm", styles.panel)}>
         <div className="flex flex-wrap items-center gap-2">

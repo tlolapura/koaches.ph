@@ -137,10 +137,17 @@ export default function StudentsPage() {
                         type="button"
                         className="coach-btn-primary w-auto flex-1 py-2 text-xs"
                         onClick={async () => {
-                          await approveIntakeAction(coachId, s.id);
-                          notifyRosterUpdated(coachId);
-                          refreshPending();
-                          showToast(`${s.name} accepted`);
+                          try {
+                            await approveIntakeAction(coachId, s.id);
+                            notifyRosterUpdated(coachId);
+                            refreshPending();
+                            showToast(`${s.name} accepted`);
+                          } catch (e) {
+                            showToast(
+                              e instanceof Error ? e.message : "Could not accept sign-up",
+                              "error"
+                            );
+                          }
                         }}
                       >
                         Accept
@@ -149,9 +156,16 @@ export default function StudentsPage() {
                         type="button"
                         className="coach-btn-outline w-auto flex-1 gap-1 py-2 text-xs text-[#6B7280]"
                         onClick={async () => {
-                          await rejectIntakeAction(coachId, s.id);
-                          refreshPending();
-                          showToast("Sign-up declined");
+                          try {
+                            await rejectIntakeAction(coachId, s.id);
+                            refreshPending();
+                            showToast("Sign-up declined");
+                          } catch (e) {
+                            showToast(
+                              e instanceof Error ? e.message : "Could not decline sign-up",
+                              "error"
+                            );
+                          }
                         }}
                       >
                         <X className="h-3.5 w-3.5" />

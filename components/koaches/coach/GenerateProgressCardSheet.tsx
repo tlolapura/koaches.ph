@@ -62,11 +62,15 @@ export function GenerateProgressCardSheet({
 
   const handleGenerate = async () => {
     if (!draft) return;
-    await saveCard(draft);
-    setGeneratedId(draft.id);
-    setStep(4);
-    onGenerated?.(draft.id);
-    showToast("Progress card created!");
+    try {
+      await saveCard(draft);
+      setGeneratedId(draft.id);
+      setStep(4);
+      onGenerated?.(draft.id);
+      showToast("Progress card created!");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Could not create progress card", "error");
+    }
   };
 
   if (!participant || !draft) return null;

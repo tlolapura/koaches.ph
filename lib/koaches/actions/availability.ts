@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import {
   DEFAULT_WORKING_HOURS,
@@ -20,7 +21,6 @@ function blockedFromDb(row: DbBlockedSlot): BlockedSlot {
   };
 }
 
-/** Legacy per-day rows — collapsed into shared daily windows. */
 function workingHoursFromLegacyRows(rows: DbWorkingHours[]): CoachWorkingHours {
   const enabled = rows.filter((r) => r.enabled && r.start_time && r.end_time);
   if (enabled.length === 0) return DEFAULT_WORKING_HOURS;
@@ -83,6 +83,7 @@ export async function fetchCoachAvailabilityAction(coachId: string): Promise<{
 }
 
 export async function saveCoachWorkingHoursAction(coachId: string, hours: CoachWorkingHours) {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
 
   const { error } = await supabase
@@ -94,8 +95,6 @@ export async function saveCoachWorkingHoursAction(coachId: string, hours: CoachW
     .eq("id", coachId);
 
   if (error) throw error;
-
-  // Clear legacy rows so old data doesn't confuse fallback reads.
   await supabase.from("coach_working_hours").delete().eq("coach_id", coachId);
 
   revalidatePath("/coach/profile");
@@ -103,12 +102,12 @@ export async function saveCoachWorkingHoursAction(coachId: string, hours: CoachW
 }
 
 export async function saveCoachBlockedSlotsAction(coachId: string, slots: BlockedSlot[]) {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   await supabase.from("coach_blocked_slots").delete().eq("coach_id", coachId);
 
   if (slots.length === 0) {
     revalidatePath("/coach/sessions");
-    revalidatePath("/coach/calendar");
     return;
   }
 
@@ -127,6 +126,7 @@ export async function saveCoachBlockedSlotsAction(coachId: string, slots: Blocke
 }
 
 export async function upsertBlockedSlotAction(coachId: string, slot: BlockedSlot) {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   const { error } = await supabase.from("coach_blocked_slots").upsert({
     id: slot.id,
@@ -141,6 +141,7 @@ export async function upsertBlockedSlotAction(coachId: string, slot: BlockedSlot
 }
 
 export async function deleteBlockedSlotAction(coachId: string, slotId: string) {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   const { error } = await supabase
     .from("coach_blocked_slots")

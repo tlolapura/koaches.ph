@@ -1,15 +1,14 @@
 "use server";
 
-import { addMonths, format } from "date-fns";
 import { revalidatePath } from "next/cache";
-import { isAdminRole } from "@/lib/koaches/auth/profile";
-import { getProfileAction } from "@/lib/koaches/actions/auth";
+import { requireAdmin } from "@/lib/koaches/actions/guards";
+import { extendCoachSubscriptionByMonths } from "@/lib/koaches/subscription-extend";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { CoachProfile, CoachListing } from "@/lib/koaches/types";
 import type { Court } from "@/lib/koaches/types";
 import { mapCoach, mapCourt, type DbCoach, type DbCourt } from "@/lib/koaches/db/mappers";
 import { provisionCoachAccount, type ProvisionCoachResult } from "@/lib/koaches/provision-coach";
-import { parseDateValue } from "@/lib/utils";
+import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
 
 export async function fetchCoachBySlugAction(slug: string): Promise<CoachProfile | null> {
   const normalized = slug.trim().toLowerCase();
@@ -27,6 +26,7 @@ export async function fetchCoachBySlugAction(slug: string): Promise<CoachProfile
 }
 
 export async function fetchCoachesAction(): Promise<CoachProfile[]> {
+  await requireAdmin();
   const supabase = createServiceClient();
   const { data, error } = await supabase.from("coaches").select("*").order("name");
   if (error) throw error;
@@ -54,13 +54,6 @@ export async function fetchPublicCoachListingsAction(): Promise<CoachListing[]> 
       .filter((court): court is Court => court !== undefined);
     return { ...coach, courts };
   });
-}
-
-async function requireAdmin() {
-  const profile = await getProfileAction();
-  if (!isAdminRole(profile?.role)) {
-    throw new Error("Not authorized as platform admin.");
-  }
 }
 
 export type CoachMutationResult =
@@ -113,32 +106,55 @@ export async function extendCoachSubscriptionAction(
   const supabase = createServiceClient();
   const { data: row, error: fetchError } = await supabase
     .from("coaches")
-    .select("subscription_expiry, slug")
+    .select("slug")
     .eq("id", coachId)
     .maybeSingle();
   if (fetchError) return { ok: false, error: fetchError.message };
   if (!row) return { ok: false, error: "Coach not found." };
 
-  const base =
-    row.subscription_expiry && row.subscription_expiry >= format(new Date(), "yyyy-MM-dd")
-      ? parseDateValue(row.subscription_expiry)
-      : new Date();
-  const nextExpiry = format(addMonths(base, months), "yyyy-MM-dd");
+  try {
+    const nextExpiry = await extendCoachSubscriptionByMonths(supabase, coachId, months);
+    revalidatePath("/admin/coaches");
+    revalidatePath("/admin");
+    revalidatePath("/coach/billing");
+    if (row.slug) revalidatePath(`/coach/${row.slug}`);
+    return { ok: true, subscriptionExpiry: nextExpiry };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Could not extend subscription." };
+  }
+}
+
+export async function updateCoachCourtIdsAction(
+  coachId: string,
+  courtIds: string[]
+): Promise<CoachMutationResult> {
+  try {
+    await requireAdmin();
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Not authorized." };
+  }
+
+  const supabase = createServiceClient();
+  const { data: coach, error: fetchError } = await supabase
+    .from("coaches")
+    .select("slug")
+    .eq("id", coachId)
+    .maybeSingle();
+  if (fetchError) return { ok: false, error: fetchError.message };
+  if (!coach) return { ok: false, error: "Coach not found." };
 
   const { error } = await supabase
     .from("coaches")
-    .update({
-      subscription_expiry: nextExpiry,
-      is_active: true,
-      updated_at: new Date().toISOString(),
-    })
+    .update({ court_ids: courtIds, updated_at: new Date().toISOString() })
     .eq("id", coachId);
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/coaches");
   revalidatePath("/admin");
-  if (row.slug) revalidatePath(`/coach/${row.slug}`);
-  return { ok: true, subscriptionExpiry: nextExpiry };
+  if (coach.slug) {
+    revalidatePath(buildPublicCoachPath(coach.slug));
+  }
+  return { ok: true };
 }
 
 export type CreateCoachManuallyInput = {

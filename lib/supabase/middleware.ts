@@ -1,10 +1,35 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import {
+  coachPortalIsRestricted,
+  isCoachRestrictedPathAllowed,
+} from "@/lib/koaches/coach-portal-access";
 import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseConfigured } from "./config";
 
 function isCoachPublicRoute(pathname: string) {
   if (pathname === "/coach/login" || pathname === "/coach/apply") {
     return true;
+  }
+  if (/^\/coach\/[^/]+\/join$/.test(pathname)) {
+    const segment = pathname.split("/")[2];
+    const reserved = [
+      "dashboard",
+      "students",
+      "sessions",
+      "programs",
+      "progress",
+      "profile",
+      "social",
+      "more",
+      "calendar",
+      "certificates",
+      "promos",
+      "free-trial",
+      "billing",
+      "login",
+      "apply",
+    ];
+    if (segment && !reserved.includes(segment)) return true;
   }
   if (/^\/coach\/[^/]+$/.test(pathname) && !pathname.startsWith("/coach/dashboard")) {
     const reserved = [
@@ -76,6 +101,27 @@ export async function updateSession(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = "/coach/login";
       url.searchParams.set("error", "unauthorized");
+      return NextResponse.redirect(url);
+    }
+
+    const { data: coach } = await supabase
+      .from("coaches")
+      .select("is_active, subscription_expiry, subscription_plan")
+      .eq("id", profile.coach_id)
+      .maybeSingle();
+
+    if (
+      coach &&
+      coachPortalIsRestricted({
+        isActive: coach.is_active,
+        subscriptionExpiry: coach.subscription_expiry ?? "",
+        subscriptionPlan: coach.subscription_plan as "early-bird" | "regular",
+      }) &&
+      !isCoachRestrictedPathAllowed(pathname)
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/coach/billing";
+      url.searchParams.set("restricted", "1");
       return NextResponse.redirect(url);
     }
   }

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { CoachAchievement } from "@/lib/koaches/types";
 import { mapAchievement, type DbAchievement } from "@/lib/koaches/db/mappers";
@@ -17,6 +18,7 @@ export async function fetchCoachAchievementsAction(coachId: string): Promise<Coa
 }
 
 export async function saveCoachAchievementsAction(coachId: string, achievements: CoachAchievement[]) {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   await supabase.from("coach_achievements").delete().eq("coach_id", coachId);
 

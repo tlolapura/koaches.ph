@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { AdminBottomNav } from "@/components/koaches/admin/AdminBottomNav";
 import { AdminHeader } from "@/components/koaches/admin/AdminHeader";
 import { AdminSidebar, AdminSidebarCompact } from "@/components/koaches/admin/AdminSidebar";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export function AdminPortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,7 +14,7 @@ export function AdminPortalShell({ children }: { children: React.ReactNode }) {
   const isLogin = pathname === "/admin/login";
 
   useEffect(() => {
-    if (isLogin) return;
+    if (isLogin || isSupabaseConfigured()) return;
     const authed = localStorage.getItem("koaches-admin-auth");
     if (!authed) router.replace("/admin/login");
   }, [isLogin, router]);

@@ -47,9 +47,13 @@ export function useProgressCards(coachId: string) {
 
   const saveCard = useCallback(
     async (card: ProgressCard) => {
-      await saveProgressCardAction(card);
+      const result = await saveProgressCardAction(card);
+      if (!result.ok) {
+        throw new Error(result.error);
+      }
       window.dispatchEvent(new Event(PROGRESS_CARDS_UPDATED_EVENT));
       refresh();
+      return result.id;
     },
     [refresh]
   );
@@ -58,6 +62,7 @@ export function useProgressCards(coachId: string) {
     cards,
     candidates,
     loading: cardsQuery.isPending || sessionsQuery.isPending,
+    error: cardsQuery.error ?? sessionsQuery.error ?? null,
     refresh,
     saveCard,
   };

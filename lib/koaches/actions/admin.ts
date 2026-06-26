@@ -1,17 +1,18 @@
 "use server";
 
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/koaches/actions/guards";
 import { isCollectedSession } from "@/lib/koaches/session-payment";
 import { mapApplication, mapCoach, mapSession, mapStudent, type DbApplication, type DbCoach, type DbSession, type DbStudent } from "@/lib/koaches/db/mappers";
 import { SUBSCRIPTION_PRICES, type AdminDashboardData, type CoachSummary } from "@/lib/koaches/admin-data";
-
-const EARLY_BIRD_SLOTS_TOTAL = 50;
+import { EARLY_BIRD_SLOTS_TOTAL } from "@/lib/koaches/early-bird";
 
 function currentMonthKey() {
   return new Date().toISOString().slice(0, 7);
 }
 
 export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
+  await requireAdmin();
   const supabase = createServiceClient();
   const month = currentMonthKey();
 

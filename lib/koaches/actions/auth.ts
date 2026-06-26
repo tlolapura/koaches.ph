@@ -5,6 +5,8 @@ import type { Profile } from "@/lib/koaches/auth/profile";
 import { isAdminRole, isCoachRole } from "@/lib/koaches/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 
+import { validateCoachLoginPassword } from "@/lib/koaches/provision-coach";
+
 export async function coachSignInAction(email: string, password: string, nextPath?: string) {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -69,4 +71,34 @@ export async function getAuthenticatedCoachIdAction(): Promise<string | null> {
   const profile = await getProfileAction();
   if (isCoachRole(profile?.role) && profile?.coach_id) return profile.coach_id;
   return null;
+}
+
+export type PasswordChangeResult = { ok: true } | { ok: false; error: string };
+
+export async function changeCoachPasswordAction(
+  currentPassword: string,
+  newPassword: string
+): Promise<PasswordChangeResult> {
+  const profile = await getProfileAction();
+  if (!isCoachRole(profile?.role) || !profile?.email) {
+    return { ok: false, error: "Not authorized." };
+  }
+
+  const passwordError = validateCoachLoginPassword(newPassword);
+  if (passwordError) return { ok: false, error: passwordError };
+  if (currentPassword === newPassword) {
+    return { ok: false, error: "New password must be different from your current password." };
+  }
+
+  const supabase = await createClient();
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: profile.email,
+    password: currentPassword,
+  });
+  if (verifyError) return { ok: false, error: "Current password is incorrect." };
+
+  const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+  if (updateError) return { ok: false, error: updateError.message };
+
+  return { ok: true };
 }

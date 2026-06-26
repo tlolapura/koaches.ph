@@ -1,6 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  assertCoachAccess,
+  assertCoachOwnsStudent,
+} from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { DuprLevel, Student } from "@/lib/koaches/types";
 import { mapStudent, studentToDb, type DbStudent } from "@/lib/koaches/db/mappers";
@@ -9,6 +13,7 @@ export async function fetchStudentsAction(
   coachId: string,
   includeArchived = false
 ): Promise<Student[]> {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   let query = supabase.from("students").select("*").eq("coach_id", coachId).order("name");
   if (!includeArchived) query = query.eq("is_archived", false);
@@ -18,6 +23,11 @@ export async function fetchStudentsAction(
 }
 
 export async function fetchStudentByIdAction(studentId: string): Promise<Student | null> {
+  try {
+    await assertCoachOwnsStudent(studentId);
+  } catch {
+    return null;
+  }
   const supabase = createServiceClient();
   const { data, error } = await supabase.from("students").select("*").eq("id", studentId).maybeSingle();
   if (error) throw error;
@@ -33,6 +43,7 @@ export type CreateStudentInput = {
 };
 
 export async function createStudentAction(coachId: string, input: CreateStudentInput) {
+  await assertCoachAccess(coachId);
   const student: Student = {
     id: `s-${crypto.randomUUID().slice(0, 8)}`,
     coachId,
@@ -61,15 +72,8 @@ export async function createStudentAction(coachId: string, input: CreateStudentI
 }
 
 export async function updateStudentNotesAction(studentId: string, notes: string) {
+  await assertCoachOwnsStudent(studentId);
   const supabase = createServiceClient();
-  const { data: student, error: fetchError } = await supabase
-    .from("students")
-    .select("id")
-    .eq("id", studentId)
-    .maybeSingle();
-  if (fetchError) throw fetchError;
-  if (!student) throw new Error("Student not found");
-
   const { error } = await supabase
     .from("students")
     .update({ notes, updated_at: new Date().toISOString() })
@@ -79,15 +83,8 @@ export async function updateStudentNotesAction(studentId: string, notes: string)
 }
 
 export async function archiveStudentAction(studentId: string) {
+  await assertCoachOwnsStudent(studentId);
   const supabase = createServiceClient();
-  const { data: student, error: fetchError } = await supabase
-    .from("students")
-    .select("id")
-    .eq("id", studentId)
-    .maybeSingle();
-  if (fetchError) throw fetchError;
-  if (!student) throw new Error("Student not found");
-
   const { error } = await supabase
     .from("students")
     .update({ is_archived: true, status: "archived", updated_at: new Date().toISOString() })

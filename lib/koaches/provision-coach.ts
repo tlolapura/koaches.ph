@@ -2,8 +2,9 @@ import { addMonths, format } from "date-fns";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isValidCoachSlug, resolveCoachSlug } from "@/lib/koaches/coach-slug";
 import type { DbCoach } from "@/lib/koaches/db/mappers";
+import { getEarlyBirdCapacityError } from "@/lib/koaches/early-bird";
 import { DEFAULT_SESSION_PRICING, getStartingRate } from "@/lib/koaches/pricing";
-import type { CoachProfile, SkillRubricId } from "@/lib/koaches/types";
+import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 
 export type ProvisionCoachProfile = {
   fullName: string;
@@ -13,6 +14,7 @@ export type ProvisionCoachProfile = {
   bio?: string;
   skillTemplateId?: SkillRubricId;
   subscriptionPlan?: CoachProfile["subscriptionPlan"];
+  sessionPricing?: CoachSessionPricing;
 };
 
 export type ProvisionCoachCredentials = {
@@ -41,7 +43,7 @@ function buildCoachRow(
   profile: ProvisionCoachProfile,
   opts: { coachId: string; slug: string; userId: string; subscriptionExpiry: string }
 ): Omit<DbCoach, "created_at" | "updated_at"> {
-  const sessionPricing = DEFAULT_SESSION_PRICING;
+  const sessionPricing = profile.sessionPricing ?? DEFAULT_SESSION_PRICING;
   return {
     id: opts.coachId,
     user_id: opts.userId,
@@ -94,6 +96,12 @@ export async function provisionCoachAccount(
 
   if (!profile.fullName.trim()) return { ok: false, error: "Full name is required." };
   if (!profile.mobile.trim()) return { ok: false, error: "Mobile number is required." };
+
+  const plan = profile.subscriptionPlan ?? "early-bird";
+  if (plan === "early-bird") {
+    const capacityError = await getEarlyBirdCapacityError(supabase);
+    if (capacityError) return { ok: false, error: capacityError };
+  }
 
   const preferredSlug = profile.preferredSlug?.trim().toLowerCase();
   if (preferredSlug && !isValidCoachSlug(preferredSlug)) {

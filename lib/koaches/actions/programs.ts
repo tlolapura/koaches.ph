@@ -1,6 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import {
+  assertCoachAccess,
+  assertCoachOwnsProgram,
+  assertCoachOwnsStudent,
+} from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { Program } from "@/lib/koaches/types";
 import type { ProgramDraft } from "@/lib/koaches/program-templates";
@@ -37,6 +42,11 @@ export async function fetchProgramsAction(coachId: string): Promise<Program[]> {
 }
 
 export async function fetchProgramByIdAction(id: string): Promise<Program | null> {
+  try {
+    await assertCoachOwnsProgram(id);
+  } catch {
+    return null;
+  }
   const supabase = createServiceClient();
   const { data, error } = await supabase.from("programs").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
@@ -46,6 +56,7 @@ export async function fetchProgramByIdAction(id: string): Promise<Program | null
 }
 
 export async function createProgramAction(coachId: string, draft: ProgramDraft) {
+  await assertCoachAccess(coachId);
   const program: Program = {
     id: `p-${crypto.randomUUID().slice(0, 8)}`,
     coachId,
@@ -73,14 +84,10 @@ export async function createProgramAction(coachId: string, draft: ProgramDraft) 
 }
 
 export async function enrollStudentInProgramAction(programId: string, studentId: string) {
-  const supabase = createServiceClient();
-  const { data: program } = await supabase
-    .from("programs")
-    .select("coach_id")
-    .eq("id", programId)
-    .single();
-  if (!program) throw new Error("Program not found");
+  const coachId = await assertCoachOwnsProgram(programId);
+  await assertCoachOwnsStudent(studentId);
 
+  const supabase = createServiceClient();
   await supabase.from("program_enrollments").upsert({
     program_id: programId,
     student_id: studentId,
@@ -89,7 +96,7 @@ export async function enrollStudentInProgramAction(programId: string, studentId:
     .from("students")
     .update({ program_id: programId, updated_at: new Date().toISOString() })
     .eq("id", studentId)
-    .eq("coach_id", program.coach_id);
+    .eq("coach_id", coachId);
 
   revalidatePath(`/coach/programs/${programId}`);
   revalidatePath(`/coach/students/${studentId}`);

@@ -33,6 +33,7 @@ export function useCoachStudents(coachId: string, includeArchived = false) {
   return {
     students,
     loading: query.isPending,
+    error: query.error ?? null,
     refresh,
   };
 }
@@ -59,6 +60,7 @@ export function useCoachStudent(studentId: string) {
   return {
     student: query.data ?? undefined,
     loading: query.isPending,
+    error: query.error ?? null,
     refresh,
   };
 }

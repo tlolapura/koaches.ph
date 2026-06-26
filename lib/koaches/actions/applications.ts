@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { isAdminRole } from "@/lib/koaches/auth/profile";
-import { getProfileAction } from "@/lib/koaches/actions/auth";
+import { requireAdmin } from "@/lib/koaches/actions/guards";
 import { mapApplication, type DbApplication } from "@/lib/koaches/db/mappers";
 import {
   provisionCoachAccount,
@@ -10,13 +9,6 @@ import {
 } from "@/lib/koaches/provision-coach";
 import type { CoachApplication, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 import { createServiceClient } from "@/lib/supabase/server";
-
-async function requireAdmin() {
-  const profile = await getProfileAction();
-  if (!isAdminRole(profile?.role)) {
-    throw new Error("Not authorized as platform admin.");
-  }
-}
 
 function revalidateCoachPaths(slug: string) {
   revalidatePath("/admin/applications");
@@ -117,6 +109,7 @@ export async function approveCoachApplicationAction(
       bio: app.bio,
       skillTemplateId: app.skillTemplateId,
       subscriptionPlan: "early-bird",
+      sessionPricing: app.sessionPricing,
     },
     { loginEmail: input.email, password: input.password }
   );

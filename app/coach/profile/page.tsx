@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useEffect, useState } from "react";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/koaches/actions/coach-profile";
 import { CoachContactSocialsCard } from "@/components/koaches/coach/CoachContactSocialsCard";
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
+import { CoachChangePasswordCard } from "@/components/koaches/coach/CoachChangePasswordCard";
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import type { SkillRubricId } from "@/lib/koaches/types";
 
@@ -153,12 +155,15 @@ export default function ProfilePage() {
 
       <div className="coach-card mt-4 p-4">
         <p className="font-heading font-semibold">Subscription</p>
-        <span className="mt-2 inline-block rounded-full bg-[#E07A5F] px-3 py-1 text-xs font-semibold text-white">
-          Early Bird — ₱299/month
-        </span>
-        <p className="mt-2 text-sm text-[#6B7280]">Valid until July 26, 2026</p>
-        <p className="mt-1 text-xs text-[#6B7280]">Renew via GCash</p>
+        <p className="mt-1 text-sm text-[#6B7280]">
+          Manage billing, invoices, and payment receipts.
+        </p>
+        <Link href="/coach/billing" className="mt-3 inline-block text-sm font-semibold text-[#E07A5F]">
+          Go to billing →
+        </Link>
       </div>
+
+      <CoachChangePasswordCard />
 
       <CoachSignOutButton className="coach-btn-ghost-danger mt-6 w-full" />
 

@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { ProgressCard } from "@/lib/koaches/types";
 import { mapProgressCard, type DbProgressCard } from "@/lib/koaches/db/mappers";
 
 export async function fetchProgressCardsAction(coachId: string): Promise<ProgressCard[]> {
+  await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("progress_cards")
@@ -16,6 +18,7 @@ export async function fetchProgressCardsAction(coachId: string): Promise<Progres
   return ((data ?? []) as DbProgressCard[]).map(mapProgressCard);
 }
 
+/** Public share page — no auth (intentional share link). */
 export async function fetchProgressCardByIdAction(id: string): Promise<ProgressCard | null> {
   const supabase = createServiceClient();
   const { data, error } = await supabase.from("progress_cards").select("*").eq("id", id).maybeSingle();
@@ -23,8 +26,27 @@ export async function fetchProgressCardByIdAction(id: string): Promise<ProgressC
   return data ? mapProgressCard(data as DbProgressCard) : null;
 }
 
-export async function saveProgressCardAction(card: ProgressCard) {
+export type SaveProgressCardResult =
+  | { ok: true; id: string }
+  | { ok: false; error: string };
+
+export async function saveProgressCardAction(card: ProgressCard): Promise<SaveProgressCardResult> {
+  await assertCoachAccess(card.coachId);
   const supabase = createServiceClient();
+
+  if (card.sessionId) {
+    const { data: existing, error: lookupError } = await supabase
+      .from("progress_cards")
+      .select("id")
+      .eq("session_id", card.sessionId)
+      .eq("student_id", card.studentId)
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+    if (existing && existing.id !== card.id) {
+      return { ok: false, error: "A progress card already exists for this session." };
+    }
+  }
+
   const { error } = await supabase.from("progress_cards").upsert({
     id: card.id,
     student_id: card.studentId,
@@ -42,4 +64,6 @@ export async function saveProgressCardAction(card: ProgressCard) {
   if (error) throw error;
   revalidatePath("/coach/progress");
   revalidatePath(`/coach/students/${card.studentId}`);
+  revalidatePath(`/progress/${card.id}`);
+  return { ok: true, id: card.id };
 }

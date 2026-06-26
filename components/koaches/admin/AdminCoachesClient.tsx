@@ -8,9 +8,12 @@ import type { Court } from "@/lib/koaches/types";
 import {
   extendCoachSubscriptionAction,
   setCoachActiveAction,
+  updateCoachCourtIdsAction,
   type CreateCoachManuallyResult,
 } from "@/lib/koaches/actions/coaches";
 import { AdminAddCoachSheet } from "@/components/koaches/admin/AdminAddCoachSheet";
+import { AdminPendingPayments } from "@/components/koaches/admin/AdminPendingPayments";
+import type { AdminPendingPayment } from "@/lib/koaches/actions/admin-billing";
 import {
   BILLING_STATUS_STYLES,
   getSubscriptionBillingInfo,
@@ -21,14 +24,22 @@ import { cn, formatCurrency, formatDisplayDate } from "@/lib/utils";
 type AdminCoachesClientProps = {
   coaches: CoachProfile[];
   courts: Court[];
+  pendingPayments: AdminPendingPayment[];
 };
 
-export function AdminCoachesClient({ coaches: initialCoaches, courts }: AdminCoachesClientProps) {
+export function AdminCoachesClient({
+  coaches: initialCoaches,
+  courts,
+  pendingPayments,
+}: AdminCoachesClientProps) {
   const router = useRouter();
   const [coaches, setCoaches] = useState(initialCoaches);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [courtEditId, setCourtEditId] = useState<string | null>(null);
+  const [courtDraft, setCourtDraft] = useState<string[]>([]);
   const courtById = new Map(courts.map((c) => [c.id, c]));
 
   useEffect(() => {
@@ -41,16 +52,20 @@ export function AdminCoachesClient({ coaches: initialCoaches, courts }: AdminCoa
 
   const handleToggleActive = async (coach: CoachProfile) => {
     setBusyId(coach.id);
+    setErrorMessage(null);
     const next = !coach.isActive;
     const result = await setCoachActiveAction(coach.id, next);
     setBusyId(null);
     if (result.ok) {
       updateCoach(coach.id, { isActive: next });
+    } else {
+      setErrorMessage(result.error);
     }
   };
 
   const handleExtend = async (coachId: string) => {
     setBusyId(coachId);
+    setErrorMessage(null);
     const result = await extendCoachSubscriptionAction(coachId, 1);
     setBusyId(null);
     if (result.ok && result.subscriptionExpiry) {
@@ -58,6 +73,33 @@ export function AdminCoachesClient({ coaches: initialCoaches, courts }: AdminCoa
         subscriptionExpiry: result.subscriptionExpiry,
         isActive: true,
       });
+    } else if (!result.ok) {
+      setErrorMessage(result.error);
+    }
+  };
+
+  const startCourtEdit = (coach: CoachProfile) => {
+    setCourtEditId(coach.id);
+    setCourtDraft([...coach.courtIds]);
+    setErrorMessage(null);
+  };
+
+  const toggleCourtDraft = (courtId: string) => {
+    setCourtDraft((prev) =>
+      prev.includes(courtId) ? prev.filter((id) => id !== courtId) : [...prev, courtId]
+    );
+  };
+
+  const saveCourtEdit = async (coachId: string) => {
+    setBusyId(coachId);
+    setErrorMessage(null);
+    const result = await updateCoachCourtIdsAction(coachId, courtDraft);
+    setBusyId(null);
+    if (result.ok) {
+      updateCoach(coachId, { courtIds: courtDraft });
+      setCourtEditId(null);
+    } else {
+      setErrorMessage(result.error);
     }
   };
 
@@ -94,6 +136,14 @@ export function AdminCoachesClient({ coaches: initialCoaches, courts }: AdminCoa
           {successMessage}
         </div>
       )}
+
+      {errorMessage && (
+        <div className="mb-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#B91C1C]" role="alert">
+          {errorMessage}
+        </div>
+      )}
+
+      <AdminPendingPayments initialPayments={pendingPayments} />
 
       <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 py-3 text-xs text-[#6B7280]">
         <p className="font-semibold text-[#374151]">Billing timeline</p>
@@ -166,10 +216,60 @@ export function AdminCoachesClient({ coaches: initialCoaches, courts }: AdminCoa
               </div>
 
               <div className="mt-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                  Assigned courts
-                </p>
-                {assignedCourts.length === 0 ? (
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                    Assigned courts
+                  </p>
+                  {courtEditId !== c.id ? (
+                    <button
+                      type="button"
+                      className="text-xs font-semibold text-[#E07A5F] hover:underline"
+                      onClick={() => startCourtEdit(c)}
+                    >
+                      Edit
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-[#6B7280] hover:underline"
+                        onClick={() => setCourtEditId(null)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isBusy}
+                        className="text-xs font-semibold text-[#E07A5F] hover:underline"
+                        onClick={() => void saveCourtEdit(c.id)}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {courtEditId === c.id ? (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {courts.map((court) => {
+                      const selected = courtDraft.includes(court.id);
+                      return (
+                        <button
+                          key={court.id}
+                          type="button"
+                          onClick={() => toggleCourtDraft(court.id)}
+                          className={cn(
+                            "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+                            selected
+                              ? "bg-[#1E3A5F] text-white"
+                              : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
+                          )}
+                        >
+                          {court.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : assignedCourts.length === 0 ? (
                   <p className="mt-1 text-sm text-[#6B7280]">No courts assigned</p>
                 ) : (
                   <div className="mt-2 flex flex-wrap gap-2">
