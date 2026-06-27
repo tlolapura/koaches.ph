@@ -34,7 +34,7 @@ export function useCoachProfile(coachId: string) {
 
   return {
     coach: query.data,
-    loading: query.isPending && !query.data,
+    loading: !!coachId && query.isPending && !query.data,
     error: query.error ?? null,
     refresh: () => query.refetch(),
   };

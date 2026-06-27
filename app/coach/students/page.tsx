@@ -62,10 +62,11 @@ export default function StudentsPage() {
   const [pendingIntakesList, setPendingIntakesList] = useState<Awaited<ReturnType<typeof fetchIntakeSubmissionsAction>>>([]);
 
   useEffect(() => {
-    void fetchIntakeSubmissionsAction(coachId).then((list) =>
-      setPendingIntakesList(list.filter((s) => s.status === "pending"))
-    );
-  }, [pendingVersion]);
+    if (!coachId) return;
+    void fetchIntakeSubmissionsAction(coachId)
+      .then((list) => setPendingIntakesList(list.filter((s) => s.status === "pending")))
+      .catch(() => setPendingIntakesList([]));
+  }, [coachId, pendingVersion]);
 
   const pendingIntakes = pendingIntakesList;
 

@@ -30,7 +30,7 @@ export function useCoachPrograms(coachId: string) {
 
   return {
     programs,
-    loading: query.isPending && programs.length === 0,
+    loading: !!coachId && query.isPending && programs.length === 0,
     refresh,
   };
 }

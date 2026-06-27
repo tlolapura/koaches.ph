@@ -32,7 +32,7 @@ export function useCoachStudents(coachId: string, includeArchived = false) {
 
   return {
     students,
-    loading: query.isPending,
+    loading: !!coachId && query.isPending,
     error: query.error ?? null,
     refresh,
   };

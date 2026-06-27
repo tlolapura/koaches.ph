@@ -24,18 +24,30 @@ export function CoachAuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!isSupabaseConfigured()) {
       setState({ coachId: "", loading: false, email: null });
       return;
     }
 
-    void getProfileAction().then((profile) => {
-      setState({
-        coachId: profile?.coach_id ?? "",
-        loading: false,
-        email: profile?.email ?? null,
+    void getProfileAction()
+      .then((profile) => {
+        if (cancelled) return;
+        setState({
+          coachId: profile?.coach_id ?? "",
+          loading: false,
+          email: profile?.email ?? null,
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setState({ coachId: "", loading: false, email: null });
       });
-    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return <CoachAuthContext.Provider value={state}>{children}</CoachAuthContext.Provider>;

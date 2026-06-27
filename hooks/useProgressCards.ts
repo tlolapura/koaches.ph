@@ -61,7 +61,7 @@ export function useProgressCards(coachId: string) {
   return {
     cards,
     candidates,
-    loading: cardsQuery.isPending || sessionsQuery.isPending,
+    loading: !!coachId && (cardsQuery.isPending || sessionsQuery.isPending),
     error: cardsQuery.error ?? sessionsQuery.error ?? null,
     refresh,
     saveCard,
