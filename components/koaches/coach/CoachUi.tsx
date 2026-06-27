@@ -67,7 +67,7 @@ export function InitialsAvatar({
   className,
 }: {
   name: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "hero";
   variant?: "coral" | "lime" | "navy" | "alt";
   className?: string;
 }) {
@@ -79,7 +79,13 @@ export function InitialsAvatar({
     .join("")
     .toUpperCase();
 
-  const sizes = { sm: "h-9 w-9 text-xs", md: "h-11 w-11 text-sm", lg: "h-16 w-16 text-lg", xl: "h-20 w-20 text-xl" };
+  const sizes = {
+    sm: "h-9 w-9 text-xs",
+    md: "h-11 w-11 text-sm",
+    lg: "h-16 w-16 text-lg",
+    xl: "h-20 w-20 text-xl",
+    hero: "h-[7.5rem] w-[7.5rem] text-3xl sm:h-36 sm:w-36",
+  };
   const variants = {
     coral: "bg-[#16A34A] text-white",
     lime: "bg-[#FACC15] text-[#14532D]",

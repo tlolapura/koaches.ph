@@ -5,7 +5,7 @@ import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useEffect, useState } from "react";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
-import { formatPricingSummary, formatTierRate, formatTierLabel, DEFAULT_SESSION_PRICING, getStartingRate } from "@/lib/koaches/pricing";
+import { formatTierRate, formatTierLabel, DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
@@ -26,7 +26,9 @@ import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPubl
 import { CoachChangePasswordCard } from "@/components/koaches/coach/CoachChangePasswordCard";
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import { invalidateCoachProfile } from "@/lib/koaches/queries/invalidate";
+import { coachGreetingLabel } from "@/lib/koaches/person-name";
 import type { SkillRubricId } from "@/lib/koaches/types";
+import { formatDisplayDate } from "@/lib/utils";
 
 const EDIT_BIO_FORM_ID = "edit-bio-form";
 
@@ -71,8 +73,10 @@ export default function ProfilePage() {
   }
 
   const specialization = coach.specialization?.trim() ?? "";
-  const hasPricing = pricing.tiers.length > 0 && getStartingRate(pricing) > 0;
-  const pricingSummary = hasPricing ? formatPricingSummary(pricing) : null;
+  const displayName = coachGreetingLabel(coach);
+  const joinedLabel = coach.createdAt
+    ? formatDisplayDate(coach.createdAt)
+    : null;
 
   return (
     <CoachPageShell>
@@ -81,49 +85,61 @@ export default function ProfilePage() {
         subtitle="Public page, drop-in rates, availability, and account"
       />
 
-      <div className="coach-card mt-6 p-6 text-center">
-        <CoachProfilePhoto
-          coachId={coachId}
-          name={coach.name}
-          defaultPhoto={coach.photo}
-          size="xl"
-          editable
-          className="mx-auto"
-        />
-        <p className="font-heading mt-4 text-xl font-bold">{coach.name}</p>
-        <div className="mt-2">
-          {bio.trim() ? (
-            <p className="text-sm leading-relaxed text-[#6B7280]">{bio.trim()}</p>
-          ) : (
-            <p className="text-sm text-[#9CA3AF]">Add a short bio for your public profile.</p>
-          )}
-          <button
-            type="button"
-            className="mt-1.5 text-sm font-semibold text-[#4F8FF7]"
-            onClick={() => setEditOpen(true)}
-          >
-            {bio.trim() ? "Edit bio" : "Add bio"}
-          </button>
-        </div>
-
-        {(specialization || pricingSummary) ? (
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            {specialization ? (
-              <span className="rounded-full bg-[#F0FDF4] px-3 py-1 text-xs font-semibold text-[#166534]">
-                {specialization}
-              </span>
-            ) : null}
-            {pricingSummary ? (
-              <span className="rounded-full bg-[#14532D] px-3 py-1 text-xs font-semibold text-white">
-                {pricingSummary}
-              </span>
-            ) : null}
+      <div className="coach-card mt-6 p-5 sm:p-6">
+        <div className="flex gap-4 sm:gap-6">
+          <div className="shrink-0">
+            <CoachProfilePhoto
+              coachId={coachId}
+              name={coach.name}
+              defaultPhoto={coach.photo}
+              size="hero"
+              editable
+            />
           </div>
-        ) : (
-          <p className="mt-4 text-xs text-[#9CA3AF]">
-            Set your specialization and drop-in rates so players know what you offer.
-          </p>
-        )}
+
+          <div className="min-w-0 flex-1 text-left">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+              Public profile
+            </p>
+            <h2 className="font-heading mt-1 text-xl font-bold leading-tight text-[#111827] sm:text-2xl">
+              {displayName}
+            </h2>
+
+            <div className="mt-3">
+              {bio.trim() ? (
+                <p className="text-sm leading-relaxed text-[#6B7280]">{bio.trim()}</p>
+              ) : (
+                <p className="text-sm leading-relaxed text-[#9CA3AF]">
+                  Add a short bio for your public profile.
+                </p>
+              )}
+              <button
+                type="button"
+                className="mt-2 inline-flex items-center text-sm font-semibold text-[#4F8FF7] hover:underline"
+                onClick={() => setEditOpen(true)}
+              >
+                {bio.trim() ? "Edit bio" : "Add bio"}
+              </button>
+            </div>
+
+            {(specialization || joinedLabel) ? (
+              <div className="mt-4 space-y-2">
+                {specialization ? (
+                  <span className="inline-flex w-fit items-center rounded-full bg-[#F0FDF4] px-3 py-1.5 text-xs font-semibold text-[#166534] ring-1 ring-[#BBF7D0]">
+                    {specialization}
+                  </span>
+                ) : null}
+                {joinedLabel ? (
+                  <p className="text-xs text-[#9CA3AF]">Joined {joinedLabel}</p>
+                ) : null}
+              </div>
+            ) : (
+              <p className="mt-4 text-xs leading-relaxed text-[#9CA3AF]">
+                Add a specialization so players know what you coach.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       <CoachPublicProfileLinkCard coach={coach} className="mt-4" />

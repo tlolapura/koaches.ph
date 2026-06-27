@@ -36,6 +36,7 @@ export type DbCoach = {
   is_active: boolean;
   total_students: number;
   total_sessions: number;
+  created_at: string;
 };
 
 export type DbProgram = {
@@ -209,6 +210,7 @@ export function mapCoach(row: DbCoach): CoachProfile {
     isActive: row.is_active,
     totalStudents: row.total_students,
     totalSessions: row.total_sessions,
+    createdAt: row.created_at,
   };
 }
 

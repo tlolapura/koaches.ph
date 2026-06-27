@@ -14,7 +14,14 @@ import { cn } from "@/lib/utils";
 const sizeClasses = {
   lg: "h-20 w-20",
   xl: "h-24 w-24",
+  hero: "h-[7.5rem] w-[7.5rem] sm:h-36 sm:w-36",
 } as const;
+
+const initialsSize = {
+  lg: "lg" as const,
+  xl: "xl" as const,
+  hero: "hero" as const,
+};
 
 type CoachProfilePhotoProps = {
   coachId: string;
@@ -83,6 +90,9 @@ export function CoachProfilePhoto({
   };
 
   const dim = sizeClasses[size];
+  const avatarSize = initialsSize[size];
+  const isHero = size === "hero";
+  const initialsShape = isHero ? "rounded-2xl" : "rounded-full";
 
   return (
     <div className={cn("relative inline-block", className)}>
@@ -92,7 +102,7 @@ export function CoachProfilePhoto({
           src={photo}
           alt={name}
           className={cn(
-            "rounded-2xl object-cover ring-4 ring-[#F0FDF4]",
+            "rounded-2xl object-cover ring-4 ring-[#F0FDF4] shadow-[0_8px_24px_rgba(22,163,74,0.12)]",
             dim,
             editable && !uploading && "cursor-pointer",
             uploading && "opacity-70"
@@ -102,15 +112,19 @@ export function CoachProfilePhoto({
       ) : (
         <button
           type="button"
-          className={cn(editable && "group relative rounded-full")}
+          className={cn(editable && "group relative", initialsShape)}
           onClick={editable ? pickPhoto : undefined}
           disabled={!editable || uploading}
         >
           <InitialsAvatar
             name={name}
-            size={size}
+            size={avatarSize}
             variant="navy"
-            className={cn(editable && "ring-4 ring-[#F0FDF4]", uploading && "opacity-70")}
+            className={cn(
+              initialsShape,
+              editable && "ring-4 ring-[#F0FDF4]",
+              uploading && "opacity-70"
+            )}
           />
         </button>
       )}
@@ -121,7 +135,8 @@ export function CoachProfilePhoto({
             ref={inputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"
-            className="sr-only"
+            className="absolute h-0 w-0 overflow-hidden opacity-0"
+            tabIndex={-1}
             disabled={uploading}
             onChange={(e) => {
               void handleFile(e.target.files?.[0]);
@@ -131,7 +146,10 @@ export function CoachProfilePhoto({
             type="button"
             onClick={pickPhoto}
             disabled={uploading}
-            className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-white shadow-md transition-transform active:scale-95 disabled:opacity-70"
+            className={cn(
+              "absolute flex items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-white shadow-md transition-transform active:scale-95 disabled:opacity-70",
+              isHero ? "-bottom-1.5 -right-1.5 h-10 w-10" : "-bottom-1 -right-1 h-9 w-9"
+            )}
             aria-label="Change profile photo"
             aria-busy={uploading}
           >

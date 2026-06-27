@@ -164,6 +164,7 @@ export type CoachProfile = {
   isActive: boolean;
   totalStudents: number;
   totalSessions: number;
+  createdAt: string;
 };
 
 export type CoachInvoiceStatus = "issued" | "payment_submitted" | "paid" | "overdue" | "void";

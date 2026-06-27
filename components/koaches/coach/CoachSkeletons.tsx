@@ -128,7 +128,17 @@ export function CoachProfileSkeleton() {
   return (
     <CoachPageShell>
       <CoachPageHeaderSkeleton />
-      <Bone className="mt-6 h-64 w-full rounded-2xl" />
+      <div className="coach-card mt-6 overflow-hidden p-5 sm:p-6">
+        <div className="flex gap-4 sm:gap-6">
+          <Bone className="h-[7.5rem] w-[7.5rem] shrink-0 rounded-2xl sm:h-36 sm:w-36" />
+          <div className="min-w-0 flex-1 space-y-3">
+            <Bone className="h-3 w-20" />
+            <Bone className="h-7 w-36" />
+            <Bone className="h-14 w-full" />
+            <Bone className="h-6 w-24" />
+          </div>
+        </div>
+      </div>
       <CoachCardListSkeleton count={4} className="mt-4" />
     </CoachPageShell>
   );

@@ -144,7 +144,7 @@ export function CoachSocialPage() {
 
   if (loading || !coach) {
     return (
-      <CoachPageShell className="pb-40 md:pb-6">
+      <CoachPageShell>
         <CoachPageHeader title="Social" />
         <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading social tools">
           <div className="h-10 rounded-xl bg-[#E5E7EB]" />
@@ -158,7 +158,7 @@ export function CoachSocialPage() {
   const thisWeekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
 
   return (
-    <CoachPageShell className="pb-40 md:pb-6">
+    <CoachPageShell>
       <CoachPageHeader title="Social" />
 
       <div className="mt-6">
@@ -327,29 +327,27 @@ export function CoachSocialPage() {
         )}
       </div>
 
-      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-30 md:pointer-events-auto md:static md:inset-auto md:bottom-auto md:mt-6">
-        <div className="pointer-events-auto space-y-2 border-t border-[#E5E7EB] bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur-md md:border-0 md:bg-transparent md:p-0 md:shadow-none">
-          <CoachButton
-            type="button"
-            className="w-full py-3.5 text-sm"
-            loading={saving}
-            loadingLabel="Saving…"
-            onClick={handleDownload}
-          >
-            <Download className="h-4 w-4" />
-            Save image
-          </CoachButton>
-          <CoachButton
-            type="button"
-            variant="outline"
-            className="w-full text-sm"
-            disabled={saving}
-            onClick={handleShare}
-          >
-            <Share2 className="h-4 w-4" />
-            Share
-          </CoachButton>
-        </div>
+      <div className="mt-6 space-y-2">
+        <CoachButton
+          type="button"
+          className="w-full py-3.5 text-sm"
+          loading={saving}
+          loadingLabel="Saving…"
+          onClick={handleDownload}
+        >
+          <Download className="h-4 w-4" />
+          Save image
+        </CoachButton>
+        <CoachButton
+          type="button"
+          variant="outline"
+          className="w-full text-sm"
+          disabled={saving}
+          onClick={handleShare}
+        >
+          <Share2 className="h-4 w-4" />
+          Share
+        </CoachButton>
       </div>
     </CoachPageShell>
   );
