@@ -5,12 +5,14 @@
 
 -- Coach row (required before profiles.coach_id FK)
 insert into coaches (
-  id, slug, name, bio, specialization, rate_per_session, session_pricing,
+  id, slug, name, first_name, last_name, bio, specialization, rate_per_session, session_pricing,
   court_ids, mobile, skill_template_id, subscription_plan, subscription_expiry, is_active
 ) values (
   'coach-1',
   'leigh',
   'Leigh',
+  'Leigh',
+  '',
   '',
   '',
   0,
@@ -24,6 +26,8 @@ insert into coaches (
 ) on conflict (id) do update set
   slug = excluded.slug,
   name = excluded.name,
+  first_name = excluded.first_name,
+  last_name = excluded.last_name,
   mobile = excluded.mobile,
   subscription_expiry = excluded.subscription_expiry;
 

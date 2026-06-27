@@ -8,6 +8,7 @@ import {
   formatCoachingLevelsLabel,
   toggleCoachingLevel,
 } from "@/lib/koaches/application-form";
+import { joinPersonName } from "@/lib/koaches/person-name";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 
 export type ApplicationFieldStep = "identity" | "coaching" | "business";
@@ -87,16 +88,28 @@ export function CoachApplicationFields({ step, draft, onDraftChange }: CoachAppl
   if (step === "identity") {
     return (
       <div className="coach-form">
-        <CoachSheetField label="Full name" htmlFor="apply-full-name">
-          <input
-            id="apply-full-name"
-            className="coach-input"
-            autoComplete="name"
-            placeholder="Juan dela Cruz"
-            required
-            {...field(draft, onDraftChange, "fullName", draft.fullName)}
-          />
-        </CoachSheetField>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <CoachSheetField label="First name" htmlFor="apply-first-name">
+            <input
+              id="apply-first-name"
+              className="coach-input"
+              autoComplete="given-name"
+              placeholder="Bianca"
+              required
+              {...field(draft, onDraftChange, "firstName", draft.firstName)}
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Last name" htmlFor="apply-last-name">
+            <input
+              id="apply-last-name"
+              className="coach-input"
+              autoComplete="family-name"
+              placeholder="Santos"
+              required
+              {...field(draft, onDraftChange, "lastName", draft.lastName)}
+            />
+          </CoachSheetField>
+        </div>
         <CoachSheetField label="Mobile number" htmlFor="apply-mobile">
           <input
             id="apply-mobile"
@@ -220,7 +233,7 @@ export function CoachApplicationFields({ step, draft, onDraftChange }: CoachAppl
 
 export function formatApplicationReview(draft: ApplicationDraft) {
   return {
-    fullName: draft.fullName.trim(),
+    fullName: joinPersonName(draft.firstName, draft.lastName),
     mobile: draft.mobile.trim(),
     email: draft.email.trim(),
     specialization: draft.specialization.trim(),

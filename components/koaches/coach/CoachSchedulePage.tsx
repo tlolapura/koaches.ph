@@ -18,7 +18,6 @@ import type { AvailableSlot } from "@/lib/koaches/session-slots";
 import { CoachScheduleGrid } from "@/components/koaches/coach/CoachScheduleGrid";
 import { AddSessionSheet } from "@/components/koaches/coach/AddSessionSheet";
 import {
-  CoachFab,
   EmptyState,
   InitialsAvatar,
   SessionTypeBadge,
@@ -119,7 +118,7 @@ export function CoachSchedulePage() {
     openAddSession({ date, startTime: slot.startValue, endTime: slot.endValue });
   };
 
-  if (loading) return <CoachScheduleSkeleton />;
+  if (!coachId || (loading && allSessions.length === 0)) return <CoachScheduleSkeleton />;
 
   return (
     <CoachPageShell>
@@ -249,8 +248,6 @@ export function CoachSchedulePage() {
           )}
         </>
       )}
-
-      <CoachFab onClick={() => openAddSession()} label="Add session" />
 
       <AddSessionSheet
         open={addOpen}

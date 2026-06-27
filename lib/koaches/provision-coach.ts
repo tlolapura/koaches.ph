@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isValidCoachSlug, resolveCoachSlug } from "@/lib/koaches/coach-slug";
 import type { DbCoach } from "@/lib/koaches/db/mappers";
 import { getEarlyBirdCapacityError } from "@/lib/koaches/early-bird";
+import { joinPersonName, splitPersonName } from "@/lib/koaches/person-name";
 import { DEFAULT_SESSION_PRICING, getStartingRate } from "@/lib/koaches/pricing";
 import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 
@@ -44,11 +45,15 @@ function buildCoachRow(
   opts: { coachId: string; slug: string; userId: string; subscriptionExpiry: string }
 ): Omit<DbCoach, "created_at" | "updated_at"> {
   const sessionPricing = profile.sessionPricing ?? DEFAULT_SESSION_PRICING;
+  const { firstName, lastName } = splitPersonName(profile.fullName);
+  const displayName = joinPersonName(firstName, lastName);
   return {
     id: opts.coachId,
     user_id: opts.userId,
     slug: opts.slug,
-    name: profile.fullName.trim(),
+    name: displayName,
+    first_name: firstName,
+    last_name: lastName,
     photo_url: null,
     bio: profile.bio?.trim() ?? "",
     specialization: profile.specialization?.trim() ?? "",

@@ -27,6 +27,7 @@ import {
 import { CoachBillingAlertBanner } from "@/components/koaches/coach/CoachBillingAlertBanner";
 import { CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachDashboardSkeleton } from "@/components/koaches/coach/CoachSkeletons";
+import { coachGreetingLabel } from "@/lib/koaches/person-name";
 import { isCollectedSession } from "@/lib/koaches/session-payment";
 import { shouldShowCoachOnboarding } from "@/lib/koaches/coach-onboarding";
 import type { Session } from "@/lib/koaches/types";
@@ -54,7 +55,7 @@ type AttentionItem = {
 export function CoachDashboard() {
   const router = useRouter();
   const coachId = usePortalCoachId();
-  const { coach, loading: profileLoading } = useCoachProfile(coachId);
+  const { coach } = useCoachProfile(coachId);
   const today = new Date();
   const todayKey = format(today, "yyyy-MM-dd");
   const todayLabel = format(today, "EEEE, MMM d");
@@ -114,7 +115,7 @@ export function CoachDashboard() {
     );
   }, [allSessions]);
 
-  const firstName = coach?.name.replace(/^Coach\s+/i, "") ?? "Coach";
+  const greetingName = coach ? coachGreetingLabel(coach) : "Coach";
 
   const attentionItems: AttentionItem[] = [];
   if (candidates.length > 0) {
@@ -153,7 +154,7 @@ export function CoachDashboard() {
     },
   };
 
-  if ((loading && allSessions.length === 0) || (profileLoading && !coach) || !coach) {
+  if (!coachId || !coach) {
     return <CoachDashboardSkeleton />;
   }
 
@@ -174,7 +175,7 @@ export function CoachDashboard() {
           <div className="relative">
             <p className="text-sm font-medium text-white/70">{todayLabel}</p>
             <h1 className="font-heading mt-1 text-2xl font-bold tracking-tight sm:text-[1.75rem]">
-              {getGreeting()}, {firstName}
+              {getGreeting()}, {greetingName}
             </h1>
             <p className="mt-1.5 text-sm text-white/60">
               {todayStats.sessionCount > 0

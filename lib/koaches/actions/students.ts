@@ -6,6 +6,7 @@ import {
   assertCoachOwnsStudent,
 } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
+import { joinPersonName, splitPersonName } from "@/lib/koaches/person-name";
 import type { DuprLevel, Student } from "@/lib/koaches/types";
 import { mapStudent, studentToDb, type DbStudent } from "@/lib/koaches/db/mappers";
 
@@ -35,7 +36,9 @@ export async function fetchStudentByIdAction(studentId: string): Promise<Student
 }
 
 export type CreateStudentInput = {
-  name: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
   mobile: string;
   email: string;
   skillLevel: DuprLevel;
@@ -44,10 +47,19 @@ export type CreateStudentInput = {
 
 export async function createStudentAction(coachId: string, input: CreateStudentInput) {
   await assertCoachAccess(coachId);
+  const { firstName, lastName } =
+    input.firstName?.trim()
+      ? { firstName: input.firstName.trim(), lastName: input.lastName?.trim() ?? "" }
+      : splitPersonName(input.name ?? "");
+  const displayName = joinPersonName(firstName, lastName);
+  if (!displayName) throw new Error("Student name is required.");
+
   const student: Student = {
     id: `s-${crypto.randomUUID().slice(0, 8)}`,
     coachId,
-    name: input.name.trim(),
+    name: displayName,
+    firstName,
+    lastName,
     mobile: input.mobile.trim(),
     email: input.email.trim(),
     status: "active",

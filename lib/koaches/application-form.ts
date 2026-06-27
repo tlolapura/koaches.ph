@@ -1,5 +1,6 @@
 import type { CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 import type { SubmitApplicationInput } from "@/lib/koaches/actions/applications";
+import { joinPersonName } from "@/lib/koaches/person-name";
 import { DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
 import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
 
@@ -17,7 +18,8 @@ export const COACHING_LEVEL_OPTIONS: {
 ];
 
 export type ApplicationDraft = {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   mobile: string;
   email: string;
   specialization: string;
@@ -30,7 +32,8 @@ export type ApplicationDraft = {
 };
 
 export const EMPTY_APPLICATION_DRAFT: ApplicationDraft = {
-  fullName: "",
+  firstName: "",
+  lastName: "",
   mobile: "",
   email: "",
   specialization: "",
@@ -60,7 +63,7 @@ export function formatCoachingLevelsLabel(levels: CoachingLevelId[]): string {
 
 export function draftToSubmitInput(draft: ApplicationDraft): SubmitApplicationInput {
   return {
-    fullName: draft.fullName.trim(),
+    fullName: joinPersonName(draft.firstName, draft.lastName),
     mobile: draft.mobile.trim(),
     email: draft.email.trim(),
     bio: draft.bio.trim(),
@@ -76,7 +79,8 @@ export function draftToSubmitInput(draft: ApplicationDraft): SubmitApplicationIn
 }
 
 export function validateIdentityStep(draft: ApplicationDraft): string | null {
-  if (!draft.fullName.trim()) return "Please enter your full name.";
+  if (!draft.firstName.trim()) return "Please enter your first name.";
+  if (!draft.lastName.trim()) return "Please enter your last name.";
   if (!draft.mobile.trim()) return "Please enter your mobile number.";
   if (!draft.email.trim()) return "Please enter your email.";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.email.trim())) return "Please enter a valid email.";

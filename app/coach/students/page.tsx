@@ -136,7 +136,9 @@ export default function StudentsPage() {
       c.participantId === generateTarget?.participantId
   );
 
-  if (loading) return <CoachStudentListSkeleton />;
+  if (!coachId || (loading && rosterStudents.length === 0)) {
+    return <CoachStudentListSkeleton />;
+  }
 
   return (
     <CoachPageShell>
@@ -309,7 +311,8 @@ export default function StudentsPage() {
             try {
               const fd = new FormData(e.currentTarget);
               await createStudentAction(coachId, {
-                name: String(fd.get("name") ?? ""),
+                firstName: String(fd.get("firstName") ?? ""),
+                lastName: String(fd.get("lastName") ?? ""),
                 mobile: String(fd.get("mobile") ?? ""),
                 email: String(fd.get("email") ?? ""),
                 skillLevel: String(fd.get("skillLevel") ?? "3.0") as import("@/lib/koaches/types").DuprLevel,
@@ -325,9 +328,14 @@ export default function StudentsPage() {
             }
           }}
         >
-          <CoachSheetField label="Full name *">
-            <input className="coach-input" name="name" required placeholder="Juan dela Cruz" />
-          </CoachSheetField>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CoachSheetField label="First name *">
+              <input className="coach-input" name="firstName" required placeholder="Juan" autoComplete="given-name" />
+            </CoachSheetField>
+            <CoachSheetField label="Last name *">
+              <input className="coach-input" name="lastName" required placeholder="dela Cruz" autoComplete="family-name" />
+            </CoachSheetField>
+          </div>
           <CoachSheetField label="Mobile number">
             <input className="coach-input" name="mobile" placeholder="09171234567" />
           </CoachSheetField>

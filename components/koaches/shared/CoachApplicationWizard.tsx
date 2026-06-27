@@ -119,11 +119,11 @@ function WizardNavButtons({
   hideBack?: boolean;
 }) {
   return (
-    <div className="flex gap-3">
+    <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
       {!hideBack ? (
         <button
           type="button"
-          className="coach-btn-outline flex flex-1 items-center justify-center gap-1"
+          className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
           onClick={onBack}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -133,8 +133,8 @@ function WizardNavButtons({
       <button
         type="button"
         className={cn(
-          "coach-btn-primary flex items-center justify-center gap-1",
-          hideBack ? "w-full" : "flex-[2]"
+          "coach-btn-primary flex min-h-[48px] items-center justify-center gap-1",
+          hideBack ? "w-full" : "sm:flex-[2]"
         )}
         onClick={onNext}
         disabled={loading}
@@ -160,7 +160,7 @@ function WizardFooter({
   error?: string | null;
 }) {
   return (
-    <div className="shrink-0 border-t border-[#E5E7EB] bg-[#FAFAF8]/95 px-1 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+    <div className="sticky bottom-0 z-20 shrink-0 border-t border-[#E5E7EB] bg-[#FAFAF8]/98 px-1 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
       {error ? (
         <p
           role="alert"
@@ -516,17 +516,17 @@ export function CoachApplicationWizard({
       {showStickyFooter && (
         <WizardFooter error={step === "welcome" ? null : error}>
           {step === "welcome" ? (
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
               <Link
                 href={backHref}
-                className="coach-btn-outline flex flex-1 items-center justify-center gap-1"
+                className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
               >
                 <ArrowLeft className="h-4 w-4" />
                 {backLabel}
               </Link>
               <button
                 type="button"
-                className="coach-btn-primary flex flex-[2] items-center justify-center gap-1"
+                className="coach-btn-primary flex min-h-[48px] items-center justify-center gap-1 sm:flex-[2]"
                 onClick={() => setStep("identity")}
               >
                 Let&apos;s go

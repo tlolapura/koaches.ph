@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import type { CoachProfile } from "@/lib/koaches/types";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
+import { coachFirstName } from "@/lib/koaches/person-name";
 import { KoachesMark } from "@/components/koaches/KoachesLogo";
 import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
 import { StudentIntakeSection } from "@/components/koaches/public/StudentIntakeSection";
@@ -11,7 +12,7 @@ type CoachJoinPageProps = {
 };
 
 export function CoachJoinPage({ coach }: CoachJoinPageProps) {
-  const firstName = coach.name.replace(/^Coach\s+/i, "").split(" ")[0];
+  const firstName = coachFirstName(coach);
   const profilePath = buildPublicCoachPath(coach.slug);
 
   return (

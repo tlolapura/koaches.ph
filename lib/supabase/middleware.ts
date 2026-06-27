@@ -93,7 +93,9 @@ export async function updateSession(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, coach_id")
+      .select(
+        "role, coach_id, coaches(is_active, subscription_expiry, subscription_plan)"
+      )
       .eq("id", user.id)
       .maybeSingle();
 
@@ -104,11 +106,19 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const { data: coach } = await supabase
-      .from("coaches")
-      .select("is_active, subscription_expiry, subscription_plan")
-      .eq("id", profile.coach_id)
-      .maybeSingle();
+    const coachRow = profile.coaches as
+      | {
+          is_active: boolean;
+          subscription_expiry: string | null;
+          subscription_plan: string;
+        }
+      | {
+          is_active: boolean;
+          subscription_expiry: string | null;
+          subscription_plan: string;
+        }[]
+      | null;
+    const coach = Array.isArray(coachRow) ? coachRow[0] : coachRow;
 
     if (
       coach &&

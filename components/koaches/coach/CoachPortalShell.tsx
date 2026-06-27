@@ -1,23 +1,35 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { HydrationBoundary, type DehydratedState } from "@tanstack/react-query";
 import { coachSlugFromPublicPath, isPublicCoachJoinPath } from "@/lib/koaches/coach-routes";
 import { CoachBottomNav } from "@/components/koaches/coach/CoachBottomNav";
 import { CoachMobileHeader } from "@/components/koaches/coach/CoachMobileHeader";
 import { CoachSidebar, CoachSidebarCompact } from "@/components/koaches/coach/CoachSidebar";
-import { CoachAuthProvider, useCoachAuth } from "@/components/koaches/coach/CoachAuthProvider";
+import { CoachAuthProvider } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachToastProvider } from "@/components/koaches/coach/CoachUi";
-import { CoachPortalPrefetch } from "@/components/koaches/coach/CoachPortalPrefetch";
-import { CoachRouteLoading } from "@/components/koaches/coach/CoachSkeletons";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 
-export function CoachPortalShell({ children }: { children: React.ReactNode }) {
+type CoachPortalShellProps = {
+  children: React.ReactNode;
+  initialCoachId?: string;
+  initialEmail?: string | null;
+  dehydratedState?: DehydratedState;
+};
+
+export function CoachPortalShell({
+  children,
+  initialCoachId = "",
+  initialEmail = null,
+  dehydratedState,
+}: CoachPortalShellProps) {
   return (
-    <CoachAuthProvider>
+    <CoachAuthProvider initialCoachId={initialCoachId} initialEmail={initialEmail}>
       <QueryProvider>
-        <CoachPortalPrefetch />
-        <CoachPortalShellInner>{children}</CoachPortalShellInner>
+        <HydrationBoundary state={dehydratedState}>
+          <CoachPortalShellInner>{children}</CoachPortalShellInner>
+        </HydrationBoundary>
       </QueryProvider>
     </CoachAuthProvider>
   );
@@ -25,23 +37,13 @@ export function CoachPortalShell({ children }: { children: React.ReactNode }) {
 
 function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { loading: authLoading } = useCoachAuth();
   const isStandalone =
     pathname.startsWith("/coach/login") || pathname.startsWith("/coach/apply");
-  // Path shape only — the page itself fetches the coach and calls notFound() if missing.
   const isPublicProfile = !!coachSlugFromPublicPath(pathname);
   const isPublicJoin = isPublicCoachJoinPath(pathname);
 
   if (isStandalone || isPublicProfile || isPublicJoin) {
     return <CoachToastProvider>{children}</CoachToastProvider>;
-  }
-
-  if (authLoading) {
-    return (
-      <CoachToastProvider>
-        <CoachRouteLoading />
-      </CoachToastProvider>
-    );
   }
 
   return (

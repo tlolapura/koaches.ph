@@ -1,4 +1,5 @@
-import { getAuthenticatedCoachIdAction, getProfileAction } from "@/lib/koaches/actions/auth";
+import { getProfileAction } from "@/lib/koaches/actions/auth";
+import { getCachedCoachId } from "@/lib/koaches/auth/cached";
 import { isAdminRole } from "@/lib/koaches/auth/profile";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -6,7 +7,7 @@ export async function assertCoachAccess(coachId: string): Promise<string> {
   if (!coachId) {
     throw new Error("Not authorized.");
   }
-  const authCoachId = await getAuthenticatedCoachIdAction();
+  const authCoachId = await getCachedCoachId();
   if (!authCoachId || authCoachId !== coachId) {
     throw new Error("Not authorized.");
   }
@@ -14,7 +15,7 @@ export async function assertCoachAccess(coachId: string): Promise<string> {
 }
 
 export async function requireAuthenticatedCoachId(): Promise<string> {
-  const coachId = await getAuthenticatedCoachIdAction();
+  const coachId = await getCachedCoachId();
   if (!coachId) throw new Error("Not authorized.");
   return coachId;
 }
@@ -27,7 +28,7 @@ export async function requireAdmin(): Promise<void> {
 }
 
 export async function assertCoachOwnsStudent(studentId: string): Promise<string> {
-  const coachId = await getAuthenticatedCoachIdAction();
+  const coachId = await getCachedCoachId();
   if (!coachId) throw new Error("Not authorized.");
 
   const supabase = createServiceClient();
@@ -42,7 +43,7 @@ export async function assertCoachOwnsStudent(studentId: string): Promise<string>
 }
 
 export async function assertCoachOwnsSession(sessionId: string): Promise<string> {
-  const coachId = await getAuthenticatedCoachIdAction();
+  const coachId = await getCachedCoachId();
   if (!coachId) throw new Error("Not authorized.");
 
   const supabase = createServiceClient();
@@ -57,7 +58,7 @@ export async function assertCoachOwnsSession(sessionId: string): Promise<string>
 }
 
 export async function assertCoachOwnsProgram(programId: string): Promise<string> {
-  const coachId = await getAuthenticatedCoachIdAction();
+  const coachId = await getCachedCoachId();
   if (!coachId) throw new Error("Not authorized.");
 
   const supabase = createServiceClient();

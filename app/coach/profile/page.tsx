@@ -31,7 +31,7 @@ const EDIT_BIO_FORM_ID = "edit-bio-form";
 
 export default function ProfilePage() {
   const coachId = usePortalCoachId();
-  const { coach, loading, refresh } = useCoachProfile(coachId);
+  const { coach, refresh } = useCoachProfile(coachId);
   const [editOpen, setEditOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
@@ -50,7 +50,7 @@ export default function ProfilePage() {
     setSkillTemplateId(coach.skillTemplateId);
   }, [coach]);
 
-  if (loading || !coach) {
+  if (!coachId || !coach) {
     return <CoachProfileSkeleton />;
   }
 

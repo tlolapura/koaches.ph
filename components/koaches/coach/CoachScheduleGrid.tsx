@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { addDays, addWeeks, format, isToday, parse, startOfWeek } from "date-fns";
-import { Ban, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Ban, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Court, Session } from "@/lib/koaches/types";
 import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
@@ -225,18 +225,7 @@ function OpenCell({
         compact ? "gap-1 px-2 text-xs" : "px-0.5 text-[8px] sm:text-[9px] lg:text-[10px]"
       )}
     >
-      {compact ? (
-        <>
-          {blockMode ? (
-            <Ban className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
-          ) : (
-            <Plus className="h-3.5 w-3.5 shrink-0 text-[#4F8FF7]" strokeWidth={2.5} />
-          )}
-          {label}
-        </>
-      ) : (
-        label
-      )}
+      {label}
     </button>
   );
 }

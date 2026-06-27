@@ -141,6 +141,8 @@ export type CoachProfile = {
   id: string;
   slug: string;
   name: string;
+  firstName: string;
+  lastName: string;
   photo: string | null;
   bio: string;
   specialization: string;
@@ -234,6 +236,8 @@ export type Student = {
   id: string;
   coachId: string;
   name: string;
+  firstName: string;
+  lastName: string;
   mobile: string;
   email: string;
   status: StudentStatus;

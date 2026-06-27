@@ -16,20 +16,34 @@ const CoachAuthContext = createContext<CoachAuthState>({
   email: null,
 });
 
-export function CoachAuthProvider({ children }: { children: React.ReactNode }) {
+type CoachAuthProviderProps = {
+  children: React.ReactNode;
+  initialCoachId?: string;
+  initialEmail?: string | null;
+};
+
+export function CoachAuthProvider({
+  children,
+  initialCoachId = "",
+  initialEmail = null,
+}: CoachAuthProviderProps) {
+  const hasServerAuth = initialCoachId.length > 0;
   const [state, setState] = useState<CoachAuthState>({
-    coachId: "",
-    loading: isSupabaseConfigured(),
-    email: null,
+    coachId: initialCoachId,
+    loading: !hasServerAuth && isSupabaseConfigured(),
+    email: initialEmail,
   });
 
   useEffect(() => {
-    let cancelled = false;
-
     if (!isSupabaseConfigured()) {
       setState({ coachId: "", loading: false, email: null });
       return;
     }
+
+    // Server layout already resolved coach auth for portal routes.
+    if (hasServerAuth) return;
+
+    let cancelled = false;
 
     void getProfileAction()
       .then((profile) => {
@@ -48,7 +62,7 @@ export function CoachAuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasServerAuth]);
 
   return <CoachAuthContext.Provider value={state}>{children}</CoachAuthContext.Provider>;
 }

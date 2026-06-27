@@ -9,6 +9,7 @@ import type {
   Student,
   StudentIntakeSubmission,
 } from "../types";
+import { joinPersonName, splitPersonName } from "../person-name";
 import { DEFAULT_SESSION_PRICING, getStartingRate } from "../pricing";
 
 export type DbCoach = {
@@ -16,6 +17,8 @@ export type DbCoach = {
   user_id: string | null;
   slug: string;
   name: string;
+  first_name: string;
+  last_name: string;
   photo_url: string | null;
   bio: string;
   specialization: string;
@@ -55,6 +58,8 @@ export type DbStudent = {
   id: string;
   coach_id: string;
   name: string;
+  first_name: string;
+  last_name: string;
   mobile: string;
   email: string;
   status: string;
@@ -176,10 +181,14 @@ export type DbBlockedSlot = {
 };
 
 export function mapCoach(row: DbCoach): CoachProfile {
+  const firstName = row.first_name?.trim() || splitPersonName(row.name).firstName;
+  const lastName = row.last_name?.trim() ?? splitPersonName(row.name).lastName;
   return {
     id: row.id,
     slug: row.slug,
-    name: row.name,
+    name: row.name?.trim() || joinPersonName(firstName, lastName),
+    firstName,
+    lastName,
     photo: row.photo_url,
     bio: row.bio,
     specialization: row.specialization,
@@ -223,10 +232,14 @@ export function mapProgram(row: DbProgram, enrolledStudentIds: string[]): Progra
 }
 
 export function mapStudent(row: DbStudent): Student {
+  const firstName = row.first_name?.trim() || splitPersonName(row.name).firstName;
+  const lastName = row.last_name?.trim() ?? splitPersonName(row.name).lastName;
   return {
     id: row.id,
     coachId: row.coach_id,
-    name: row.name,
+    name: row.name?.trim() || joinPersonName(firstName, lastName),
+    firstName,
+    lastName,
     mobile: row.mobile,
     email: row.email,
     status: row.status as Student["status"],
@@ -331,11 +344,14 @@ export function coachInsertFromApplication(
   app: CoachApplication,
   opts: { coachId: string; slug: string; userId?: string | null }
 ): Omit<DbCoach, "created_at" | "updated_at"> {
+  const { firstName, lastName } = splitPersonName(app.fullName);
   return {
     id: opts.coachId,
     user_id: opts.userId ?? null,
     slug: opts.slug,
-    name: app.fullName,
+    name: joinPersonName(firstName, lastName),
+    first_name: firstName,
+    last_name: lastName,
     photo_url: null,
     bio: app.bio,
     specialization: app.specialization,
@@ -398,10 +414,14 @@ export function programToDb(program: Program): DbProgram {
 }
 
 export function studentToDb(student: Student): DbStudent {
+  const firstName = student.firstName?.trim() || splitPersonName(student.name).firstName;
+  const lastName = student.lastName?.trim() ?? splitPersonName(student.name).lastName;
   return {
     id: student.id,
     coach_id: student.coachId,
-    name: student.name,
+    name: student.name?.trim() || joinPersonName(firstName, lastName),
+    first_name: firstName,
+    last_name: lastName,
     mobile: student.mobile,
     email: student.email,
     status: student.status,

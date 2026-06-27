@@ -1,5 +1,3 @@
-import { CoachSocialSkeleton } from "@/components/koaches/coach/CoachSkeletons";
-
-export default function SocialLoading() {
-  return <CoachSocialSkeleton />;
+export default function Loading() {
+  return null;
 }
