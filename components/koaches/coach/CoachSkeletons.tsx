@@ -75,13 +75,28 @@ export function CoachStudentListSkeleton() {
   return (
     <CoachPageShell>
       <CoachPageHeaderSkeleton />
-      <Bone className="mt-4 h-11 w-full rounded-xl" />
-      <div className="mt-3 flex gap-2">
-        <Bone className="h-9 w-16 rounded-full" />
-        <Bone className="h-9 w-20 rounded-full" />
-        <Bone className="h-9 w-24 rounded-full" />
+      <Bone className="mt-3 h-11 w-full rounded-xl" />
+      <div className="mt-2 flex gap-2">
+        <Bone className="h-8 w-16 rounded-full" />
+        <Bone className="h-8 w-12 rounded-full" />
+        <Bone className="h-8 w-20 rounded-full" />
       </div>
-      <CoachCardListSkeleton count={4} className="mt-4" />
+      <CoachCardListSkeleton count={4} className="mt-3" />
+    </CoachPageShell>
+  );
+}
+
+export function CoachReportsSkeleton() {
+  return (
+    <CoachPageShell>
+      <CoachPageHeaderSkeleton />
+      <div className="mt-4 flex gap-2">
+        <Bone className="h-11 w-24 rounded-full" />
+        <Bone className="h-11 w-28 rounded-full" />
+        <Bone className="h-11 w-20 rounded-full" />
+      </div>
+      <Bone className="mt-4 h-28 w-full rounded-2xl" />
+      <CoachCardListSkeleton count={3} className="mt-6" />
     </CoachPageShell>
   );
 }

@@ -7,6 +7,7 @@ import { updateCoachContactAction } from "@/lib/koaches/actions/coach-profile";
 import { invalidateCoachProfile } from "@/lib/koaches/queries/invalidate";
 import { displayFacebook, displayInstagram } from "@/lib/koaches/social-links";
 import { FacebookIcon, InstagramIcon } from "@/components/koaches/shared/SocialIcons";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
@@ -93,9 +94,9 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
         subtitle="These appear on your public coach page"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={CONTACT_FORM_ID} className="coach-btn-primary" disabled={saving}>
-              {saving ? "Saving…" : "Save"}
-            </button>
+            <CoachButton type="submit" form={CONTACT_FORM_ID} loading={saving} loadingLabel="Saving…">
+              Save
+            </CoachButton>
           </CoachSheetFooter>
         }
       >

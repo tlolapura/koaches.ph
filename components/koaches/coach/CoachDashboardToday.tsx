@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { useState } from "react";
 import {
   ArrowRight,
@@ -182,9 +183,12 @@ function DashboardMarkDoneButton({ session }: { session: Session }) {
   const [busy, setBusy] = useState(false);
 
   return (
-    <button
+    <CoachButton
       type="button"
-      disabled={busy}
+      variant="outline"
+      className="min-h-[40px] w-full border-[#FDE68A] bg-[#FFFBEB] px-4 text-xs font-semibold text-[#92400E] hover:bg-[#FEF3C7] active:bg-[#FEF3C7]"
+      loading={busy}
+      loadingLabel="Saving…"
       onClick={async () => {
         setBusy(true);
         try {
@@ -196,10 +200,9 @@ function DashboardMarkDoneButton({ session }: { session: Session }) {
           setBusy(false);
         }
       }}
-      className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 text-xs font-semibold text-[#92400E] active:bg-[#FEF3C7] disabled:opacity-60"
     >
-      {busy ? "Saving…" : "Mark session done"}
-    </button>
+      Mark session done
+    </CoachButton>
   );
 }
 

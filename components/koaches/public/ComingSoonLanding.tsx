@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
-import { BRAND_NAME, SITE_TAGLINE } from "@/lib/koaches/constants";
+import { BRAND_NAME } from "@/lib/koaches/constants";
 
 export function ComingSoonLanding() {
   return (
@@ -14,13 +14,7 @@ export function ComingSoonLanding() {
             <KoachesWordmark size="lg" />
           </div>
 
-          <p className="mt-10 text-[11px] font-bold uppercase tracking-[0.2em] text-[#16A34A]">
-            Coming soon
-          </p>
-          <h1 className="font-heading mt-3 text-3xl font-bold leading-tight text-[#111827] sm:text-4xl">
-            {SITE_TAGLINE}
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-[#6B7280]">
+          <p className="mt-8 text-base leading-relaxed text-[#6B7280] sm:text-lg">
             Pickleball coaching for the Philippines. We&apos;re getting the court ready.
           </p>
 

@@ -15,6 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { CoachBillingSkeleton } from "@/components/koaches/coach/CoachSkeletons";
@@ -408,9 +409,9 @@ export function CoachBillingPage() {
               </p>
             )}
 
-            <button type="submit" className="coach-btn-primary w-full py-3" disabled={submitting}>
-              {submitting ? "Uploading…" : "Submit receipt"}
-            </button>
+            <CoachButton type="submit" className="w-full py-3" loading={submitting} loadingLabel="Uploading…">
+              Submit receipt
+            </CoachButton>
           </form>
         </section>
       )}

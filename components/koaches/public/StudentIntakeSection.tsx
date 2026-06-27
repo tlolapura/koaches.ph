@@ -11,6 +11,7 @@ import {
   validateIntakePayload,
 } from "@/lib/koaches/intake";
 import { submitIntakeAction } from "@/lib/koaches/actions/intake";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { cn } from "@/lib/utils";
@@ -221,9 +222,9 @@ export function StudentIntakeSection({ coach }: StudentIntakeSectionProps) {
 
       {error && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#991B1B]">{error}</p>}
 
-      <button type="submit" className="coach-btn-primary w-full py-3.5" disabled={submitting}>
-        {submitting ? "Submitting…" : "Submit & join roster"}
-      </button>
+      <CoachButton type="submit" className="w-full py-3.5" loading={submitting} loadingLabel="Submitting…">
+        Submit & join roster
+      </CoachButton>
     </form>
   );
 }

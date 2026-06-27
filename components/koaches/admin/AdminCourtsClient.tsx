@@ -9,6 +9,7 @@ import {
   deleteCourtAction,
   updateCourtActiveAction,
 } from "@/lib/koaches/actions/courts";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
   const [region, setRegion] = useState("Metro Manila");
   const [mapsUrl, setMapsUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [busyCourtId, setBusyCourtId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const resetForm = () => {
@@ -76,26 +78,36 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
   };
 
   const toggleActive = async (court: Court) => {
+    setBusyCourtId(court.id);
     const next = court.isActive === false;
     setError(null);
-    const result = await updateCourtActiveAction(court.id, next);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await updateCourtActiveAction(court.id, next);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setCourtList((prev) => prev.map((c) => (c.id === court.id ? { ...c, isActive: next } : c)));
+      router.refresh();
+    } finally {
+      setBusyCourtId(null);
     }
-    setCourtList((prev) => prev.map((c) => (c.id === court.id ? { ...c, isActive: next } : c)));
-    router.refresh();
   };
 
   const removeCourt = async (id: string) => {
+    setBusyCourtId(id);
     setError(null);
-    const result = await deleteCourtAction(id);
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await deleteCourtAction(id);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setCourtList((prev) => prev.filter((c) => c.id !== id));
+      router.refresh();
+    } finally {
+      setBusyCourtId(null);
     }
-    setCourtList((prev) => prev.filter((c) => c.id !== id));
-    router.refresh();
   };
 
   return (
@@ -180,9 +192,9 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
             </CoachSheetField>
           </div>
           <div className="flex gap-2">
-            <button type="submit" className="coach-btn-primary w-auto px-5" disabled={saving}>
-              {saving ? "Saving…" : "Save court"}
-            </button>
+            <CoachButton type="submit" className="w-auto px-5" loading={saving} loadingLabel="Saving…">
+              Save court
+            </CoachButton>
             <button
               type="button"
               className="coach-btn-outline w-auto px-5"
@@ -233,18 +245,20 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
                 </span>
                 <button
                   type="button"
-                  className="text-xs font-semibold text-[#6B7280] hover:text-[#4F8FF7]"
+                  disabled={busyCourtId === c.id}
+                  className="text-xs font-semibold text-[#6B7280] hover:text-[#4F8FF7] disabled:opacity-60"
                   onClick={() => void toggleActive(c)}
                 >
-                  {c.isActive !== false ? "Deactivate" : "Activate"}
+                  {busyCourtId === c.id ? "…" : c.isActive !== false ? "Deactivate" : "Activate"}
                 </button>
                 <button
                   type="button"
-                  className="text-xs font-semibold text-[#6B7280] hover:text-red-500"
+                  disabled={busyCourtId === c.id}
+                  className="text-xs font-semibold text-[#6B7280] hover:text-red-500 disabled:opacity-60"
                   onClick={() => void removeCourt(c.id)}
                 >
                   <Trash2 className="mr-0.5 inline h-3.5 w-3.5" />
-                  Remove
+                  {busyCourtId === c.id ? "…" : "Remove"}
                 </button>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, CalendarDays, FileText, Menu } from "lucide-react";
+import { Home, Users, CalendarDays, BarChart3, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { bottomNavActiveClass } from "@/lib/koaches/coach-colors";
 
@@ -10,7 +10,7 @@ const tabs = [
   { href: "/coach/dashboard", label: "Home", icon: Home },
   { href: "/coach/sessions", label: "Schedule", icon: CalendarDays },
   { href: "/coach/students", label: "Students", icon: Users },
-  { href: "/coach/programs", label: "Programs", icon: FileText },
+  { href: "/coach/reports", label: "Reports", icon: BarChart3 },
   { href: "/coach/more", label: "More", icon: Menu },
 ];
 
@@ -29,7 +29,7 @@ export function CoachBottomNav() {
             (tab.href === "/coach/dashboard" && pathname === "/coach") ||
             (tab.href !== "/coach/dashboard" && tab.href !== "/coach/more" && pathname.startsWith(tab.href)) ||
             (tab.href === "/coach/more" &&
-              ["/coach/profile", "/coach/social", "/coach/billing"].some((p) =>
+              ["/coach/profile", "/coach/social", "/coach/billing", "/coach/programs"].some((p) =>
                 pathname.startsWith(p)
               ));
           const Icon = tab.icon;

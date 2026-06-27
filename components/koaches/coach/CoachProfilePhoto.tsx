@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef } from "react";
-import { Camera, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { Camera, Loader2, Trash2 } from "lucide-react";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { useCoachPhoto } from "@/hooks/useCoachPhoto";
 import { InitialsAvatar, useCoachToast } from "@/components/koaches/coach/CoachUi";
 import {
@@ -39,31 +40,46 @@ export function CoachProfilePhoto({
   const inputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useCoachToast();
   const { photo, savePhoto } = useCoachPhoto(coachId, defaultPhoto);
+  const [uploading, setUploading] = useState(false);
 
-  const pickPhoto = () => inputRef.current?.click();
+  const pickPhoto = () => {
+    if (!uploading) inputRef.current?.click();
+  };
 
   const handleFile = async (file: File | undefined) => {
-    if (!file) return;
+    if (!file || uploading) return;
     const error = validateCoachPhotoFile(file);
     if (error) {
       showToast(error, "error");
       return;
     }
+    setUploading(true);
     try {
       const dataUrl = await readImageFileAsDataUrl(file);
-      savePhoto(dataUrl);
+      await savePhoto(dataUrl);
       onUpdated?.();
       showToast("Profile photo updated!");
     } catch {
       showToast("Could not upload photo", "error");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
-  const removePhoto = () => {
-    savePhoto(null);
-    onUpdated?.();
-    showToast("Photo removed");
-    if (inputRef.current) inputRef.current.value = "";
+  const removePhoto = async () => {
+    if (uploading) return;
+    setUploading(true);
+    try {
+      await savePhoto(null);
+      onUpdated?.();
+      showToast("Photo removed");
+      if (inputRef.current) inputRef.current.value = "";
+    } catch {
+      showToast("Could not remove photo", "error");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const dim = sizeClasses[size];
@@ -78,22 +94,23 @@ export function CoachProfilePhoto({
           className={cn(
             "rounded-2xl object-cover ring-4 ring-[#F0FDF4]",
             dim,
-            editable && "cursor-pointer"
+            editable && !uploading && "cursor-pointer",
+            uploading && "opacity-70"
           )}
-          onClick={editable ? pickPhoto : undefined}
+          onClick={editable && !uploading ? pickPhoto : undefined}
         />
       ) : (
         <button
           type="button"
           className={cn(editable && "group relative rounded-full")}
           onClick={editable ? pickPhoto : undefined}
-          disabled={!editable}
+          disabled={!editable || uploading}
         >
           <InitialsAvatar
             name={name}
             size={size}
             variant="navy"
-            className={cn(editable && "ring-4 ring-[#F0FDF4]")}
+            className={cn(editable && "ring-4 ring-[#F0FDF4]", uploading && "opacity-70")}
           />
         </button>
       )}
@@ -105,6 +122,7 @@ export function CoachProfilePhoto({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             className="sr-only"
+            disabled={uploading}
             onChange={(e) => {
               void handleFile(e.target.files?.[0]);
             }}
@@ -112,10 +130,16 @@ export function CoachProfilePhoto({
           <button
             type="button"
             onClick={pickPhoto}
-            className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-white shadow-md transition-transform active:scale-95"
+            disabled={uploading}
+            className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#16A34A] text-white shadow-md transition-transform active:scale-95 disabled:opacity-70"
             aria-label="Change profile photo"
+            aria-busy={uploading}
           >
-            <Camera className="h-4 w-4" />
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Camera className="h-4 w-4" />
+            )}
           </button>
         </>
       )}
@@ -123,11 +147,12 @@ export function CoachProfilePhoto({
       {editable && showRemove && photo && (
         <button
           type="button"
-          onClick={removePhoto}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 text-xs font-semibold text-[#6B7280] hover:text-[#EF4444]"
+          onClick={() => void removePhoto()}
+          disabled={uploading}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 text-xs font-semibold text-[#6B7280] hover:text-[#EF4444] disabled:opacity-60"
         >
           <Trash2 className="h-3.5 w-3.5" />
-          Remove photo
+          {uploading ? "Removing…" : "Remove photo"}
         </button>
       )}
     </div>
@@ -147,20 +172,25 @@ export function CoachPhotoUploadField({
   const inputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useCoachToast();
   const { photo, savePhoto } = useCoachPhoto(coachId, defaultPhoto);
+  const [uploading, setUploading] = useState(false);
 
   const handleFile = async (file: File | undefined) => {
-    if (!file) return;
+    if (!file || uploading) return;
     const error = validateCoachPhotoFile(file);
     if (error) {
       showToast(error, "error");
       return;
     }
+    setUploading(true);
     try {
       const dataUrl = await readImageFileAsDataUrl(file);
-      savePhoto(dataUrl);
+      await savePhoto(dataUrl);
       showToast("Profile photo updated!");
     } catch {
       showToast("Could not upload photo", "error");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
@@ -172,33 +202,45 @@ export function CoachPhotoUploadField({
       ) : (
         <InitialsAvatar name={name} size="xl" variant="navy" />
       )}
-      <button
+      <CoachButton
         type="button"
+        variant="outline"
+        className="mt-4 w-auto px-4 py-2 text-sm"
+        loading={uploading}
+        loadingLabel="Uploading…"
         onClick={() => inputRef.current?.click()}
-        className="coach-btn-outline mt-4 w-auto gap-2 px-4 py-2 text-sm"
       >
         <Camera className="h-4 w-4" />
         {photo ? "Change photo" : "Upload photo"}
-      </button>
+      </CoachButton>
       <p className="mt-2 text-center text-[10px] text-[#9CA3AF]">JPG or PNG, max 2 MB</p>
       <input
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp"
         className="sr-only"
+        disabled={uploading}
         onChange={(e) => void handleFile(e.target.files?.[0])}
       />
       {photo && (
         <button
           type="button"
-          onClick={() => {
-            savePhoto(null);
-            showToast("Photo removed");
-            if (inputRef.current) inputRef.current.value = "";
-          }}
-          className="mt-2 text-xs font-medium text-[#6B7280] hover:text-[#EF4444]"
+          disabled={uploading}
+          onClick={() => void (async () => {
+            setUploading(true);
+            try {
+              await savePhoto(null);
+              showToast("Photo removed");
+              if (inputRef.current) inputRef.current.value = "";
+            } catch {
+              showToast("Could not remove photo", "error");
+            } finally {
+              setUploading(false);
+            }
+          })()}
+          className="mt-2 text-xs font-medium text-[#6B7280] hover:text-[#EF4444] disabled:opacity-60"
         >
-          Remove photo
+          {uploading ? "Removing…" : "Remove photo"}
         </button>
       )}
     </div>

@@ -7,6 +7,7 @@ import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
 import { formatPricingSummary, formatTierRate, formatTierLabel, DEFAULT_SESSION_PRICING, getStartingRate } from "@/lib/koaches/pricing";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
@@ -192,9 +193,9 @@ export default function ProfilePage() {
         title="Edit bio"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={EDIT_BIO_FORM_ID} className="coach-btn-primary" disabled={savingBio}>
-              {savingBio ? "Saving…" : "Save bio"}
-            </button>
+            <CoachButton type="submit" form={EDIT_BIO_FORM_ID} loading={savingBio} loadingLabel="Saving…">
+              Save bio
+            </CoachButton>
           </CoachSheetFooter>
         }
       >
@@ -237,10 +238,10 @@ export default function ProfilePage() {
         subtitle="Rates for drop-in sessions — programs have their own bundle price per person"
         footer={
           <CoachSheetFooter>
-            <button
+            <CoachButton
               type="button"
-              className="coach-btn-primary"
-              disabled={savingPricing}
+              loading={savingPricing}
+              loadingLabel="Saving…"
               onClick={async () => {
                 setSavingPricing(true);
                 try {
@@ -256,8 +257,8 @@ export default function ProfilePage() {
                 }
               }}
             >
-              {savingPricing ? "Saving…" : "Save Pricing"}
-            </button>
+              Save Pricing
+            </CoachButton>
           </CoachSheetFooter>
         }
       >
@@ -271,10 +272,10 @@ export default function ProfilePage() {
         subtitle="Default rubric for rating students"
         footer={
           <CoachSheetFooter>
-            <button
+            <CoachButton
               type="button"
-              className="coach-btn-primary"
-              disabled={savingTemplate}
+              loading={savingTemplate}
+              loadingLabel="Saving…"
               onClick={async () => {
                 setSavingTemplate(true);
                 try {
@@ -290,8 +291,8 @@ export default function ProfilePage() {
                 }
               }}
             >
-              {savingTemplate ? "Saving…" : "Save Template"}
-            </button>
+              Save Template
+            </CoachButton>
           </CoachSheetFooter>
         }
       >

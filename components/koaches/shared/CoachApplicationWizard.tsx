@@ -16,6 +16,7 @@ import {
   User,
   Users,
 } from "lucide-react";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
   CoachApplicationFields,
   formatApplicationReview,
@@ -130,24 +131,16 @@ function WizardNavButtons({
           Back
         </button>
       ) : null}
-      <button
+      <CoachButton
         type="button"
-        className={cn(
-          "coach-btn-primary flex min-h-[48px] items-center justify-center gap-1",
-          hideBack ? "w-full" : "sm:flex-[2]"
-        )}
+        className={cn(hideBack ? "w-full" : "sm:flex-[2]")}
+        loading={loading}
+        loadingLabel={loadingLabel ?? "Sending…"}
         onClick={onNext}
-        disabled={loading}
       >
-        {loading ? (
-          loadingLabel ?? "Sending…"
-        ) : (
-          <>
-            {nextLabel}
-            {nextLabel !== "Submit application" && <ArrowRight className="h-4 w-4" />}
-          </>
-        )}
-      </button>
+        {nextLabel}
+        {nextLabel !== "Submit application" && !loading && <ArrowRight className="h-4 w-4" />}
+      </CoachButton>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { LogOut } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/koaches/actions/auth";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +32,11 @@ export function AdminSignOutButton({
         className
       )}
     >
-      {showIcon && <LogOut className="h-4 w-4" strokeWidth={2.25} />}
+      {pending ? (
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+      ) : (
+        showIcon && <LogOut className="h-4 w-4" strokeWidth={2.25} />
+      )}
       {pending ? "Signing out…" : label}
     </button>
   );

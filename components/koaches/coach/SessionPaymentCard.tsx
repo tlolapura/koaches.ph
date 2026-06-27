@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
 import { useSessionPayment } from "@/hooks/useSessionPayment";
 import {
@@ -57,9 +58,13 @@ export function SessionPaymentCard({ session }: SessionPaymentCardProps) {
                 : "text-[#6B7280] hover:bg-white/70"
             )}
           >
-            {updating && paymentStatus !== status
-              ? "…"
-              : getPaymentStatusLabel(status)}
+            {updating && paymentStatus !== status ? (
+              <span className="inline-flex items-center gap-1">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+              </span>
+            ) : (
+              getPaymentStatusLabel(status)
+            )}
           </button>
         ))}
       </div>

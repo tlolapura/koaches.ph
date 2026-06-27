@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachSheetFooterActions } from "@/components/koaches/coach/CoachSheet";
 
 const SHEET_OPEN_ATTR = "data-coach-sheet-open";
@@ -145,22 +146,25 @@ export function ConfirmSheet({
       title={message}
       footer={
         <CoachSheetFooterActions>
-          <button
+          <CoachButton
             type="button"
+            variant="outline"
+            className="flex-1"
             onClick={onClose}
             disabled={pending}
-            className="font-heading min-h-[48px] flex-1 rounded-xl border border-[#E5E7EB] font-semibold text-[#6B7280] disabled:opacity-60"
           >
             Cancel
-          </button>
-          <button
+          </CoachButton>
+          <CoachButton
             type="button"
+            variant="danger"
+            className="flex-1"
+            loading={pending}
+            loadingLabel="Working…"
             onClick={() => void handleConfirm()}
-            disabled={pending}
-            className="font-heading min-h-[48px] flex-1 rounded-xl bg-[#EF4444] font-semibold text-white disabled:opacity-60"
           >
-            {pending ? "Working…" : confirmLabel}
-          </button>
+            {confirmLabel}
+          </CoachButton>
         </CoachSheetFooterActions>
       }
     />

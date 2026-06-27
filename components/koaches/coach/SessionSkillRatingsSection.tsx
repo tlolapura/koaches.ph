@@ -72,8 +72,8 @@ function ParticipantProgressPanel({
         customSkillIds={ctx.customSkillIds}
         sessionNumber={ctx.sessionNumber}
         totalSessions={ctx.totalSessions}
-        onSave={(before, after) => {
-          saveRatings({ ratingsBefore: before, ratingsAfter: after });
+        onSave={async (before, after) => {
+          await saveRatings({ ratingsBefore: before, ratingsAfter: after });
           showToast(`Ratings saved for ${participant.name}`);
         }}
       />

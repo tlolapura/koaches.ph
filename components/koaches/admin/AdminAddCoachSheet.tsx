@@ -5,6 +5,7 @@ import {
   createCoachManuallyAction,
   type CreateCoachManuallyResult,
 } from "@/lib/koaches/actions/coaches";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import type { CoachProfile } from "@/lib/koaches/types";
@@ -71,22 +72,24 @@ export function AdminAddCoachSheet({ open, onClose, onCreated }: AdminAddCoachSh
       subtitle="Create a coach account directly — no application required."
       footer={
         <CoachSheetFooter>
-          <button
+          <CoachButton
             type="button"
-            className="coach-btn-outline w-full py-3 text-sm"
+            variant="outline"
+            className="w-full py-3 text-sm"
             onClick={onClose}
             disabled={submitting}
           >
             Cancel
-          </button>
-          <button
+          </CoachButton>
+          <CoachButton
             type="submit"
             form="admin-add-coach-form"
-            className="coach-btn-primary w-full py-3 text-sm"
-            disabled={submitting}
+            className="w-full py-3 text-sm"
+            loading={submitting}
+            loadingLabel="Creating…"
           >
-            {submitting ? "Creating…" : "Create coach"}
-          </button>
+            Create coach
+          </CoachButton>
         </CoachSheetFooter>
       }
     >

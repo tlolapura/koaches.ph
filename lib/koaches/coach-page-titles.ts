@@ -10,6 +10,7 @@ const SECTIONS: Array<{ prefix: string; title: string; backHref?: string; backLa
   { prefix: "/coach/students", title: "Students", backHref: "/coach/students", backLabel: "Students" },
   { prefix: "/coach/sessions", title: "Schedule", backHref: "/coach/sessions", backLabel: "Schedule" },
   { prefix: "/coach/programs", title: "Programs", backHref: "/coach/programs", backLabel: "Programs" },
+  { prefix: "/coach/reports", title: "Reports" },
   { prefix: "/coach/social", title: "Social", backHref: "/coach/more", backLabel: "More" },
   { prefix: "/coach/profile", title: "Profile", backHref: "/coach/more", backLabel: "More" },
   { prefix: "/coach/billing", title: "Billing", backHref: "/coach/more", backLabel: "More" },

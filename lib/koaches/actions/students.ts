@@ -83,6 +83,74 @@ export async function createStudentAction(coachId: string, input: CreateStudentI
   return student;
 }
 
+export type UpdateStudentProfileInput = {
+  firstName: string;
+  lastName: string;
+  mobile: string;
+  email: string;
+  skillLevel: DuprLevel;
+  programId?: string;
+};
+
+export async function updateStudentProfileAction(studentId: string, input: UpdateStudentProfileInput) {
+  const coachId = await assertCoachOwnsStudent(studentId);
+  const firstName = input.firstName.trim();
+  const lastName = input.lastName.trim();
+  const displayName = joinPersonName(firstName, lastName);
+  if (!displayName) throw new Error("Student name is required.");
+
+  const supabase = createServiceClient();
+  const { data: row, error: fetchError } = await supabase
+    .from("students")
+    .select("program_id")
+    .eq("id", studentId)
+    .single();
+  if (fetchError) throw fetchError;
+
+  const oldProgramId = row.program_id ?? null;
+  const newProgramId = input.programId?.trim() || null;
+
+  const { error } = await supabase
+    .from("students")
+    .update({
+      name: displayName,
+      first_name: firstName,
+      last_name: lastName,
+      mobile: input.mobile.trim(),
+      email: input.email.trim(),
+      skill_level: input.skillLevel,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", studentId)
+    .eq("coach_id", coachId);
+  if (error) throw error;
+
+  if (newProgramId !== oldProgramId) {
+    if (oldProgramId) {
+      await supabase
+        .from("program_enrollments")
+        .delete()
+        .eq("student_id", studentId)
+        .eq("program_id", oldProgramId);
+    }
+    if (newProgramId) {
+      const { enrollStudentInProgramAction } = await import("@/lib/koaches/actions/programs");
+      await enrollStudentInProgramAction(newProgramId, studentId);
+    } else {
+      await supabase
+        .from("students")
+        .update({ program_id: null, updated_at: new Date().toISOString() })
+        .eq("id", studentId)
+        .eq("coach_id", coachId);
+    }
+  }
+
+  revalidatePath("/coach/students");
+  revalidatePath(`/coach/students/${studentId}`);
+  if (oldProgramId) revalidatePath(`/coach/programs/${oldProgramId}`);
+  if (newProgramId) revalidatePath(`/coach/programs/${newProgramId}`);
+}
+
 export async function updateStudentNotesAction(studentId: string, notes: string) {
   await assertCoachOwnsStudent(studentId);
   const supabase = createServiceClient();

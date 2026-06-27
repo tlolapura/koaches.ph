@@ -26,6 +26,8 @@ import { notifyRosterUpdated } from "@/hooks/useCoachStudents";
 import { crudToast } from "@/lib/koaches/crud-toast";
 import type { Session } from "@/lib/koaches/types";
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { EditStudentSheet } from "@/components/koaches/coach/EditStudentSheet";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
   CoachBackLink,
   CoachEntityTitle,
@@ -43,6 +45,7 @@ export function StudentProfileView({ student }: { student: Student }) {
   const router = useRouter();
   const coachId = usePortalCoachId();
   const [tab, setTab] = useState<(typeof tabs)[number]>("Progress");
+  const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [note, setNote] = useState(student.notes ?? "");
   const [savingNote, setSavingNote] = useState(false);
@@ -60,13 +63,22 @@ export function StudentProfileView({ student }: { student: Student }) {
     <CoachPageShell>
       <div className="flex items-center justify-between">
         <CoachBackLink href="/coach/students" label="Students" className="hidden md:inline-flex" />
-        <button
-          type="button"
-          onClick={() => setArchiveOpen(true)}
-          className="text-sm font-medium text-[#6B7280]"
-        >
-          Archive
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => setEditOpen(true)}
+            className="text-sm font-medium text-[#16A34A]"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => setArchiveOpen(true)}
+            className="text-sm font-medium text-[#6B7280]"
+          >
+            Archive
+          </button>
+        </div>
       </div>
 
       <div className="coach-card mt-4 p-5">
@@ -174,10 +186,11 @@ export function StudentProfileView({ student }: { student: Student }) {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
               />
-              <button
+              <CoachButton
                 type="button"
-                className="coach-btn-primary mt-3"
-                disabled={savingNote}
+                className="mt-3"
+                loading={savingNote}
+                loadingLabel="Saving…"
                 onClick={async () => {
                   setSavingNote(true);
                   try {
@@ -191,8 +204,8 @@ export function StudentProfileView({ student }: { student: Student }) {
                   }
                 }}
               >
-                {savingNote ? "Saving…" : "Save Note"}
-              </button>
+                Save Note
+              </CoachButton>
             </div>
             {completed
               .filter((s) => s.notes)
@@ -205,6 +218,8 @@ export function StudentProfileView({ student }: { student: Student }) {
           </div>
         )}
       </div>
+
+      <EditStudentSheet open={editOpen} onClose={() => setEditOpen(false)} student={student} />
 
       <ConfirmSheet
         open={archiveOpen}

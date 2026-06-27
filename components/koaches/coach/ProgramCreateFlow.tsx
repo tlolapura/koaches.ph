@@ -28,6 +28,7 @@ import {
 import { PresetIcon } from "@/components/koaches/coach/CoachIcons";
 import { SkillRubricPreview } from "@/components/koaches/coach/SkillRubricPreview";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachSheetField, CoachSheetStickyActions } from "@/components/koaches/coach/CoachSheet";
 import { SessionCountField } from "@/components/koaches/coach/SessionCountField";
 import { cn } from "@/lib/utils";
@@ -40,7 +41,7 @@ type TemplateStep = "pick" | "customize";
 type ProgramCreateFlowProps = {
   open: boolean;
   onClose: () => void;
-  onSave: (draft: ProgramDraft) => void;
+  onSave: (draft: ProgramDraft) => void | Promise<void>;
   /** Open directly into custom wizard */
   initialMode?: FlowMode;
 };
@@ -57,6 +58,18 @@ export function ProgramCreateFlow({
   const [draft, setDraft] = useState<ProgramDraft | null>(null);
   const [rubricBase, setRubricBase] = useState<Exclude<SkillRubricId, "custom"> | "scratch">("beginner");
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(["fundamentals"]));
+  const [saving, setSaving] = useState(false);
+
+  const submitDraft = async (next: ProgramDraft) => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave(next);
+      handleClose();
+    } finally {
+      setSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -257,7 +270,8 @@ export function ProgramCreateFlow({
           draft={draft}
           setDraft={setDraft}
           onBack={() => setTemplateStep("pick")}
-          onSave={() => { onSave(draft); handleClose(); }}
+          onSave={() => void submitDraft(draft)}
+          saving={saving}
         />
       )}
 
@@ -542,17 +556,15 @@ export function ProgramCreateFlow({
               <SkillRubricPreview rubricId="custom" customSkillIds={draft.customSkillIds} />
 
               <CoachSheetStickyActions>
-                <button
+                <CoachButton
                   type="button"
-                  className="coach-btn-primary"
                   disabled={!canSaveCustom}
-                  onClick={() => {
-                    onSave({ ...draft, source: "custom", rubricId: "custom" });
-                    handleClose();
-                  }}
+                  loading={saving}
+                  loadingLabel="Creating…"
+                  onClick={() => void submitDraft({ ...draft, source: "custom", rubricId: "custom" })}
                 >
                   Create Program
-                </button>
+                </CoachButton>
               </CoachSheetStickyActions>
             </div>
           )}
@@ -567,11 +579,13 @@ function TemplateCustomizeForm({
   setDraft,
   onBack,
   onSave,
+  saving = false,
 }: {
   draft: ProgramDraft;
   setDraft: (d: ProgramDraft) => void;
   onBack: () => void;
   onSave: () => void;
+  saving?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -616,9 +630,9 @@ function TemplateCustomizeForm({
       />
 
       <CoachSheetStickyActions>
-        <button type="button" className="coach-btn-primary" onClick={onSave}>
+        <CoachButton type="button" loading={saving} loadingLabel="Saving…" onClick={onSave}>
           Save Program
-        </button>
+        </CoachButton>
       </CoachSheetStickyActions>
     </div>
   );

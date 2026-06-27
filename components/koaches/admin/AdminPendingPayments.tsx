@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { Check, ExternalLink, X } from "lucide-react";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
   approvePaymentSubmissionAction,
   getAdminReceiptSignedUrlAction,
   rejectPaymentSubmissionAction,
   type AdminPendingPayment,
 } from "@/lib/koaches/actions/admin-billing";
-import { cn, formatCurrency, formatDisplayDate } from "@/lib/utils";
+import { formatCurrency, formatDisplayDate } from "@/lib/utils";
 
 type AdminPendingPaymentsProps = {
   initialPayments: AdminPendingPayment[];
@@ -103,26 +104,26 @@ export function AdminPendingPayments({ initialPayments }: AdminPendingPaymentsPr
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <button
+                <CoachButton
                   type="button"
-                  disabled={isBusy}
+                  className="w-auto min-h-[40px] px-4 py-2 text-sm"
+                  loading={isBusy}
+                  loadingLabel="Saving…"
                   onClick={() => void handleApprove(payment)}
-                  className={cn(
-                    "coach-btn-primary inline-flex w-auto min-h-[40px] items-center gap-1.5 px-4 py-2 text-sm"
-                  )}
                 >
                   <Check className="h-4 w-4" />
-                  {isBusy ? "Saving…" : "Approve & extend"}
-                </button>
-                <button
+                  Approve & extend
+                </CoachButton>
+                <CoachButton
                   type="button"
+                  variant="outline"
+                  className="w-auto min-h-[40px] px-4 py-2 text-sm text-[#6B7280]"
                   disabled={isBusy}
                   onClick={() => void handleReject(payment)}
-                  className="coach-btn-outline inline-flex w-auto min-h-[40px] items-center gap-1.5 px-4 py-2 text-sm text-[#6B7280]"
                 >
                   <X className="h-4 w-4" />
                   Reject
-                </button>
+                </CoachButton>
               </div>
             </div>
           );

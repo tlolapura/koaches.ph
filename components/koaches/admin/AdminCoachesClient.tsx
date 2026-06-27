@@ -18,6 +18,7 @@ import {
   BILLING_STATUS_STYLES,
   getSubscriptionBillingInfo,
 } from "@/lib/koaches/subscription-billing";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
 import { cn, formatCurrency, formatDisplayDate } from "@/lib/utils";
 
@@ -286,31 +287,32 @@ export function AdminCoachesClient({
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <button
+                <CoachButton
                   type="button"
-                  disabled={isBusy}
-                  onClick={() => void handleToggleActive(c)}
+                  variant={c.isActive ? "outline" : "primary"}
                   className={cn(
-                    "min-h-[40px] rounded-xl px-4 py-2 text-sm font-semibold transition-colors",
-                    c.isActive
-                      ? "border border-[#FECACA] bg-white text-[#B91C1C] hover:bg-[#FEF2F2]"
-                      : "coach-btn-primary w-auto"
+                    "w-auto min-h-[40px] px-4 py-2 text-sm",
+                    c.isActive && "border-[#FECACA] text-[#B91C1C] hover:bg-[#FEF2F2]"
                   )}
+                  loading={isBusy}
+                  loadingLabel="Saving…"
+                  onClick={() => void handleToggleActive(c)}
                 >
-                  {isBusy ? "Saving…" : c.isActive ? "Deactivate account" : "Reactivate account"}
-                </button>
+                  {c.isActive ? "Deactivate account" : "Reactivate account"}
+                </CoachButton>
                 {(billing.status === "payment_due" ||
                   billing.status === "overdue" ||
                   billing.status === "lapsed" ||
                   billing.status === "not_set") && (
-                  <button
+                  <CoachButton
                     type="button"
+                    variant="outline"
+                    className="w-auto min-h-[40px] px-4 py-2 text-sm"
                     disabled={isBusy}
                     onClick={() => void handleExtend(c.id)}
-                    className="coach-btn-outline min-h-[40px] w-auto px-4 py-2 text-sm"
                   >
                     Extend 1 month
-                  </button>
+                  </CoachButton>
                 )}
               </div>
             </div>

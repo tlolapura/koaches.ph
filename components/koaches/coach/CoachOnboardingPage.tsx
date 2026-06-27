@@ -6,6 +6,7 @@ import { CheckCircle2 } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachProfileSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { PricingTiersEditor } from "@/components/koaches/coach/PricingTiersEditor";
@@ -247,14 +248,15 @@ export function CoachOnboardingPage() {
             Back
           </button>
         )}
-        <button
+        <CoachButton
           type="button"
-          className="coach-btn-primary flex-1"
-          disabled={saving}
+          className="flex-1"
+          loading={saving}
+          loadingLabel="Saving…"
           onClick={() => void handleNext()}
         >
-          {saving ? "Saving…" : isLast ? "Go to dashboard" : "Continue"}
-        </button>
+          {isLast ? "Go to dashboard" : "Continue"}
+        </CoachButton>
       </div>
 
       <button

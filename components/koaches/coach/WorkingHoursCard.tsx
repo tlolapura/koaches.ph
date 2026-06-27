@@ -12,6 +12,7 @@ import {
 } from "@/lib/koaches/coach-availability";
 import { useCoachAvailability } from "@/hooks/useCoachAvailability";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 
@@ -80,9 +81,9 @@ export function WorkingHoursCard() {
         subtitle="When you're available for sessions — add as many windows as you need"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={WORKING_HOURS_FORM_ID} className="coach-btn-primary" disabled={saving}>
-              {saving ? "Saving…" : "Save hours"}
-            </button>
+            <CoachButton type="submit" form={WORKING_HOURS_FORM_ID} loading={saving} loadingLabel="Saving…">
+              Save hours
+            </CoachButton>
           </CoachSheetFooter>
         }
       >

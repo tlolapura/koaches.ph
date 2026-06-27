@@ -12,6 +12,7 @@ import {
 } from "@/lib/koaches/progress-cards";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { getSessionParticipants } from "@/lib/koaches/session-participants";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { RadarChart, SkillComparisonTable } from "@/components/koaches/RadarChart";
@@ -37,6 +38,7 @@ export function GenerateProgressCardSheet({
   const [step, setStep] = useState(1);
   const [message, setMessage] = useState("");
   const [generatedId, setGeneratedId] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   const participant = getSessionParticipants(session).find((p) => p.id === participantId);
   const ratings = resolveParticipantProgress(session, participantId);
@@ -61,7 +63,8 @@ export function GenerateProgressCardSheet({
   }, [open, session.id, participantId]);
 
   const handleGenerate = async () => {
-    if (!draft) return;
+    if (!draft || generating) return;
+    setGenerating(true);
     try {
       await saveCard(draft);
       setGeneratedId(draft.id);
@@ -70,6 +73,8 @@ export function GenerateProgressCardSheet({
       showToast("Progress card created!");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Could not create progress card", "error");
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -103,20 +108,22 @@ export function GenerateProgressCardSheet({
         step < 4 ? (
           <CoachSheetFooter>
             {step > 1 && (
-              <button type="button" className="coach-btn-outline" onClick={() => setStep((s) => s - 1)}>
+              <CoachButton type="button" variant="outline" disabled={generating} onClick={() => setStep((s) => s - 1)}>
                 Back
-              </button>
+              </CoachButton>
             )}
-            <button
+            <CoachButton
               type="button"
-              className="coach-btn-primary"
+              loading={step === 3 && generating}
+              loadingLabel="Generating…"
+              disabled={generating}
               onClick={() => {
-                if (step === 3) handleGenerate();
+                if (step === 3) void handleGenerate();
                 else setStep((s) => s + 1);
               }}
             >
               {step === 3 ? "Generate card" : "Next"}
-            </button>
+            </CoachButton>
           </CoachSheetFooter>
         ) : (
           <CoachSheetFooter>

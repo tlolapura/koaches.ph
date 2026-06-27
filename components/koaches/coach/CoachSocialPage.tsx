@@ -31,6 +31,7 @@ import {
 } from "@/components/koaches/coach/social/SocialStoryCards";
 import { STORY_EXPORT_LABEL } from "@/components/koaches/coach/social/SocialStoryFrame";
 import { cn } from "@/lib/utils";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachSocialSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 
@@ -328,24 +329,26 @@ export function CoachSocialPage() {
 
       <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-30 md:pointer-events-auto md:static md:inset-auto md:bottom-auto md:mt-6">
         <div className="pointer-events-auto space-y-2 border-t border-[#E5E7EB] bg-white/95 px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur-md md:border-0 md:bg-transparent md:p-0 md:shadow-none">
-          <button
+          <CoachButton
             type="button"
-            className="coach-btn-primary w-full gap-2 py-3.5 text-sm"
+            className="w-full py-3.5 text-sm"
+            loading={saving}
+            loadingLabel="Saving…"
             onClick={handleDownload}
-            disabled={saving}
           >
             <Download className="h-4 w-4" />
-            {saving ? "Saving…" : "Save image"}
-          </button>
-          <button
+            Save image
+          </CoachButton>
+          <CoachButton
             type="button"
-            className="coach-btn-outline w-full gap-2 text-sm"
-            onClick={handleShare}
+            variant="outline"
+            className="w-full text-sm"
             disabled={saving}
+            onClick={handleShare}
           >
             <Share2 className="h-4 w-4" />
             Share
-          </button>
+          </CoachButton>
         </div>
       </div>
     </CoachPageShell>

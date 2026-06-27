@@ -30,21 +30,50 @@ import { ProgressCardReadySection } from "@/components/koaches/coach/ProgressCar
 import { GenerateProgressCardSheet } from "@/components/koaches/coach/GenerateProgressCardSheet";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { crudToast } from "@/lib/koaches/crud-toast";
+import type { DuprLevel } from "@/lib/koaches/types";
 import { cn, formatDisplayDate } from "@/lib/utils";
 
 const ADD_STUDENT_FORM_ID = "add-student-form";
 
-type Filter = "all" | "active" | "archived" | "pending";
+type StatusFilter = "all" | "active" | "archived" | "pending";
+
+function FilterChip({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "font-heading shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold min-h-[32px]",
+        active ? "bg-[#16A34A] text-white" : "border border-[#E5E7EB] bg-white text-[#6B7280]"
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function duprShortLabel(level: DuprLevel): string {
+  return DUPR_LEVELS.find((d) => d.level === level)?.label ?? level;
+}
 
 export default function StudentsPage() {
   const coachId = usePortalCoachId();
-  const [filter, setFilter] = useState<Filter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const { showToast } = useCoachToast();
-  const { students: rosterStudents, loading } = useCoachStudents(coachId, true);
+  const { students: rosterStudents } = useCoachStudents(coachId, true);
   const [savingStudent, setSavingStudent] = useState(false);
   const [declineTarget, setDeclineTarget] = useState<{ id: string; name: string } | null>(null);
+  const [processingIntakeId, setProcessingIntakeId] = useState<string | null>(null);
 
   const [pendingVersion, setPendingVersion] = useState(0);
   const refreshPending = useCallback(() => setPendingVersion((v) => v + 1), []);
@@ -70,25 +99,37 @@ export default function StudentsPage() {
 
   const pendingIntakes = pendingIntakesList;
 
-  const rosterForFilter = useMemo(() => {
-    if (filter === "pending") return [];
+  const rosterCounts = useMemo(() => {
+    const active = rosterStudents.filter((s) => !s.isArchived).length;
+    const archived = rosterStudents.filter((s) => s.isArchived).length;
+    return {
+      total: rosterStudents.length,
+      active,
+      archived,
+      pending: pendingIntakes.length,
+    };
+  }, [rosterStudents, pendingIntakes.length]);
+
+  const rosterForStatus = useMemo(() => {
+    if (statusFilter === "pending") return [];
     return rosterStudents.filter((s) => {
-      if (filter === "active" && s.isArchived) return false;
-      if (filter === "archived" && !s.isArchived) return false;
+      if (statusFilter === "active" && s.isArchived) return false;
+      if (statusFilter === "archived" && !s.isArchived) return false;
       return true;
     });
-  }, [filter, rosterStudents]);
+  }, [statusFilter, rosterStudents]);
 
   const students = useMemo(() => {
-    if (filter === "pending") return [];
+    if (statusFilter === "pending") return [];
     const q = search.trim().toLowerCase();
-    return rosterForFilter.filter((s) => !q || s.name.toLowerCase().includes(q));
-  }, [filter, search, rosterForFilter]);
+    if (!q) return rosterForStatus;
+    return rosterForStatus.filter((s) => s.name.toLowerCase().includes(q));
+  }, [statusFilter, rosterForStatus, search]);
 
   const emptyRosterState = useMemo(() => {
-    if (filter === "pending") return null;
+    if (statusFilter === "pending") return null;
     const q = search.trim();
-    if (q && rosterForFilter.length > 0 && students.length === 0) {
+    if (q && rosterForStatus.length > 0 && students.length === 0) {
       return {
         title: "No matches",
         description: `No students match "${search}".`,
@@ -99,13 +140,13 @@ export default function StudentsPage() {
         ),
       };
     }
-    if (filter === "archived") {
+    if (statusFilter === "archived") {
       return {
         title: "No archived students",
         description: "Students you archive will appear here.",
       };
     }
-    if (filter === "active" && rosterStudents.length > 0 && rosterForFilter.length === 0) {
+    if (statusFilter === "active" && rosterStudents.length > 0 && rosterForStatus.length === 0) {
       return {
         title: "No active students",
         description: "All students on your roster are archived.",
@@ -120,7 +161,7 @@ export default function StudentsPage() {
         </button>
       ),
     };
-  }, [filter, search, rosterForFilter.length, rosterStudents.length, students.length]);
+  }, [statusFilter, search, rosterForStatus.length, rosterStudents.length, students.length]);
 
   const { programs } = useCoachPrograms(coachId);
   const { sessions: allSessions } = useCoachSessions(coachId);
@@ -140,40 +181,37 @@ export default function StudentsPage() {
     return <CoachStudentListSkeleton />;
   }
 
+  const statusChips: { key: StatusFilter; label: string }[] = [
+    { key: "active", label: "Active" },
+    { key: "all", label: "All" },
+    {
+      key: "pending",
+      label: rosterCounts.pending > 0 ? `Pending (${rosterCounts.pending})` : "Pending",
+    },
+    { key: "archived", label: "Archived" },
+  ];
+
   return (
     <CoachPageShell>
-      <CoachPageHeader
-        title="Students"
-        subtitle="Roster and session progress"
-      />
+      <CoachPageHeader title="Students" subtitle="Roster and session progress" />
 
-      <div className="sticky top-14 z-20 -mx-4 mt-4 bg-[#FAFAF8]/95 px-4 py-3 backdrop-blur md:top-0 md:mt-6">
-        <CoachSearchInput
-          value={search}
-          onChange={setSearch}
-          placeholder="Search students..."
-        />
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {(["all", "active", "pending", "archived"] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={cn(
-                "font-heading shrink-0 rounded-full px-4 py-2 text-xs font-semibold capitalize min-h-[36px]",
-                filter === f ? "bg-[#16A34A] text-white" : "bg-white text-[#6B7280] border border-[#E5E7EB]"
-              )}
-            >
-              {f}
-              {f === "pending" && pendingIntakes.length > 0 && ` (${pendingIntakes.length})`}
-            </button>
+      <div className="mt-3 space-y-2">
+        <CoachSearchInput value={search} onChange={setSearch} placeholder="Search students..." />
+        <div className="flex flex-wrap gap-2">
+          {statusChips.map(({ key, label }) => (
+            <FilterChip
+              key={key}
+              active={statusFilter === key}
+              label={label}
+              onClick={() => setStatusFilter(key)}
+            />
           ))}
         </div>
       </div>
 
-      {filter !== "pending" && candidates.length > 0 && (
+      {statusFilter !== "pending" && candidates.length > 0 && (
         <ProgressCardReadySection
-          className="mt-4"
+          className="mt-3"
           candidates={candidates}
           onGenerate={(sessionId, participantId) =>
             setGenerateTarget({ sessionId, participantId })
@@ -181,7 +219,7 @@ export default function StudentsPage() {
         />
       )}
 
-      {filter === "pending" ? (
+      {statusFilter === "pending" ? (
         pendingIntakes.length === 0 ? (
           <EmptyState
             icon={UserCheck}
@@ -189,7 +227,7 @@ export default function StudentsPage() {
             description="Students who complete your intake form will show up here."
           />
         ) : (
-          <div className="mt-4 space-y-3">
+          <div className="mt-3 space-y-3">
             {pendingIntakes.map((s) => (
               <div key={s.id} className="coach-card border-[#16A34A]/30 p-4">
                 <div className="flex items-start gap-3">
@@ -198,15 +236,21 @@ export default function StudentsPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="font-heading font-semibold">{s.name}</p>
-                    <p className="text-sm text-[#6B7280]">{s.mobile} · {s.email}</p>
+                    <p className="text-sm text-[#6B7280]">
+                      {s.mobile} · {s.email}
+                    </p>
                     <p className="mt-1 text-xs text-[#9CA3AF]">
-                      DUPR {s.skillLevel} · waiver signed {formatDisplayDate(s.submittedAt)}
+                      DUPR {s.skillLevel} · {duprShortLabel(s.skillLevel)} · waiver{" "}
+                      {formatDisplayDate(s.submittedAt)}
                     </p>
                     <div className="mt-3 flex gap-2">
-                      <button
+                      <CoachButton
                         type="button"
-                        className="coach-btn-primary w-auto flex-1 py-2 text-xs"
+                        className="w-auto flex-1 py-2 text-xs"
+                        loading={processingIntakeId === s.id}
+                        loadingLabel="Accepting…"
                         onClick={async () => {
+                          setProcessingIntakeId(s.id);
                           try {
                             await approveIntakeAction(coachId, s.id);
                             notifyRosterUpdated(coachId);
@@ -217,19 +261,23 @@ export default function StudentsPage() {
                               e instanceof Error ? e.message : "Could not accept sign-up",
                               "error"
                             );
+                          } finally {
+                            setProcessingIntakeId(null);
                           }
                         }}
                       >
                         Accept
-                      </button>
-                      <button
+                      </CoachButton>
+                      <CoachButton
                         type="button"
-                        className="coach-btn-outline w-auto flex-1 gap-1 py-2 text-xs text-[#6B7280]"
+                        variant="outline"
+                        className="w-auto flex-1 gap-1 py-2 text-xs text-[#6B7280]"
+                        disabled={processingIntakeId !== null}
                         onClick={() => setDeclineTarget({ id: s.id, name: s.name })}
                       >
                         <X className="h-3.5 w-3.5" />
                         Decline
-                      </button>
+                      </CoachButton>
                     </div>
                   </div>
                 </div>
@@ -245,7 +293,7 @@ export default function StudentsPage() {
           action={emptyRosterState.action}
         />
       ) : (
-        <div className="mt-4 space-y-3">
+        <div className="mt-3 space-y-3">
           {students.map((s, i) => {
             const prog = programs.find((p) => p.id === s.programId);
             const lastSession = allSessions
@@ -260,7 +308,14 @@ export default function StudentsPage() {
                 <div className="flex items-start gap-3">
                   <InitialsAvatar name={s.name} variant={i % 2 === 0 ? "lime" : "navy"} />
                   <div className="min-w-0 flex-1">
-                    <p className="font-heading font-semibold">{s.name}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-heading font-semibold">{s.name}</p>
+                      {s.isArchived && (
+                        <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-semibold text-[#6B7280]">
+                          Archived
+                        </span>
+                      )}
+                    </div>
                     <div className="mt-1">
                       {prog ? <SessionTypeBadge type="program" /> : <SessionTypeBadge type="drop-in" />}
                       <span className="ml-2 text-xs text-[#6B7280]">{prog?.name ?? "Drop-in"}</span>
@@ -277,7 +332,9 @@ export default function StudentsPage() {
                       </div>
                     )}
                     {lastSession && (
-                      <p className="mt-2 text-xs text-[#6B7280]">Last session: {formatDisplayDate(lastSession.date!)}</p>
+                      <p className="mt-2 text-xs text-[#6B7280]">
+                        Last session: {formatDisplayDate(lastSession.date!)}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -315,7 +372,7 @@ export default function StudentsPage() {
                 lastName: String(fd.get("lastName") ?? ""),
                 mobile: String(fd.get("mobile") ?? ""),
                 email: String(fd.get("email") ?? ""),
-                skillLevel: String(fd.get("skillLevel") ?? "3.0") as import("@/lib/koaches/types").DuprLevel,
+                skillLevel: String(fd.get("skillLevel") ?? "3.0") as DuprLevel,
                 programId: String(fd.get("programId") ?? "") || undefined,
               });
               notifyRosterUpdated(coachId);

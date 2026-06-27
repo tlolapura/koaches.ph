@@ -5,6 +5,7 @@ export const COACH_PORTAL_SEGMENTS = new Set([
   "sessions",
   "calendar",
   "programs",
+  "reports",
   "progress",
   "profile",
   "social",

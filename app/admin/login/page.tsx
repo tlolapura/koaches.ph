@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { adminSignInAction } from "@/lib/koaches/actions/auth";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
@@ -75,9 +76,9 @@ export default function AdminLoginPage() {
             {error}
           </p>
         )}
-        <button type="submit" className="coach-btn-primary mt-6 w-full" disabled={pending}>
-          {pending ? "Signing in…" : "Sign in"}
-        </button>
+        <CoachButton type="submit" className="mt-6" loading={pending} loadingLabel="Signing in…">
+          Sign in
+        </CoachButton>
       </form>
     </div>
   );

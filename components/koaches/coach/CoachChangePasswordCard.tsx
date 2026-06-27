@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { changeCoachPasswordAction } from "@/lib/koaches/actions/auth";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
@@ -48,9 +49,9 @@ export function CoachChangePasswordCard() {
         subtitle="Use at least 8 characters"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={FORM_ID} className="coach-btn-primary" disabled={saving}>
-              {saving ? "Saving…" : "Update password"}
-            </button>
+            <CoachButton type="submit" form={FORM_ID} loading={saving} loadingLabel="Saving…">
+              Update password
+            </CoachButton>
           </CoachSheetFooter>
         }
       >

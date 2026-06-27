@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { CoachApplication } from "@/lib/koaches/types";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import {
@@ -60,22 +61,24 @@ export function ApproveCoachApplicationSheet({
       }
       footer={
         <CoachSheetFooter>
-          <button
+          <CoachButton
             type="button"
-            className="coach-btn-outline w-full py-3 text-sm"
+            variant="outline"
+            className="w-full py-3 text-sm"
             onClick={onClose}
             disabled={submitting}
           >
             Cancel
-          </button>
-          <button
+          </CoachButton>
+          <CoachButton
             type="submit"
             form="approve-coach-form"
-            className="coach-btn-primary w-full py-3 text-sm"
-            disabled={submitting}
+            className="w-full py-3 text-sm"
+            loading={submitting}
+            loadingLabel="Creating account…"
           >
-            {submitting ? "Creating account…" : "Approve & create account"}
-          </button>
+            Approve & create account
+          </CoachButton>
         </CoachSheetFooter>
       }
     >

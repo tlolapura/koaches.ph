@@ -15,6 +15,7 @@ import {
 import type { CoachAchievementKind } from "@/lib/koaches/types";
 import { useCoachAchievements } from "@/hooks/useCoachAchievements";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
@@ -101,9 +102,9 @@ export function CoachAchievementsCard() {
         subtitle="Shown on your public coach profile"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={ACHIEVEMENTS_FORM_ID} className="coach-btn-primary" disabled={saving}>
-              {saving ? "Saving…" : "Save achievements"}
-            </button>
+            <CoachButton type="submit" form={ACHIEVEMENTS_FORM_ID} loading={saving} loadingLabel="Saving…">
+              Save achievements
+            </CoachButton>
           </CoachSheetFooter>
         }
       >

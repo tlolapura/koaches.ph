@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { ArrowRight, Check, TrendingUp } from "lucide-react";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
   ALL_SKILL_CATEGORIES,
   categoryAverages,
@@ -22,7 +23,7 @@ type SkillRatingPanelProps = {
   sessionNumber?: number;
   totalSessions?: number;
   phaseLabel?: string;
-  onSave?: (before: SkillRating[], after: SkillRating[]) => void;
+  onSave?: (before: SkillRating[], after: SkillRating[]) => void | Promise<void>;
 };
 
 function defaultRatings(rubricId: SkillRubricId, customSkillIds?: string[]): SkillRating[] {
@@ -136,6 +137,7 @@ export function SkillRatingPanel({
   const [after, setAfter] = useState<SkillRating[]>(
     initialAfter ?? defaultRatings(activeRubric, customSkillIds)
   );
+  const [saving, setSaving] = useState(false);
 
   const visibleCategories = useMemo(() => {
     const cats = getSkillsForRubric(activeRubric, customSkillIds).map((s) => s.category);
@@ -270,14 +272,24 @@ export function SkillRatingPanel({
         })}
 
         <div className="mt-4 border-t border-[#E5E7EB] pt-4">
-          <button
+          <CoachButton
             type="button"
-            className="coach-btn-soft"
-            onClick={() => onSave?.(before, after)}
+            variant="soft"
+            loading={saving}
+            loadingLabel="Saving…"
+            onClick={async () => {
+              if (!onSave || saving) return;
+              setSaving(true);
+              try {
+                await onSave(before, after);
+              } finally {
+                setSaving(false);
+              }
+            }}
           >
             <Check className="h-4 w-4" strokeWidth={2.5} />
             Save ratings
-          </button>
+          </CoachButton>
         </div>
       </div>
     </div>
