@@ -18,6 +18,16 @@ export function ComingSoonLanding() {
             Pickleball coaching for the Philippines. We&apos;re getting the court ready.
           </p>
 
+          <div className="mt-6 rounded-2xl border border-[#E5E7EB] bg-[#FAFAF8] px-4 py-4 text-left">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9CA3AF]">
+              Coming soon
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-[#6B7280]">
+              A public coach directory where players can browse coaches, view programs, and book
+              sessions — all in one place.
+            </p>
+          </div>
+
           <Link href="/coach/login" className="coach-btn-primary mx-auto mt-8 max-w-xs gap-2">
             Coach login
             <ArrowRight className="h-4 w-4" />
