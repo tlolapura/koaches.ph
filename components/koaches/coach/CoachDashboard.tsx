@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { endOfWeek, format, isWithinInterval, parseISO, startOfWeek } from "date-fns";
 import {
@@ -12,9 +12,9 @@ import {
   Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useCoachAuth, usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
+import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
-import { pendingIntakeCountAction } from "@/lib/koaches/actions/intake";
+import { useCoachNavBadges } from "@/hooks/useCoachNavBadges";
 import { parseDisplayTime, sessionStartsAt } from "@/lib/koaches/session-time";
 import { formatCurrency, cn } from "@/lib/utils";
 import { isCanceledStatus } from "@/lib/koaches/session-status";
@@ -56,32 +56,13 @@ type AttentionItem = {
 export function CoachDashboard() {
   const router = useRouter();
   const coachId = usePortalCoachId();
-  const { loading: authLoading } = useCoachAuth();
   const { coach, loading: profileLoading } = useCoachProfile(coachId);
+  const { counts: navCounts } = useCoachNavBadges();
   const today = new Date();
   const todayKey = format(today, "yyyy-MM-dd");
   const todayLabel = format(today, "EEEE, MMM d");
   const { sessions: allSessions, loading } = useCoachSessions(coachId);
   const { cards, candidates } = useProgressCards(coachId);
-  const [pendingSignups, setPendingSignups] = useState(0);
-
-  useEffect(() => {
-    if (!coachId || authLoading) return;
-
-    const refresh = () => {
-      void pendingIntakeCountAction()
-        .then(setPendingSignups)
-        .catch(() => setPendingSignups(0));
-    };
-    refresh();
-    window.addEventListener("koaches-intake-updated", refresh);
-    window.addEventListener("storage", refresh);
-    return () => {
-      window.removeEventListener("koaches-intake-updated", refresh);
-      window.removeEventListener("storage", refresh);
-    };
-  }, [coachId, authLoading]);
-
   useEffect(() => {
     if (coach && shouldShowCoachOnboarding(coach)) {
       router.replace("/coach/onboarding");
@@ -139,11 +120,11 @@ export function CoachDashboard() {
   const firstName = coach?.name.replace(/^Coach\s+/i, "") ?? "Coach";
 
   const attentionItems: AttentionItem[] = [];
-  if (pendingSignups > 0) {
+  if (navCounts.pendingIntakes > 0) {
     attentionItems.push({
       key: "intake",
       href: "/coach/students",
-      label: `${pendingSignups} new sign-up${pendingSignups === 1 ? "" : "s"}`,
+      label: `${navCounts.pendingIntakes} new sign-up${navCounts.pendingIntakes === 1 ? "" : "s"}`,
       detail: "Review intake forms",
       icon: UserPlus,
       tone: "coral",
@@ -185,7 +166,9 @@ export function CoachDashboard() {
     },
   };
 
-  if (loading || profileLoading || !coach) return <CoachDashboardSkeleton />;
+  if ((loading && allSessions.length === 0) || (profileLoading && !coach) || !coach) {
+    return <CoachDashboardSkeleton />;
+  }
 
   return (
     <CoachPageShell className="px-0 pb-6 pt-0 md:px-4 md:pt-6">

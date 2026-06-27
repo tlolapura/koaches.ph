@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCoachAuth } from "@/components/koaches/coach/CoachAuthProvider";
-import { coachNotificationsAction } from "@/lib/koaches/actions/nav-badges";
+import { coachNavMetaAction } from "@/lib/koaches/actions/nav-badges";
+import { fetchProgressCardsAction } from "@/lib/koaches/actions/progress-cards";
+import { fetchSessionsAction } from "@/lib/koaches/actions/sessions";
+import {
+  buildCoachNotifications,
+  computeCoachNavBadgeCounts,
+} from "@/lib/koaches/coach-nav-notifications";
 import { PROGRESS_CARDS_UPDATED_EVENT } from "@/lib/koaches/progress-cards";
 import { coachKeys } from "@/lib/koaches/queries/keys";
 
@@ -16,19 +22,34 @@ const EMPTY_COUNTS = {
 
 export function useCoachNavBadges() {
   const { coachId, loading: authLoading } = useCoachAuth();
+  const queryClient = useQueryClient();
+  const enabled = !!coachId && !authLoading;
 
-  const query = useQuery({
-    queryKey: [...coachKeys.all, "notifications", coachId] as const,
-    queryFn: () => coachNotificationsAction(),
-    enabled: !!coachId && !authLoading,
-    staleTime: 30_000,
+  const sessionsQuery = useQuery({
+    queryKey: coachKeys.sessions(coachId),
+    queryFn: () => fetchSessionsAction(coachId),
+    enabled,
+  });
+
+  const cardsQuery = useQuery({
+    queryKey: [...coachKeys.all, "progress-cards", coachId] as const,
+    queryFn: () => fetchProgressCardsAction(coachId),
+    enabled,
+  });
+
+  const metaQuery = useQuery({
+    queryKey: [...coachKeys.all, "nav-meta", coachId] as const,
+    queryFn: () => coachNavMetaAction(),
+    enabled,
   });
 
   useEffect(() => {
-    if (!coachId || authLoading) return;
+    if (!enabled) return;
 
     const refresh = () => {
-      void query.refetch();
+      void queryClient.invalidateQueries({ queryKey: coachKeys.sessions(coachId) });
+      void queryClient.invalidateQueries({ queryKey: [...coachKeys.all, "progress-cards", coachId] });
+      void queryClient.invalidateQueries({ queryKey: [...coachKeys.all, "nav-meta", coachId] });
     };
 
     window.addEventListener("koaches-intake-updated", refresh);
@@ -41,12 +62,42 @@ export function useCoachNavBadges() {
       window.removeEventListener("koaches-sessions-updated", refresh);
       window.removeEventListener("storage", refresh);
     };
-  }, [authLoading, coachId, query]);
+  }, [enabled, coachId, queryClient]);
+
+  const sessions = sessionsQuery.data ?? [];
+  const cards = cardsQuery.data ?? [];
+  const meta = metaQuery.data;
+
+  const counts = useMemo(() => {
+    if (!coachId || !meta) return EMPTY_COUNTS;
+    return computeCoachNavBadgeCounts({
+      coachId,
+      sessions,
+      cards,
+      pendingIntakes: meta.pendingIntakes,
+      billingStatus: meta.billingStatus,
+    });
+  }, [coachId, meta, sessions, cards]);
+
+  const items = useMemo(() => {
+    if (!meta) return [];
+    return buildCoachNotifications(counts, meta.billingStatus, meta.billingLabel);
+  }, [counts, meta]);
+
+  const loading =
+    authLoading ||
+    (enabled &&
+      (sessionsQuery.isPending || cardsQuery.isPending || metaQuery.isPending) &&
+      !meta);
 
   return {
-    counts: query.data?.counts ?? EMPTY_COUNTS,
-    items: query.data?.items ?? [],
-    loading: query.isPending,
-    refresh: () => query.refetch(),
+    counts,
+    items,
+    loading,
+    refresh: () => {
+      void sessionsQuery.refetch();
+      void cardsQuery.refetch();
+      void metaQuery.refetch();
+    },
   };
 }

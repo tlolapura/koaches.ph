@@ -7,6 +7,7 @@ import { CoachMobileHeader } from "@/components/koaches/coach/CoachMobileHeader"
 import { CoachSidebar, CoachSidebarCompact } from "@/components/koaches/coach/CoachSidebar";
 import { CoachAuthProvider } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachToastProvider } from "@/components/koaches/coach/CoachUi";
+import { CoachPortalPrefetch } from "@/components/koaches/coach/CoachPortalPrefetch";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 
@@ -14,6 +15,7 @@ export function CoachPortalShell({ children }: { children: React.ReactNode }) {
   return (
     <CoachAuthProvider>
       <QueryProvider>
+        <CoachPortalPrefetch />
         <CoachPortalShellInner>{children}</CoachPortalShellInner>
       </QueryProvider>
     </CoachAuthProvider>

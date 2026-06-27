@@ -30,7 +30,7 @@ export default function ProgramsPage() {
     await createProgram.mutateAsync(draft);
   };
 
-  if (loading) return <CoachProgramListSkeleton />;
+  if (loading && programs.length === 0) return <CoachProgramListSkeleton />;
 
   return (
     <CoachPageShell>
@@ -118,7 +118,7 @@ export default function ProgramsPage() {
         )}
       </section>
 
-      <CoachFab onClick={() => openCreate("custom")} label="Create program" />
+      <CoachFab onClick={() => openCreate("home")} label="Create program" />
 
       <ProgramCreateFlow
         open={createOpen}

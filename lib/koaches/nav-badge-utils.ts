@@ -1,4 +1,9 @@
-import type { AdminNavBadgeCounts, CoachNavBadgeCounts } from "@/lib/koaches/actions/nav-badges";
+import type { CoachNavBadgeCounts } from "@/lib/koaches/coach-nav-notifications";
+
+export type AdminNavBadgeCounts = {
+  pendingApplications: number;
+  pendingPaymentReceipts: number;
+};
 
 export function coachBadgeForNavHref(href: string, counts: CoachNavBadgeCounts): number {
   switch (href) {

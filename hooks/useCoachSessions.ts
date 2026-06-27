@@ -33,7 +33,7 @@ export function useCoachSessions(coachId: string) {
 
   return {
     sessions,
-    loading: query.isPending,
+    loading: query.isPending && sessions.length === 0,
     refresh,
   };
 }

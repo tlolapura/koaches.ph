@@ -1,140 +1,75 @@
 "use server";
 
-import { format } from "date-fns";
 import { fetchCoachProfileAction } from "@/lib/koaches/actions/coach-profile";
 import { requireAdmin, requireAuthenticatedCoachId } from "@/lib/koaches/actions/guards";
-import { fetchIntakeSubmissionsAction } from "@/lib/koaches/actions/intake";
 import { fetchProgressCardsAction } from "@/lib/koaches/actions/progress-cards";
 import { fetchSessionsAction } from "@/lib/koaches/actions/sessions";
 import type { PortalNotification } from "@/lib/koaches/notifications";
-import { listProgressCardCandidates } from "@/lib/koaches/progress-cards";
-import { getSessionDisplayStatus } from "@/lib/koaches/session-lifecycle";
-import { isCollectedSession } from "@/lib/koaches/session-payment";
-import { isCanceledStatus } from "@/lib/koaches/session-status";
-import { getSubscriptionBillingInfo } from "@/lib/koaches/subscription-billing";
+import {
+  billingMetaFromCoach,
+  buildCoachNotifications,
+  computeCoachNavBadgeCounts,
+  type CoachNavBadgeCounts,
+} from "@/lib/koaches/coach-nav-notifications";
+import type { AdminNavBadgeCounts } from "@/lib/koaches/nav-badge-utils";
 import { createServiceClient } from "@/lib/supabase/server";
-
-export type CoachNavBadgeCounts = {
-  pendingIntakes: number;
-  progressReady: number;
-  unpaidSessionsToday: number;
-  billingAttention: number;
-};
 
 export type CoachNotificationsPayload = {
   counts: CoachNavBadgeCounts;
   items: PortalNotification[];
 };
 
-function buildCoachNotifications(
-  counts: CoachNavBadgeCounts,
-  billingStatus: ReturnType<typeof getSubscriptionBillingInfo>["status"],
-  billingLabel: string
-): PortalNotification[] {
-  const items: PortalNotification[] = [];
+export type CoachNavMeta = {
+  pendingIntakes: number;
+  billingStatus: ReturnType<typeof billingMetaFromCoach>["status"];
+  billingLabel: string;
+};
 
-  if (billingStatus === "overdue") {
-    items.push({
-      id: "billing-overdue",
-      href: "/coach/billing",
-      title: "Subscription overdue",
-      message: "Submit your payment receipt to keep full portal access.",
-      tone: "red",
-    });
-  } else if (billingStatus === "payment_due") {
-    items.push({
-      id: "billing-due",
-      href: "/coach/billing",
-      title: "Payment due today",
-      message: "Upload your receipt on the billing page.",
-      tone: "amber",
-    });
-  } else if (billingStatus === "send_invoice") {
-    items.push({
-      id: "billing-invoice",
-      href: "/coach/billing",
-      title: billingLabel === "Invoice window" ? "Subscription renewing soon" : billingLabel,
-      message: "Review billing and upload your payment when ready.",
-      tone: "amber",
-    });
-  }
+/** Lightweight counts source — pending intakes + billing only (no full session/card fetch). */
+export async function coachNavMetaAction(): Promise<CoachNavMeta> {
+  const coachId = await requireAuthenticatedCoachId();
+  const supabase = createServiceClient();
 
-  if (counts.pendingIntakes > 0) {
-    items.push({
-      id: "intake-pending",
-      href: "/coach/students",
-      title:
-        counts.pendingIntakes === 1
-          ? "1 new student sign-up"
-          : `${counts.pendingIntakes} new student sign-ups`,
-      message: "Review intake forms and approve or decline.",
-      tone: "green",
-    });
-  }
+  const [{ count: pendingIntakes, error: intakeError }, coach] = await Promise.all([
+    supabase
+      .from("student_intake_submissions")
+      .select("*", { count: "exact", head: true })
+      .eq("coach_id", coachId)
+      .eq("status", "pending"),
+    fetchCoachProfileAction(coachId),
+  ]);
 
-  if (counts.unpaidSessionsToday > 0) {
-    items.push({
-      id: "sessions-unpaid",
-      href: "/coach/sessions?view=list",
-      title:
-        counts.unpaidSessionsToday === 1
-          ? "1 unpaid session today"
-          : `${counts.unpaidSessionsToday} unpaid sessions today`,
-      message: "Mark payment when you collect from students.",
-      tone: "blue",
-    });
-  }
+  if (intakeError) throw intakeError;
+  if (!coach) throw new Error("Coach not found");
 
-  if (counts.progressReady > 0) {
-    items.push({
-      id: "progress-ready",
-      href: "/coach/students",
-      title:
-        counts.progressReady === 1
-          ? "1 progress card ready"
-          : `${counts.progressReady} progress cards ready`,
-      message: "Generate and share from the student's profile.",
-      tone: "blue",
-    });
-  }
-
-  return items;
+  const billing = billingMetaFromCoach(coach);
+  return {
+    pendingIntakes: pendingIntakes ?? 0,
+    billingStatus: billing.status,
+    billingLabel: billing.label,
+  };
 }
 
 export async function coachNotificationsAction(): Promise<CoachNotificationsPayload> {
   const coachId = await requireAuthenticatedCoachId();
 
-  const [intakes, cards, sessions, coach] = await Promise.all([
-    fetchIntakeSubmissionsAction(coachId),
+  const [meta, cards, sessions] = await Promise.all([
+    coachNavMetaAction(),
     fetchProgressCardsAction(coachId),
     fetchSessionsAction(coachId),
-    fetchCoachProfileAction(coachId),
   ]);
 
-  const todayKey = format(new Date(), "yyyy-MM-dd");
-  const unpaidSessionsToday = sessions.filter(
-    (s) =>
-      s.date === todayKey &&
-      !isCanceledStatus(s.status) &&
-      getSessionDisplayStatus(s, cards) === "upcoming" &&
-      !isCollectedSession(s)
-  ).length;
-
-  const billing = getSubscriptionBillingInfo(coach);
-  const billingAttention = ["send_invoice", "payment_due", "overdue"].includes(billing.status)
-    ? 1
-    : 0;
-
-  const counts: CoachNavBadgeCounts = {
-    pendingIntakes: intakes.filter((s) => s.status === "pending").length,
-    progressReady: listProgressCardCandidates(coachId, cards, sessions).length,
-    unpaidSessionsToday,
-    billingAttention,
-  };
+  const counts = computeCoachNavBadgeCounts({
+    coachId,
+    sessions,
+    cards,
+    pendingIntakes: meta.pendingIntakes,
+    billingStatus: meta.billingStatus,
+  });
 
   return {
     counts,
-    items: buildCoachNotifications(counts, billing.status, billing.label),
+    items: buildCoachNotifications(counts, meta.billingStatus, meta.billingLabel),
   };
 }
 
@@ -143,11 +78,6 @@ export async function coachNavBadgeCountsAction(): Promise<CoachNavBadgeCounts> 
   const { counts } = await coachNotificationsAction();
   return counts;
 }
-
-export type AdminNavBadgeCounts = {
-  pendingApplications: number;
-  pendingPaymentReceipts: number;
-};
 
 export type AdminNotificationsPayload = {
   counts: AdminNavBadgeCounts;

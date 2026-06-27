@@ -59,35 +59,6 @@ function compactTime(timeValue: string) {
 const slotCellBase =
   "box-border flex w-full min-w-0 rounded-lg sm:rounded-xl min-h-[40px] sm:min-h-[44px] lg:min-h-[48px]";
 
-function SlotLegend({ compact, blockMode }: { compact?: boolean; blockMode?: boolean }) {
-  return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center gap-3 font-semibold uppercase tracking-wide text-[#6B7280]",
-        compact ? "gap-2 text-[9px]" : "text-[10px]"
-      )}
-    >
-      <span className="flex items-center gap-1.5">
-        <span className="h-2 w-5 rounded-full border border-[#4F8FF7] bg-[#EFF6FF] sm:h-2.5 sm:w-6" />
-        Open
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-2 w-5 rounded-full bg-[#EDF2F7] ring-1 ring-[#E5E7EB] sm:h-2.5 sm:w-6" />
-        Booked
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="h-2 w-5 rounded-full bg-[#E5E7EB] ring-1 ring-[#D1D5DB] sm:h-2.5 sm:w-6" />
-        Blocked
-      </span>
-      {blockMode && (
-        <span className="rounded-full bg-[#4F8FF7] px-2 py-0.5 text-[9px] text-white normal-case">
-          Tap open slots to block
-        </span>
-      )}
-    </div>
-  );
-}
-
 function DayNavigator({
   date,
   onPrevDay,
@@ -578,8 +549,7 @@ export function CoachScheduleGrid({
       <DayNavigator date={date} onPrevDay={() => shiftDay(-1)} onNextDay={() => shiftDay(1)} />
       <WeekNavigator weekDates={weekDates} onPrevWeek={() => shiftWeek(-1)} onNextWeek={() => shiftWeek(1)} />
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <SlotLegend compact blockMode={blockMode} />
+      <div className="flex justify-end">
         <button
           type="button"
           onClick={() => setBlockMode((v) => !v)}
@@ -623,24 +593,6 @@ export function CoachScheduleGrid({
           onUnblockSlot={handleUnblockSlot}
         />
       </div>
-
-      <p className="text-[9px] leading-snug text-[#6B7280] sm:text-[10px]">
-        <span className="md:hidden">Swipe days with arrows or tap a day above · </span>
-        {blockMode ? (
-          <>
-            Tap <span className="font-semibold text-[#6B7280]">open</span> slots to block · tap{" "}
-            <span className="font-semibold text-[#6B7280]">blocked</span> to unblock
-          </>
-        ) : (
-          <>
-            Tap <span className="font-semibold text-[#4F8FF7]">Open</span> to schedule · tap booked for details
-          </>
-        )}{" "}
-        · {HOURLY_SESSION_MINUTES}-min blocks · hours set in{" "}
-        <Link href="/coach/profile" className="font-semibold text-[#4F8FF7]">
-          profile
-        </Link>
-      </p>
     </div>
   );
 }
