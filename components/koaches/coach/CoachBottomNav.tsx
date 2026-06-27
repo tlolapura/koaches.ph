@@ -5,9 +5,6 @@ import { usePathname } from "next/navigation";
 import { Home, Users, CalendarDays, FileText, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { bottomNavActiveClass } from "@/lib/koaches/coach-colors";
-import { NavCountBadge } from "@/components/koaches/coach/NavCountBadge";
-import { useCoachNavBadges } from "@/hooks/useCoachNavBadges";
-import { coachBadgeForNavHref } from "@/lib/koaches/nav-badge-utils";
 
 const tabs = [
   { href: "/coach/dashboard", label: "Home", icon: Home },
@@ -19,7 +16,6 @@ const tabs = [
 
 export function CoachBottomNav() {
   const pathname = usePathname();
-  const { counts } = useCoachNavBadges();
 
   return (
     <nav
@@ -37,7 +33,6 @@ export function CoachBottomNav() {
                 pathname.startsWith(p)
               ));
           const Icon = tab.icon;
-          const badge = coachBadgeForNavHref(tab.href, counts);
           return (
             <Link
               key={tab.href}
@@ -50,7 +45,6 @@ export function CoachBottomNav() {
             >
               <span className="relative">
                 <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
-                <NavCountBadge count={badge} pinned />
               </span>
               {tab.label}
             </Link>

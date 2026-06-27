@@ -8,13 +8,11 @@ import {
   ChevronRight,
   Plus,
   TrendingUp,
-  UserPlus,
   Wallet,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
-import { useCoachNavBadges } from "@/hooks/useCoachNavBadges";
 import { parseDisplayTime, sessionStartsAt } from "@/lib/koaches/session-time";
 import { formatCurrency, cn } from "@/lib/utils";
 import { isCanceledStatus } from "@/lib/koaches/session-status";
@@ -57,7 +55,6 @@ export function CoachDashboard() {
   const router = useRouter();
   const coachId = usePortalCoachId();
   const { coach, loading: profileLoading } = useCoachProfile(coachId);
-  const { counts: navCounts } = useCoachNavBadges();
   const today = new Date();
   const todayKey = format(today, "yyyy-MM-dd");
   const todayLabel = format(today, "EEEE, MMM d");
@@ -120,16 +117,6 @@ export function CoachDashboard() {
   const firstName = coach?.name.replace(/^Coach\s+/i, "") ?? "Coach";
 
   const attentionItems: AttentionItem[] = [];
-  if (navCounts.pendingIntakes > 0) {
-    attentionItems.push({
-      key: "intake",
-      href: "/coach/students",
-      label: `${navCounts.pendingIntakes} new sign-up${navCounts.pendingIntakes === 1 ? "" : "s"}`,
-      detail: "Review intake forms",
-      icon: UserPlus,
-      tone: "coral",
-    });
-  }
   if (candidates.length > 0) {
     attentionItems.push({
       key: "progress",

@@ -19,9 +19,6 @@ import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButto
 import { CoachAvatar } from "@/components/koaches/coach/CoachAvatar";
 import { KoachesWordmark, KoachesMark } from "@/components/koaches/coach/CoachIcons";
 import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
-import { NavCountBadge } from "@/components/koaches/coach/NavCountBadge";
-import { useCoachNavBadges } from "@/hooks/useCoachNavBadges";
-import { coachBadgeForNavHref } from "@/lib/koaches/nav-badge-utils";
 
 const navItems = [
   { href: "/coach/dashboard", label: "Dashboard", icon: Home },
@@ -59,7 +56,6 @@ function SidebarAccount() {
 
 export function CoachSidebar() {
   const pathname = usePathname();
-  const { counts } = useCoachNavBadges();
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col overflow-hidden border-r border-[#E5E7EB] bg-white lg:flex">
@@ -70,7 +66,6 @@ export function CoachSidebar() {
       <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const badge = coachBadgeForNavHref(item.href, counts);
           return (
             <Link
               key={item.href}
@@ -82,7 +77,6 @@ export function CoachSidebar() {
             >
               <Icon className="h-5 w-5 shrink-0" />
               <span className="flex-1">{item.label}</span>
-              <NavCountBadge count={badge} />
             </Link>
           );
         })}
@@ -96,7 +90,6 @@ export function CoachSidebar() {
 
 export function CoachSidebarCompact() {
   const pathname = usePathname();
-  const { counts } = useCoachNavBadges();
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-16 shrink-0 flex-col overflow-hidden border-r border-[#E5E7EB] bg-white md:flex lg:hidden">
@@ -107,7 +100,6 @@ export function CoachSidebarCompact() {
       <nav className="flex min-h-0 flex-1 flex-col items-center gap-2 overflow-y-auto px-2">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const badge = coachBadgeForNavHref(item.href, counts);
           return (
             <Link
               key={item.href}
@@ -119,7 +111,6 @@ export function CoachSidebarCompact() {
               )}
             >
               <Icon className="h-5 w-5" />
-              <NavCountBadge count={badge} pinned />
             </Link>
           );
         })}

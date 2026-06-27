@@ -3,6 +3,9 @@ import { isAdminRole } from "@/lib/koaches/auth/profile";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export async function assertCoachAccess(coachId: string): Promise<string> {
+  if (!coachId) {
+    throw new Error("Not authorized.");
+  }
   const authCoachId = await getAuthenticatedCoachIdAction();
   if (!authCoachId || authCoachId !== coachId) {
     throw new Error("Not authorized.");

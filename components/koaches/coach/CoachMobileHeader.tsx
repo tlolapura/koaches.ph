@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { getCoachPageMeta } from "@/lib/koaches/coach-page-titles";
 import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
-import { CoachNotificationBell } from "@/components/koaches/coach/CoachNotificationBell";
 import { CoachAvatar } from "@/components/koaches/coach/CoachAvatar";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
@@ -38,7 +37,6 @@ export function CoachMobileHeader() {
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <CoachNotificationBell />
         <Link
           href="/coach/profile"
           className="shrink-0"

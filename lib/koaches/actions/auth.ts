@@ -68,9 +68,10 @@ export async function getProfileAction(): Promise<Profile | null> {
 }
 
 export async function getAuthenticatedCoachIdAction(): Promise<string | null> {
-  const profile = await getProfileAction();
-  if (isCoachRole(profile?.role) && profile?.coach_id) return profile.coach_id;
-  return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("current_coach_id");
+  if (error) return null;
+  return typeof data === "string" && data.length > 0 ? data : null;
 }
 
 export type PasswordChangeResult = { ok: true } | { ok: false; error: string };
