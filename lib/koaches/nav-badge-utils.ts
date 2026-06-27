@@ -3,15 +3,13 @@ import type { AdminNavBadgeCounts, CoachNavBadgeCounts } from "@/lib/koaches/act
 export function coachBadgeForNavHref(href: string, counts: CoachNavBadgeCounts): number {
   switch (href) {
     case "/coach/students":
-      return counts.pendingIntakes;
-    case "/coach/progress":
-      return counts.progressReady;
+      return counts.pendingIntakes + counts.progressReady;
     case "/coach/sessions":
       return counts.unpaidSessionsToday;
     case "/coach/billing":
       return counts.billingAttention;
     case "/coach/more":
-      return counts.progressReady + counts.billingAttention;
+      return counts.billingAttention;
     default:
       return 0;
   }

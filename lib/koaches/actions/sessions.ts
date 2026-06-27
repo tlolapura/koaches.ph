@@ -44,6 +44,7 @@ export async function updateSessionStatusAction(sessionId: string, status: Sessi
     .eq("id", sessionId);
   if (error) throw error;
   revalidatePath(`/coach/sessions/${sessionId}`);
+  revalidatePath("/coach/sessions");
   revalidatePath("/coach/dashboard");
   revalidatePath("/coach/students");
 }

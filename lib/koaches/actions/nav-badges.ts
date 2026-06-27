@@ -88,12 +88,12 @@ function buildCoachNotifications(
   if (counts.progressReady > 0) {
     items.push({
       id: "progress-ready",
-      href: "/coach/progress",
+      href: "/coach/students",
       title:
         counts.progressReady === 1
           ? "1 progress card ready"
           : `${counts.progressReady} progress cards ready`,
-      message: "Share skill updates with your students.",
+      message: "Generate and share from the student's profile.",
       tone: "blue",
     });
   }

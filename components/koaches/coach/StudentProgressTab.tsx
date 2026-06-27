@@ -22,6 +22,8 @@ import {
   SkillProgressList,
   TopWinsList,
 } from "@/components/koaches/SkillProgressDisplay";
+import { ProgressCardReadySection } from "@/components/koaches/coach/ProgressCardReadySection";
+import { GenerateProgressCardSheet } from "@/components/koaches/coach/GenerateProgressCardSheet";
 import { formatDate, cn } from "@/lib/utils";
 
 type StudentProgressTabProps = {
@@ -99,8 +101,19 @@ function SessionProgressCard({
 export function StudentProgressTab({ student, upcomingSessionId }: StudentProgressTabProps) {
   const coachId = usePortalCoachId();
   const history = useStudentProgressHistory(student.id);
-  const { cards: allCards } = useProgressCards(coachId);
+  const { cards: allCards, candidates } = useProgressCards(coachId);
   const cards = allCards.filter((c) => c.studentId === student.id);
+  const [generateTarget, setGenerateTarget] = useState<{
+    sessionId: string;
+    participantId: string;
+  } | null>(null);
+
+  const activeCandidate = candidates.find(
+    (c) =>
+      c.studentId === student.id &&
+      c.session.id === generateTarget?.sessionId &&
+      c.participantId === generateTarget?.participantId
+  );
 
   const { programs } = useCoachPrograms(coachId);
   const program = student.programId ? programs.find((p) => p.id === student.programId) : undefined;
@@ -108,18 +121,39 @@ export function StudentProgressTab({ student, upcomingSessionId }: StudentProgre
   const rubric = rubricId !== "custom" ? SKILL_RUBRICS[rubricId as keyof typeof SKILL_RUBRICS] : null;
 
   if (history.length === 0) {
+    const studentCandidates = candidates.filter((c) => c.studentId === student.id);
     return (
-      <div className="py-8 text-center">
-        <p className="text-sm text-[#6B7280]">
-          No rated sessions yet. Save Start + Now ratings on a session to track progress here.
-        </p>
-        {upcomingSessionId && (
-          <Link
-            href={`/coach/sessions/${upcomingSessionId}`}
-            className="coach-btn-primary mx-auto mt-4 max-w-xs text-center text-sm"
-          >
-            Open next session
-          </Link>
+      <div className="space-y-4">
+        {studentCandidates.length > 0 && (
+          <ProgressCardReadySection
+            candidates={candidates}
+            studentId={student.id}
+            onGenerate={(sessionId, participantId) =>
+              setGenerateTarget({ sessionId, participantId })
+            }
+          />
+        )}
+        <div className="py-8 text-center">
+          <p className="text-sm text-[#6B7280]">
+            No rated sessions yet. Save Start + Now ratings on a session to track progress here.
+          </p>
+          {upcomingSessionId && (
+            <Link
+              href={`/coach/sessions/${upcomingSessionId}`}
+              className="coach-btn-primary mx-auto mt-4 max-w-xs text-center text-sm"
+            >
+              Open next session
+            </Link>
+          )}
+        </div>
+        {activeCandidate && (
+          <GenerateProgressCardSheet
+            open={!!generateTarget}
+            onClose={() => setGenerateTarget(null)}
+            session={activeCandidate.session}
+            participantId={activeCandidate.participantId}
+            onGenerated={() => setGenerateTarget(null)}
+          />
         )}
       </div>
     );
@@ -133,6 +167,14 @@ export function StudentProgressTab({ student, upcomingSessionId }: StudentProgre
 
   return (
     <div className="space-y-4">
+      <ProgressCardReadySection
+        candidates={candidates}
+        studentId={student.id}
+        onGenerate={(sessionId, participantId) =>
+          setGenerateTarget({ sessionId, participantId })
+        }
+      />
+
       <div className="coach-card p-4">
         <p className="font-heading text-lg font-semibold text-[#111827]">{headline}</p>
         <p className="mt-1 text-xs text-[#6B7280]">
@@ -226,6 +268,16 @@ export function StudentProgressTab({ student, upcomingSessionId }: StudentProgre
             ))}
           </div>
         </div>
+      )}
+
+      {activeCandidate && (
+        <GenerateProgressCardSheet
+          open={!!generateTarget}
+          onClose={() => setGenerateTarget(null)}
+          session={activeCandidate.session}
+          participantId={activeCandidate.participantId}
+          onGenerated={() => setGenerateTarget(null)}
+        />
       )}
     </div>
   );

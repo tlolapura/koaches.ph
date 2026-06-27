@@ -92,12 +92,26 @@ export async function enrollStudentInProgramAction(programId: string, studentId:
     program_id: programId,
     student_id: studentId,
   });
+
+  const { count } = await supabase
+    .from("sessions")
+    .select("*", { count: "exact", head: true })
+    .eq("student_id", studentId)
+    .eq("program_id", programId)
+    .eq("type", "program")
+    .eq("status", "done");
+
   await supabase
     .from("students")
-    .update({ program_id: programId, updated_at: new Date().toISOString() })
+    .update({
+      program_id: programId,
+      sessions_completed: count ?? 0,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", studentId)
     .eq("coach_id", coachId);
 
   revalidatePath(`/coach/programs/${programId}`);
   revalidatePath(`/coach/students/${studentId}`);
+  revalidatePath("/coach/students");
 }

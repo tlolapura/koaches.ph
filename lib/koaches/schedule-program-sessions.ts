@@ -29,17 +29,30 @@ export function getScheduledProgramSessionNumbers(
     .filter((n): n is number => typeof n === "number");
 }
 
+/** Done program sessions for this student + program (excludes drop-ins). */
+export function countProgramSessionsCompleted(
+  studentId: string,
+  programId: string,
+  sessions: Session[]
+): number {
+  return sessions.filter(
+    (s) =>
+      s.type === "program" &&
+      s.programId === programId &&
+      s.status === "done" &&
+      (s.studentId === studentId || sessionIncludesStudent(s, studentId))
+  ).length;
+}
+
 /** Next session number to book for this student, or undefined if all are done/scheduled */
 export function getNextProgramSessionNumber(
   program: Program,
   student: Student,
   sessions: Session[]
 ): number | undefined {
-  const scheduled = new Set(
-    getScheduledProgramSessionNumbers(student.id, program.id, sessions)
-  );
-  for (let n = student.sessionsCompleted + 1; n <= program.sessionCount; n++) {
-    if (!scheduled.has(n)) return n;
+  const taken = new Set(getScheduledProgramSessionNumbers(student.id, program.id, sessions));
+  for (let n = 1; n <= program.sessionCount; n++) {
+    if (!taken.has(n)) return n;
   }
   return undefined;
 }

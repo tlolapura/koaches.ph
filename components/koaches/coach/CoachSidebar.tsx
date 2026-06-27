@@ -9,7 +9,6 @@ import {
   FileText,
   Share2,
   CreditCard,
-  TrendingUp,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,7 +28,6 @@ const navItems = [
   { href: "/coach/sessions", label: "Schedule", icon: CalendarDays },
   { href: "/coach/students", label: "Students", icon: Users },
   { href: "/coach/programs", label: "Programs", icon: FileText },
-  { href: "/coach/progress", label: "Progress", icon: TrendingUp },
   { href: "/coach/social", label: "Social", icon: Share2 },
   { href: "/coach/billing", label: "Billing", icon: CreditCard },
   { href: "/coach/profile", label: "Profile", icon: User },

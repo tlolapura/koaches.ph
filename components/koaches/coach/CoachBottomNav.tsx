@@ -33,7 +33,7 @@ export function CoachBottomNav() {
             (tab.href === "/coach/dashboard" && pathname === "/coach") ||
             (tab.href !== "/coach/dashboard" && tab.href !== "/coach/more" && pathname.startsWith(tab.href)) ||
             (tab.href === "/coach/more" &&
-              ["/coach/progress", "/coach/profile", "/coach/social", "/coach/billing"].some((p) =>
+              ["/coach/profile", "/coach/social", "/coach/billing"].some((p) =>
                 pathname.startsWith(p)
               ));
           const Icon = tab.icon;

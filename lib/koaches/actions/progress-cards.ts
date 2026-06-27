@@ -62,7 +62,7 @@ export async function saveProgressCardAction(card: ProgressCard): Promise<SavePr
     session_id: card.sessionId ?? null,
   });
   if (error) throw error;
-  revalidatePath("/coach/progress");
+  revalidatePath("/coach/students");
   revalidatePath(`/coach/students/${card.studentId}`);
   revalidatePath(`/progress/${card.id}`);
   return { ok: true, id: card.id };

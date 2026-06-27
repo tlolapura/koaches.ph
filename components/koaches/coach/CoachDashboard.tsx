@@ -152,9 +152,9 @@ export function CoachDashboard() {
   if (candidates.length > 0) {
     attentionItems.push({
       key: "progress",
-      href: "/coach/progress",
+      href: "/coach/students",
       label: `${candidates.length} progress card${candidates.length === 1 ? "" : "s"}`,
-      detail: "Ready to share with students",
+      detail: "Ready to share — open a student profile",
       icon: TrendingUp,
       tone: "navy",
     });

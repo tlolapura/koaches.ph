@@ -34,7 +34,10 @@ export function resolveParticipantProgramContext(
       programName: program.name,
       rubricId: resolveProgramRubric(program),
       customSkillIds: program.customSkillIds,
-      sessionNumber: student ? student.sessionsCompleted + 1 : session.sessionNumber,
+      sessionNumber:
+        session.type === "program" && session.sessionNumber != null
+          ? session.sessionNumber
+          : undefined,
       totalSessions: program.sessionCount,
     };
   }

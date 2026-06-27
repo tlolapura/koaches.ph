@@ -123,7 +123,7 @@ export function SessionSkillRatingsSection({ session }: SessionSkillRatingsSecti
   const active = participants.find((p) => p.id === activeId) ?? participants[0];
 
   return (
-    <div className="mt-6">
+    <div className="mt-2">
       <h2 className="font-heading text-lg font-semibold">Skill ratings</h2>
       <p className="mt-1 text-sm text-[#6B7280]">
         {participants.length > 1

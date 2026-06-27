@@ -4,9 +4,9 @@ import { useState } from "react";
 import { CalendarX, CircleCheck } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
 import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
-import { useCoachProgram } from "@/hooks/useCoachPrograms";
 import { formatParticipantProgramLabel, resolveParticipantProgramContext } from "@/lib/koaches/participant-program";
 import { SessionSkillRatingsSection } from "@/components/koaches/coach/SessionSkillRatingsSection";
+import { SessionDetailStepper } from "@/components/koaches/coach/SessionDetailStepper";
 import { SessionTypeBadge, SessionDisplayStatusBadge, useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { SessionPaymentCard } from "@/components/koaches/coach/SessionPaymentCard";
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
@@ -16,9 +16,7 @@ import { updateSessionNotesAction } from "@/lib/koaches/actions/sessions";
 import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { formatSessionTimeRange } from "@/lib/koaches/session-time";
-import {
-  isSessionDateScheduled,
-} from "@/lib/koaches/session-schedule";
+import { isSessionDateScheduled } from "@/lib/koaches/session-schedule";
 import {
   formatSessionParticipantList,
   formatSessionParticipantNames,
@@ -35,48 +33,44 @@ type SessionDetailViewProps = {
   session: Session;
 };
 
-export function SessionDetailView({ session }: SessionDetailViewProps) {
-  const [cancelOpen, setCancelOpen] = useState(false);
-  const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [notes, setNotes] = useState(session.notes ?? "");
-  const [savingNotes, setSavingNotes] = useState(false);
-  const [markingDone, setMarkingDone] = useState(false);
-  const { showToast } = useCoachToast();
-  const { status, displayStatus, markDone, markCanceled } = useSessionStatus(session);
-  const participants = getSessionParticipants(session);
-  const primaryName = formatSessionParticipantNames(session);
-  const { lookup } = useCourts();
-  const { program } = useCoachProgram(session.programId ?? null);
-  const courtName = courtNameFromLookup(lookup, session.courtId);
-
+function SessionInfoCard({
+  session,
+  primaryName,
+  courtName,
+  participants,
+  displayStatus,
+}: {
+  session: Session;
+  primaryName: string;
+  courtName: string;
+  participants: ReturnType<typeof getSessionParticipants>;
+  displayStatus: ReturnType<typeof useSessionStatus>["displayStatus"];
+}) {
   return (
-    <CoachPageShell>
-      <CoachBackLink href="/coach/sessions" label="Schedule" className="hidden md:inline-flex" />
-
-      <div className="coach-card mt-4 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <CoachEntityTitle>{primaryName}</CoachEntityTitle>
-          <span className="shrink-0 rounded-full bg-[#14532D] px-3 py-1 text-sm font-semibold text-white">
-            {formatCurrency(session.price)}
-          </span>
-        </div>
-        <p className="mt-1 text-sm text-[#6B7280]">
-          {isSessionDateScheduled(session)
-            ? `${formatDisplayDate(session.date!)} · ${formatSessionTimeRange(session.time, session.endTime)}`
-            : `Session ${session.sessionNumber ?? ""} · Date TBD`}
-        </p>
-        <p className="text-sm text-[#6B7280]">{courtName}</p>
-        <p className="text-xs text-[#6B7280]">
-          {session.playerCount} player{session.playerCount !== 1 ? "s" : ""}
-          {session.playerCount > 1 && ` · ${formatSessionParticipantList(session)}`}
-        </p>
-        {participants.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {participants.map((p) => {
-              const programLabel = formatParticipantProgramLabel(
-                resolveParticipantProgramContext(p, session)
-              );
-              return (
+    <div className="coach-card p-4">
+      <div className="flex items-start justify-between gap-3">
+        <CoachEntityTitle>{primaryName}</CoachEntityTitle>
+        <span className="shrink-0 rounded-full bg-[#14532D] px-3 py-1 text-sm font-semibold text-white">
+          {formatCurrency(session.price)}
+        </span>
+      </div>
+      <p className="mt-1 text-sm text-[#6B7280]">
+        {isSessionDateScheduled(session)
+          ? `${formatDisplayDate(session.date!)} · ${formatSessionTimeRange(session.time, session.endTime)}`
+          : `Session ${session.sessionNumber ?? ""} · Date TBD`}
+      </p>
+      <p className="text-sm text-[#6B7280]">{courtName}</p>
+      <p className="text-xs text-[#6B7280]">
+        {session.playerCount} player{session.playerCount !== 1 ? "s" : ""}
+        {session.playerCount > 1 && ` · ${formatSessionParticipantList(session)}`}
+      </p>
+      {participants.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {participants.map((p) => {
+            const programLabel = formatParticipantProgramLabel(
+              resolveParticipantProgramContext(p, session)
+            );
+            return (
               <span
                 key={p.id}
                 className="inline-flex items-center gap-1.5 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-xs font-medium text-[#166534]"
@@ -85,108 +79,165 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
                 <span className="text-[10px] opacity-75">· {programLabel}</span>
               </span>
             );
-            })}
-          </div>
+          })}
+        </div>
+      )}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <SessionTypeBadge type={session.type} />
+        <SessionDisplayStatusBadge status={displayStatus} />
+        {session.sessionNumber && (
+          <span className="text-sm text-[#6B7280]">Session {session.sessionNumber}</span>
         )}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <SessionTypeBadge type={session.type} />
-          <SessionDisplayStatusBadge status={displayStatus} />
-          {session.sessionNumber && (
-            <span className="text-sm text-[#6B7280]">Session {session.sessionNumber}</span>
-          )}
-        </div>
       </div>
+    </div>
+  );
+}
 
-      {displayStatus === "pending_progress_review" && (
-        <p className="mt-3 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5 text-sm text-[#92400E]">
-          Save Start + Now skill ratings below to complete this session review.
-        </p>
-      )}
+export function SessionDetailView({ session }: SessionDetailViewProps) {
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [notes, setNotes] = useState(session.notes ?? "");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [markingDone, setMarkingDone] = useState(false);
+  const [step, setStep] = useState<1 | 2>(() =>
+    session.status === "upcoming" || session.status === "canceled" ? 1 : 2
+  );
+  const { showToast } = useCoachToast();
+  const { status, displayStatus, markDone, markCanceled } = useSessionStatus(session);
+  const ratingsUnlocked = status !== "upcoming" && status !== "canceled";
+  const participants = getSessionParticipants(session);
+  const primaryName = formatSessionParticipantNames(session);
+  const { lookup } = useCourts();
+  const courtName = courtNameFromLookup(lookup, session.courtId);
 
-      {displayStatus === "ready_to_share" && (
-        <p className="mt-3 rounded-xl border border-[#16A34A]/25 bg-[#F0FDF4] px-3 py-2.5 text-sm text-[#166534]">
-          Ratings saved — generate a progress card to share with your student.
-        </p>
-      )}
+  const handleMarkDone = async () => {
+    setMarkingDone(true);
+    try {
+      await markDone();
+      showToast("Session marked done — add skill ratings");
+      setStep(2);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Could not update session", "error");
+    } finally {
+      setMarkingDone(false);
+    }
+  };
 
-      {!isSessionDateScheduled(session) && status === "upcoming" && (
-        <div className="mt-3">
-          <button type="button" className="coach-btn-secondary w-full text-sm" onClick={() => setScheduleOpen(true)}>
-            Schedule date & time
-          </button>
-        </div>
-      )}
-
-      <SessionPaymentCard session={session} />
-
-      <div className="coach-card mt-4 p-4">
-        <label className="coach-label" htmlFor="session-notes">
-          Session notes
-        </label>
-        <textarea
-          id="session-notes"
-          className="coach-input mt-1 min-h-[100px] resize-none"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="How did the session go?"
-        />
-        <CoachButton
-          type="button"
-          variant="outline"
-          className="mt-3 text-sm"
-          loading={savingNotes}
-          loadingLabel="Saving…"
-          onClick={async () => {
-            setSavingNotes(true);
-            try {
-              await updateSessionNotesAction(session.id, notes);
-              invalidateCoachSessions(session.coachId);
-              showToast("Notes saved");
-            } catch (e) {
-              showToast(e instanceof Error ? e.message : "Could not save notes", "error");
-            } finally {
-              setSavingNotes(false);
-            }
-          }}
-        >
-          Save notes
-        </CoachButton>
-      </div>
-
-      <SessionSkillRatingsSection session={session} />
+  return (
+    <CoachPageShell>
+      <CoachBackLink href="/coach/sessions" label="Schedule" className="hidden md:inline-flex" />
 
       {status !== "canceled" && (
-        <div className="coach-session-actions">
-          {status === "upcoming" && (
+        <SessionDetailStepper
+          step={step}
+          onStep={setStep}
+          ratingsUnlocked={ratingsUnlocked}
+        />
+      )}
+
+      {step === 1 && (
+        <div className="mt-4 space-y-4 pb-32 lg:pb-4">
+          <SessionInfoCard
+            session={session}
+            primaryName={primaryName}
+            courtName={courtName}
+            participants={participants}
+            displayStatus={displayStatus}
+          />
+
+          {!isSessionDateScheduled(session) && status === "upcoming" && (
+            <button
+              type="button"
+              className="coach-btn-secondary w-full text-sm"
+              onClick={() => setScheduleOpen(true)}
+            >
+              Schedule date & time
+            </button>
+          )}
+
+          <SessionPaymentCard session={session} />
+
+          <div className="coach-card p-4">
+            <label className="coach-label" htmlFor="session-notes">
+              Session notes
+            </label>
+            <textarea
+              id="session-notes"
+              className="coach-input mt-1 min-h-[100px] resize-none"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="How did the session go?"
+            />
             <CoachButton
               type="button"
-              loading={markingDone}
+              variant="outline"
+              className="mt-3 text-sm"
+              loading={savingNotes}
               loadingLabel="Saving…"
               onClick={async () => {
-                setMarkingDone(true);
+                setSavingNotes(true);
                 try {
-                  await markDone();
-                  showToast("Session marked done — add skill ratings when ready");
+                  await updateSessionNotesAction(session.id, notes);
+                  invalidateCoachSessions(session.coachId);
+                  showToast("Notes saved");
                 } catch (e) {
-                  showToast(e instanceof Error ? e.message : "Could not update session", "error");
+                  showToast(e instanceof Error ? e.message : "Could not save notes", "error");
                 } finally {
-                  setMarkingDone(false);
+                  setSavingNotes(false);
                 }
               }}
             >
-              <CircleCheck className="h-4 w-4" strokeWidth={2.5} />
-              Mark done
+              Save notes
             </CoachButton>
+          </div>
+
+          {status !== "canceled" && (
+            <div className="coach-session-step-footer">
+              {status === "upcoming" ? (
+                <>
+                  <CoachButton
+                    type="button"
+                    loading={markingDone}
+                    loadingLabel="Saving…"
+                    onClick={() => void handleMarkDone()}
+                  >
+                    <CircleCheck className="h-4 w-4" strokeWidth={2.5} />
+                    Mark done & continue
+                  </CoachButton>
+                  <button
+                    type="button"
+                    className="coach-btn-ghost-danger"
+                    onClick={() => setCancelOpen(true)}
+                  >
+                    <CalendarX className="h-4 w-4" strokeWidth={2.5} />
+                    Cancel session
+                  </button>
+                </>
+              ) : (
+                <CoachButton type="button" onClick={() => setStep(2)}>
+                  Continue to ratings
+                </CoachButton>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === 2 && ratingsUnlocked && (
+        <div className="mt-4 space-y-4 pb-8">
+          {displayStatus === "pending_progress_review" && (
+            <p className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5 text-sm text-[#92400E]">
+              Rate Start + Now for each skill, then save ratings.
+            </p>
           )}
 
-          <button
-            type="button"
-            className="coach-btn-ghost-danger"
-            onClick={() => setCancelOpen(true)}
-          >
-            <CalendarX className="h-4 w-4" strokeWidth={2.5} />
-            Cancel session
-          </button>
+          {displayStatus === "ready_to_share" && (
+            <p className="rounded-xl border border-[#16A34A]/25 bg-[#F0FDF4] px-3 py-2.5 text-sm text-[#166534]">
+              Ratings saved — generate a progress card to share with your student.
+            </p>
+          )}
+
+          <SessionSkillRatingsSection session={session} />
         </div>
       )}
 

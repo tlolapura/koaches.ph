@@ -11,7 +11,7 @@ import {
 import { PROGRESS_CARDS_UPDATED_EVENT } from "@/lib/koaches/progress-cards";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { updateSessionStatusAction } from "@/lib/koaches/actions/sessions";
-import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
+import { invalidateCoachSessions, invalidateCoachStudents } from "@/lib/koaches/queries/invalidate";
 
 export function useSessionStatus(session: Session) {
   const { cards } = useProgressCards(session.coachId);
@@ -48,6 +48,7 @@ export function useSessionStatus(session: Session) {
     setStatus("done");
     setDisplayStatus(getSessionDisplayStatus({ ...session, status: "done" }, cards));
     invalidateCoachSessions(session.coachId);
+    invalidateCoachStudents(session.coachId);
   }, [session, cards]);
 
   const markCanceled = useCallback(async () => {
@@ -55,6 +56,7 @@ export function useSessionStatus(session: Session) {
     setStatus("canceled");
     setDisplayStatus("canceled");
     invalidateCoachSessions(session.coachId);
+    invalidateCoachStudents(session.coachId);
   }, [session.id, session.coachId]);
 
   return {

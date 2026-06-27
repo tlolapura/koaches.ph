@@ -14,6 +14,7 @@ import {
 } from "@/lib/koaches/coach-availability";
 import {
   buildProgramSession,
+  countProgramSessionsCompleted,
   getNextProgramSessionNumber,
   hasProgramSessionConflict,
 } from "@/lib/koaches/schedule-program-sessions";
@@ -184,7 +185,7 @@ export function ScheduleProgramSessionsSheet({
               onChange={setStudentId}
               options={enrolled.map((s) => ({
                 value: s.id,
-                label: `${s.name} · ${s.sessionsCompleted} of ${program.sessionCount} done`,
+                label: `${s.name} · ${countProgramSessionsCompleted(s.id, program.id, allSessions)} of ${program.sessionCount} done`,
               }))}
             />
           </CoachSheetField>

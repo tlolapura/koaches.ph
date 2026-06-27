@@ -1188,6 +1188,33 @@ body[data-coach-sheet-open] .coach-portal-fab {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
 }
 
+.coach-portal .coach-session-step-footer {
+  position: fixed;
+  right: 0;
+  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  border-top: 1px solid #E5E7EB;
+  background: rgba(250, 250, 248, 0.95);
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  backdrop-filter: blur(8px);
+}
+
+@media (min-width: 768px) {
+  .coach-portal .coach-session-step-footer {
+    position: sticky;
+    bottom: 0;
+    margin-top: 1rem;
+    border-top: none;
+    background: transparent;
+    padding: 0;
+    backdrop-filter: none;
+  }
+}
+
 @media (min-width: 1024px) {
   .coach-portal .coach-session-actions {
     padding-bottom: 0;

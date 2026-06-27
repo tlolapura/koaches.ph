@@ -26,6 +26,9 @@ import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachStudentListSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { ProgressCardReadySection } from "@/components/koaches/coach/ProgressCardReadySection";
+import { GenerateProgressCardSheet } from "@/components/koaches/coach/GenerateProgressCardSheet";
+import { useProgressCards } from "@/hooks/useProgressCards";
 import { crudToast } from "@/lib/koaches/crud-toast";
 import { cn, formatDisplayDate } from "@/lib/utils";
 
@@ -120,6 +123,17 @@ export default function StudentsPage() {
 
   const { programs } = useCoachPrograms(coachId);
   const { sessions: allSessions } = useCoachSessions(coachId);
+  const { candidates } = useProgressCards(coachId);
+  const [generateTarget, setGenerateTarget] = useState<{
+    sessionId: string;
+    participantId: string;
+  } | null>(null);
+
+  const activeCandidate = candidates.find(
+    (c) =>
+      c.session.id === generateTarget?.sessionId &&
+      c.participantId === generateTarget?.participantId
+  );
 
   if (loading) return <CoachStudentListSkeleton />;
 
@@ -153,6 +167,16 @@ export default function StudentsPage() {
           ))}
         </div>
       </div>
+
+      {filter !== "pending" && candidates.length > 0 && (
+        <ProgressCardReadySection
+          className="mt-4"
+          candidates={candidates}
+          onGenerate={(sessionId, participantId) =>
+            setGenerateTarget({ sessionId, participantId })
+          }
+        />
+      )}
 
       {filter === "pending" ? (
         pendingIntakes.length === 0 ? (
@@ -350,6 +374,16 @@ export default function StudentsPage() {
           }
         }}
       />
+
+      {activeCandidate && (
+        <GenerateProgressCardSheet
+          open={!!generateTarget}
+          onClose={() => setGenerateTarget(null)}
+          session={activeCandidate.session}
+          participantId={activeCandidate.participantId}
+          onGenerated={() => setGenerateTarget(null)}
+        />
+      )}
     </CoachPageShell>
   );
 }

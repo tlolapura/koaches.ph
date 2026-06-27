@@ -2,20 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, CreditCard, Share2, TrendingUp, User } from "lucide-react";
-import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
+import { ChevronRight, CreditCard, Share2, User } from "lucide-react";
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
-import { useProgressCards } from "@/hooks/useProgressCards";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { cn } from "@/lib/utils";
 
 const links = [
-  {
-    href: "/coach/progress",
-    label: "Progress cards",
-    icon: TrendingUp,
-    desc: "Sessions rated — ready to share",
-  },
   {
     href: "/coach/social",
     label: "Social",
@@ -37,19 +29,16 @@ const links = [
 ] as const;
 
 export default function MorePage() {
-  const coachId = usePortalCoachId();
   const pathname = usePathname();
-  const { candidates } = useProgressCards(coachId);
 
   return (
     <CoachPageShell className="pb-8">
-      <CoachPageHeader title="More" subtitle="Progress, social, and account" />
+      <CoachPageHeader title="More" subtitle="Social, billing, and account" />
 
       <div className="mt-6 space-y-2">
         {links.map((l) => {
           const Icon = l.icon;
           const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
-          const badge = l.href === "/coach/progress" && candidates.length > 0 ? candidates.length : null;
 
           return (
             <Link
@@ -64,14 +53,7 @@ export default function MorePage() {
                 <Icon className="h-5 w-5 text-[#166534]" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <p className="font-heading font-semibold text-[#111827]">{l.label}</p>
-                  {badge != null && (
-                    <span className="rounded-full bg-[#16A34A] px-2 py-0.5 text-[10px] font-bold text-white">
-                      {badge}
-                    </span>
-                  )}
-                </div>
+                <p className="font-heading font-semibold text-[#111827]">{l.label}</p>
                 <p className="text-xs text-[#6B7280]">{l.desc}</p>
               </div>
               <ChevronRight className="h-5 w-5 shrink-0 text-[#D1D5DB]" />

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import {
+  ArrowRight,
   CalendarDays,
   ChevronRight,
+  CircleCheck,
   CircleDot,
   ClipboardList,
   Sun,
@@ -23,7 +25,10 @@ import {
 import { useSessionPayment } from "@/hooks/useSessionPayment";
 import { useSessionStatus } from "@/hooks/useSessionStatus";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
-import { getSessionDisplayStatus } from "@/lib/koaches/session-lifecycle";
+import {
+  getSessionDisplayStatus,
+  type SessionDisplayStatus,
+} from "@/lib/koaches/session-lifecycle";
 import { cn, formatDisplayDate } from "@/lib/utils";
 
 function sortByTime(sessions: Session[]) {
@@ -119,29 +124,51 @@ function SessionTags({ session }: { session: Session }) {
   );
 }
 
-function ProgressAction({ session }: { session: Session }) {
-  const { displayStatus } = useSessionStatus(session);
+function ProgressActionLink({
+  session,
+  displayStatus,
+  compact,
+}: {
+  session: Session;
+  displayStatus: SessionDisplayStatus;
+  compact?: boolean;
+}) {
+  const studentId =
+    session.studentId ?? session.participants.find((p) => p.studentId)?.studentId;
 
   if (displayStatus === "pending_progress_review") {
     return (
       <Link
         href={`/coach/sessions/${session.id}`}
-        className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#16A34A] px-4 text-xs font-semibold text-white active:bg-[#15803D]"
+        className={cn(
+          "inline-flex items-center gap-1 font-semibold text-[#166534]",
+          compact
+            ? "shrink-0 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-[10px] active:bg-[#DCFCE7]"
+            : "min-h-[40px] w-full justify-center gap-1.5 rounded-xl bg-[#16A34A] px-4 text-xs text-white active:bg-[#15803D]"
+        )}
       >
-        <ClipboardList className="h-3.5 w-3.5" aria-hidden />
-        Add progress report
+        <ClipboardList className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} aria-hidden />
+        {compact ? "Rate" : "Add progress report"}
       </Link>
     );
   }
 
   if (displayStatus === "ready_to_share") {
+    const href = studentId
+      ? `/coach/students/${studentId}`
+      : `/coach/sessions/${session.id}`;
     return (
       <Link
-        href="/coach/progress"
-        className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#14532D] px-4 text-xs font-semibold text-white active:bg-[#166534]"
+        href={href}
+        className={cn(
+          "inline-flex items-center gap-1 font-semibold text-[#166534]",
+          compact
+            ? "shrink-0 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-[10px] active:bg-[#DCFCE7]"
+            : "min-h-[40px] w-full justify-center gap-1.5 rounded-xl bg-[#14532D] px-4 text-xs text-white active:bg-[#166534]"
+        )}
       >
-        <TrendingUp className="h-3.5 w-3.5" aria-hidden />
-        Create progress card
+        <TrendingUp className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} aria-hidden />
+        {compact ? "Share" : "Share progress card"}
       </Link>
     );
   }
@@ -235,51 +262,132 @@ function SessionRow({
   );
 }
 
-function FinishedRow({
-  session,
+function FinishedSection({
+  sessions,
+  progressCards,
   courtLookup,
 }: {
-  session: Session;
+  sessions: Session[];
+  progressCards: ProgressCard[];
   courtLookup: Map<string, Court>;
 }) {
-  const duration = formatSessionDuration(session.time, session.endTime);
-  const subtitle = [shortCourt(courtLookup, session.courtId), duration].filter(Boolean).join(" · ");
-  const action = <ProgressAction session={session} />;
+  type FinishedMeta = {
+    session: Session;
+    display: SessionDisplayStatus;
+    studentId?: string;
+    name: string;
+  };
+
+  const items: FinishedMeta[] = sessions.map((session) => ({
+    session,
+    display: getSessionDisplayStatus(session, progressCards),
+    studentId:
+      session.studentId ?? session.participants.find((p) => p.studentId)?.studentId,
+    name: formatSessionParticipantNames(session),
+  }));
+
+  const shareGroups = new Map<string, FinishedMeta[]>();
+  for (const item of items) {
+    if (item.display !== "ready_to_share" || !item.studentId) continue;
+    const list = shareGroups.get(item.studentId) ?? [];
+    list.push(item);
+    shareGroups.set(item.studentId, list);
+  }
+
+  const groupedStudentIds = new Set(
+    [...shareGroups.entries()].filter(([, list]) => list.length > 1).map(([id]) => id)
+  );
+
+  const groupedFooters: { studentId: string; name: string; href: string }[] = [];
+  for (const [studentId, list] of shareGroups) {
+    if (list.length > 1) {
+      groupedFooters.push({
+        studentId,
+        name: list[0].name,
+        href: `/coach/students/${studentId}`,
+      });
+    }
+  }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(30,58,95,0.06)]">
-      <div className="flex items-center gap-3 px-3 py-3">
-        <TimeColumn time={session.time} muted />
-        <div className="min-w-0 flex-1">
-          <p className="font-heading truncate text-[15px] font-semibold text-[#374151]">
-            {formatSessionParticipantNames(session)}
-          </p>
-          <p className="mt-0.5 truncate text-xs text-[#9CA3AF]">{subtitle}</p>
-          <div className="mt-2">
-            <SessionTags session={session} />
-          </div>
-        </div>
+    <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white shadow-[0_2px_12px_rgba(30,58,95,0.05)]">
+      <div className="divide-y divide-[#F3F4F6]">
+        {items.map(({ session, display, studentId, name }) => {
+          const duration = formatSessionDuration(session.time, session.endTime);
+          const subtitle = [shortCourt(courtLookup, session.courtId), duration]
+            .filter(Boolean)
+            .join(" · ");
+          const hideInlineShare =
+            display === "ready_to_share" &&
+            studentId != null &&
+            groupedStudentIds.has(studentId);
+
+          return (
+            <div key={session.id} className="flex items-center gap-2.5 px-3 py-2.5">
+              <TimeColumn time={session.time} muted />
+              <Link
+                href={`/coach/sessions/${session.id}`}
+                className="min-w-0 flex-1 active:opacity-80"
+              >
+                <p className="font-heading truncate text-sm font-semibold text-[#374151]">
+                  {name}
+                </p>
+                <p className="mt-0.5 truncate text-[11px] text-[#9CA3AF]">{subtitle}</p>
+                <div className="mt-1.5">
+                  <SessionTags session={session} />
+                </div>
+              </Link>
+              {!hideInlineShare && display !== "done" && display !== "canceled" && (
+                <ProgressActionLink session={session} displayStatus={display} compact />
+              )}
+              {(display === "done" || display === "canceled" || hideInlineShare) && (
+                <Link
+                  href={`/coach/sessions/${session.id}`}
+                  className="shrink-0 text-[#D1D5DB] active:text-[#9CA3AF]"
+                  aria-label={`Open ${name}`}
+                >
+                  <ChevronRight className="h-4 w-4" aria-hidden />
+                </Link>
+              )}
+            </div>
+          );
+        })}
       </div>
-      {action ? (
-        <div className="border-t border-[#F3F4F6] px-3 py-2.5">{action}</div>
-      ) : (
+
+      {groupedFooters.map(({ studentId, name, href }) => (
         <Link
-          href={`/coach/sessions/${session.id}`}
-          className="flex min-h-[36px] items-center justify-center gap-1 border-t border-[#F3F4F6] text-xs font-medium text-[#6B7280] active:bg-[#FAFAF8]"
+          key={studentId}
+          href={href}
+          className="flex min-h-[44px] items-center justify-between gap-3 border-t border-[#E5E7EB] bg-gradient-to-r from-[#F0FDF4] to-[#FAFAF8] px-4 py-3 active:bg-[#ECFDF5]"
         >
-          View session
-          <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#16A34A]/10">
+              <TrendingUp className="h-4 w-4 text-[#166534]" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="font-heading truncate text-sm font-semibold text-[#14532D]">
+                Share progress card
+              </p>
+              <p className="truncate text-[11px] text-[#6B7280]">For {name}</p>
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 shrink-0 text-[#16A34A]" aria-hidden />
         </Link>
-      )}
+      ))}
     </div>
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, count }: { children: React.ReactNode; count?: number }) {
   return (
-    <p className="mb-2.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
-      <span className="h-1 w-1 rounded-full bg-[#16A34A]" aria-hidden />
+    <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#16A34A]" aria-hidden />
       {children}
+      {count != null && count > 0 && (
+        <span className="rounded-full bg-[#F3F4F6] px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-[#6B7280]">
+          {count}
+        </span>
+      )}
     </p>
   );
 }
@@ -349,12 +457,12 @@ export function DashboardMySessionsToday({
 
       {finished.length > 0 && (
         <div>
-          <SectionLabel>Finished</SectionLabel>
-          <div className="space-y-2">
-            {finished.map((s) => (
-              <FinishedRow key={s.id} session={s} courtLookup={lookup} />
-            ))}
-          </div>
+          <SectionLabel count={finished.length}>Finished</SectionLabel>
+          <FinishedSection
+            sessions={finished}
+            progressCards={progressCards}
+            courtLookup={lookup}
+          />
         </div>
       )}
     </div>
