@@ -118,7 +118,7 @@ export function CoachSchedulePage() {
     openAddSession({ date, startTime: slot.startValue, endTime: slot.endValue });
   };
 
-  if (!coachId || (loading && allSessions.length === 0)) return <CoachScheduleSkeleton />;
+  if (!coachId) return <CoachScheduleSkeleton />;
 
   return (
     <CoachPageShell>

@@ -50,8 +50,23 @@ export default function ProfilePage() {
     setSkillTemplateId(coach.skillTemplateId);
   }, [coach]);
 
-  if (!coachId || !coach) {
+  if (!coachId) {
     return <CoachProfileSkeleton />;
+  }
+
+  if (!coach) {
+    return (
+      <CoachPageShell>
+        <CoachPageHeader
+          title="Profile"
+          subtitle="Public page, drop-in rates, availability, and account"
+        />
+        <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading profile">
+          <div className="h-64 rounded-2xl bg-[#E5E7EB]" />
+          <div className="h-32 rounded-2xl bg-[#E5E7EB]/80" />
+        </div>
+      </CoachPageShell>
+    );
   }
 
   const specialization = coach.specialization?.trim() ?? "";

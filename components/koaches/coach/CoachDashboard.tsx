@@ -115,7 +115,12 @@ export function CoachDashboard() {
     );
   }, [allSessions]);
 
+  if (!coachId) {
+    return <CoachDashboardSkeleton />;
+  }
+
   const greetingName = coach ? coachGreetingLabel(coach) : "Coach";
+  const sessionsLoading = loading && allSessions.length === 0;
 
   const attentionItems: AttentionItem[] = [];
   if (candidates.length > 0) {
@@ -153,10 +158,6 @@ export function CoachDashboard() {
       icon: "bg-[#D97706] text-white",
     },
   };
-
-  if (!coachId || !coach) {
-    return <CoachDashboardSkeleton />;
-  }
 
   return (
     <CoachPageShell className="px-0 pb-6 pt-0 md:px-4 md:pt-6">
@@ -203,7 +204,7 @@ export function CoachDashboard() {
         </div>
       </div>
 
-      <CoachBillingAlertBanner coach={coach} className="mt-4" />
+      {coach ? <CoachBillingAlertBanner coach={coach} className="mt-4" /> : null}
 
       <section className="mt-4 px-4">
         <Link
@@ -269,7 +270,12 @@ export function CoachDashboard() {
           </Link>
         </div>
 
-        {todaySessions.length === 0 ? (
+        {sessionsLoading ? (
+          <div className="coach-card animate-pulse p-8" aria-hidden>
+            <div className="h-4 w-32 rounded bg-[#E5E7EB]" />
+            <div className="mt-3 h-16 rounded-xl bg-[#E5E7EB]/80" />
+          </div>
+        ) : todaySessions.length === 0 ? (
           <DashboardEmptyDay />
         ) : (
           <DashboardMySessionsToday

@@ -30,7 +30,7 @@ export default function ProgramsPage() {
     await createProgram.mutateAsync(draft);
   };
 
-  if (!coachId || (loading && programs.length === 0)) return <CoachProgramListSkeleton />;
+  if (!coachId) return <CoachProgramListSkeleton />;
 
   return (
     <CoachPageShell>

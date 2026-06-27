@@ -136,7 +136,7 @@ export default function StudentsPage() {
       c.participantId === generateTarget?.participantId
   );
 
-  if (!coachId || (loading && rosterStudents.length === 0)) {
+  if (!coachId) {
     return <CoachStudentListSkeleton />;
   }
 

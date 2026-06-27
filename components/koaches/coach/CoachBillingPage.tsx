@@ -140,8 +140,20 @@ export function CoachBillingPage() {
     else showToast("Could not open receipt", "error");
   };
 
-  if (loading || !data) {
+  if (!coachId) {
     return <CoachBillingSkeleton />;
+  }
+
+  if (loading || !data) {
+    return (
+      <CoachPageShell className="pb-8">
+        <CoachPageHeader title="Billing" subtitle="Subscription and payment receipts" />
+        <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading billing">
+          <div className="h-24 rounded-2xl bg-[#E5E7EB]" />
+          <div className="h-40 rounded-2xl bg-[#E5E7EB]/80" />
+        </div>
+      </CoachPageShell>
+    );
   }
 
   const { billing, currentInvoice, pendingSubmission } = data;

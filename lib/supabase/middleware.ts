@@ -78,10 +78,12 @@ export async function updateSession(request: NextRequest) {
   });
 
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
+  const user = session?.user;
 
   const { pathname } = request.nextUrl;
+  let coachPortalContext: { coachId: string; email: string } | null = null;
 
   if (pathname.startsWith("/coach") && !isCoachPublicRoute(pathname)) {
     if (!user) {
@@ -134,6 +136,11 @@ export async function updateSession(request: NextRequest) {
       url.searchParams.set("restricted", "1");
       return NextResponse.redirect(url);
     }
+
+    coachPortalContext = {
+      coachId: profile.coach_id,
+      email: user.email ?? "",
+    };
   }
 
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
@@ -154,6 +161,21 @@ export async function updateSession(request: NextRequest) {
       url.pathname = "/admin/login";
       return NextResponse.redirect(url);
     }
+  }
+
+  if (coachPortalContext) {
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-koach-coach-id", coachPortalContext.coachId);
+    if (coachPortalContext.email) {
+      requestHeaders.set("x-koach-profile-email", coachPortalContext.email);
+    }
+    const response = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      response.cookies.set(cookie);
+    });
+    return response;
   }
 
   return supabaseResponse;

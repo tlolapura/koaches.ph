@@ -1,38 +1,48 @@
 import { dehydrate } from "@tanstack/react-query";
+import { headers } from "next/headers";
 import { CoachPortalShell } from "@/components/koaches/coach/CoachPortalShell";
-import { coachPortalBootstrapAction } from "@/lib/koaches/actions/coach-bootstrap";
-import { fetchProgramsAction } from "@/lib/koaches/actions/programs";
-import { fetchStudentsAction } from "@/lib/koaches/actions/students";
+import { mapCoach, type DbCoach } from "@/lib/koaches/db/mappers";
 import { getCachedProfile } from "@/lib/koaches/auth/cached";
 import { isCoachRole } from "@/lib/koaches/auth/profile";
 import { coachKeys } from "@/lib/koaches/queries/keys";
 import { getQueryClient } from "@/lib/koaches/queries/client";
+import { createServiceClient } from "@/lib/supabase/server";
 
+/**
+ * Coach portal layout — keep this fast.
+ * Middleware already validated auth and passes coach id via request headers.
+ * We only fetch the coach row here for React Query hydration.
+ */
 export default async function CoachLayout({ children }: { children: React.ReactNode }) {
-  const profile = await getCachedProfile();
-  const coachId = isCoachRole(profile?.role) ? profile?.coach_id ?? "" : "";
+  const h = await headers();
+  let coachId = h.get("x-koach-coach-id") ?? "";
+  let email = h.get("x-koach-profile-email") ?? null;
+
+  if (!coachId) {
+    const profile = await getCachedProfile();
+    if (isCoachRole(profile?.role) && profile?.coach_id) {
+      coachId = profile.coach_id;
+      email = profile.email ?? null;
+    }
+  }
+
   const queryClient = getQueryClient();
 
   if (coachId) {
-    try {
-      const [bootstrap, programs, students] = await Promise.all([
-        coachPortalBootstrapAction(coachId),
-        fetchProgramsAction(coachId),
-        fetchStudentsAction(coachId, true),
-      ]);
-      queryClient.setQueryData([...coachKeys.all, "profile", coachId] as const, bootstrap.coach);
-      queryClient.setQueryData(coachKeys.sessions(coachId), bootstrap.sessions);
-      queryClient.setQueryData(coachKeys.programs(coachId), programs);
-      queryClient.setQueryData(coachKeys.students(coachId, true), students);
-    } catch {
-      // Client hooks refetch if bootstrap fails.
+    const supabase = createServiceClient();
+    const { data } = await supabase.from("coaches").select("*").eq("id", coachId).single();
+    if (data) {
+      queryClient.setQueryData(
+        [...coachKeys.all, "profile", coachId] as const,
+        mapCoach(data as DbCoach)
+      );
     }
   }
 
   return (
     <CoachPortalShell
       initialCoachId={coachId}
-      initialEmail={profile?.email ?? null}
+      initialEmail={email}
       dehydratedState={dehydrate(queryClient)}
     >
       {children}

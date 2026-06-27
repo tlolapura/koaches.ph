@@ -39,6 +39,7 @@ function SidebarAccount() {
     <div className="border-t border-[#E5E7EB] p-3">
       <Link
         href="/coach/profile"
+        prefetch={false}
         className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-[#F9FAFB]"
       >
         <CoachAvatar name={coach?.name ?? "Coach"} photo={coach?.photo} size="sm" />
@@ -70,6 +71,7 @@ export function CoachSidebar() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               className={cn(
                 "font-heading flex min-h-[44px] items-center gap-3 rounded-xl px-3 text-sm font-semibold transition-colors",
                 navActiveClass(pathname, item.href)
@@ -104,6 +106,7 @@ export function CoachSidebarCompact() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               title={item.label}
               className={cn(
                 "relative flex h-11 w-11 items-center justify-center rounded-xl transition-colors",

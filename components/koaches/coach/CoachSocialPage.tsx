@@ -137,8 +137,20 @@ export function CoachSocialPage() {
     }
   };
 
-  if (loading || !coach) {
+  if (!coachId) {
     return <CoachSocialSkeleton />;
+  }
+
+  if (loading || !coach) {
+    return (
+      <CoachPageShell className="pb-40 md:pb-6">
+        <CoachPageHeader title="Social" />
+        <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading social tools">
+          <div className="h-10 rounded-xl bg-[#E5E7EB]" />
+          <div className="h-80 rounded-2xl bg-[#E5E7EB]/80" />
+        </div>
+      </CoachPageShell>
+    );
   }
 
   const isWeekTemplate = template === "week-calendar";
