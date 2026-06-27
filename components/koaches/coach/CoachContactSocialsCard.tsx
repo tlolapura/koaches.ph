@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Phone } from "lucide-react";
 import type { CoachProfile } from "@/lib/koaches/types";
 import { updateCoachContactAction } from "@/lib/koaches/actions/coach-profile";
+import { invalidateCoachProfile } from "@/lib/koaches/queries/invalidate";
 import { displayFacebook, displayInstagram } from "@/lib/koaches/social-links";
 import { FacebookIcon, InstagramIcon } from "@/components/koaches/shared/SocialIcons";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
@@ -106,6 +107,7 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
             setSaving(true);
             try {
               await updateCoachContactAction(coachId, { mobile, instagram, facebook });
+              invalidateCoachProfile(coachId);
               onSaved?.();
               showToast("Contact info updated!");
               setOpen(false);

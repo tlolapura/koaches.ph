@@ -33,6 +33,7 @@ import { SessionPaymentFields } from "@/components/koaches/coach/SessionPaymentF
 import { SessionPriceFields } from "@/components/koaches/coach/SessionPriceFields";
 import { SessionTimeFields } from "@/components/koaches/coach/SessionTimeFields";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { formatDisplayDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -89,6 +90,7 @@ export function AddSessionSheet({
   const [endTime, setEndTime] = useState(() => addMinutesToTimeValue("08:00", defaultDuration));
   const [courtId, setCourtId] = useState("");
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const selectedProgram =
     sessionType === "program"
@@ -246,14 +248,15 @@ export function AddSessionSheet({
       subtitle="Choose type first, then set details"
       footer={
         <CoachSheetFooter>
-          <button
+          <CoachButton
             type="submit"
             form={ADD_SESSION_FORM_ID}
-            className="coach-btn-primary"
+            loading={saving}
+            loadingLabel="Saving…"
             disabled={!canSave}
           >
             Save Session
-          </button>
+          </CoachButton>
         </CoachSheetFooter>
       }
     >
@@ -262,8 +265,10 @@ export function AddSessionSheet({
         className="space-y-4"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (!canSave) return;
+          if (!canSave || saving) return;
 
+          setSaving(true);
+          try {
           const program = selectedProgram;
           const sessionNumber = nextSessionNumber;
           const scheduled = Boolean(date);
@@ -294,6 +299,11 @@ export function AddSessionSheet({
               : `Session ${sessionNumber} saved — add a date when ready`
           );
           onClose();
+          } catch (e) {
+            showToast(e instanceof Error ? e.message : "Could not save session", "error");
+          } finally {
+            setSaving(false);
+          }
         }}
       >
         <CoachSheetField label="Session type">

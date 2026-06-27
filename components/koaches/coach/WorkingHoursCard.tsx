@@ -28,6 +28,7 @@ export function WorkingHoursCard() {
   const { workingHours, setWorkingHours } = useCoachAvailability(coachId);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<DraftWindow[]>(() => workingHoursToDraft(workingHours));
+  const [saving, setSaving] = useState(false);
   const { showToast } = useCoachToast();
 
   const openEditor = () => {
@@ -79,8 +80,8 @@ export function WorkingHoursCard() {
         subtitle="When you're available for sessions — add as many windows as you need"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={WORKING_HOURS_FORM_ID} className="coach-btn-primary">
-              Save hours
+            <button type="submit" form={WORKING_HOURS_FORM_ID} className="coach-btn-primary" disabled={saving}>
+              {saving ? "Saving…" : "Save hours"}
             </button>
           </CoachSheetFooter>
         }
@@ -97,12 +98,15 @@ export function WorkingHoursCard() {
               return;
             }
             void (async () => {
+              setSaving(true);
               try {
                 await setWorkingHours(next);
                 showToast("Working hours saved");
                 setOpen(false);
               } catch {
                 showToast("Couldn't save working hours. Please try again.", "error");
+              } finally {
+                setSaving(false);
               }
             })();
           }}

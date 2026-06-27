@@ -3,12 +3,14 @@
 import { useState } from "react";
 import type { Session } from "@/lib/koaches/types";
 import { updateSessionScheduleAction } from "@/lib/koaches/actions/sessions";
+import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
 import { CoachTimePicker } from "@/components/koaches/coach/CoachTimePicker";
 import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { useCoachCourts } from "@/hooks/useCourts";
 import { parseDisplayTime } from "@/lib/koaches/session-time";
 
@@ -40,6 +42,7 @@ export function ScheduleTbdSessionSheet({
   const { showToast } = useCoachToast();
   const [date, setDate] = useState("");
   const [time, setTime] = useState("8:00 AM");
+  const [saving, setSaving] = useState(false);
 
   return (
     <CoachBottomSheet
@@ -49,9 +52,9 @@ export function ScheduleTbdSessionSheet({
       subtitle="Pick a date and time for this session"
       footer={
         <CoachSheetFooter>
-          <button type="submit" form={FORM_ID} className="coach-btn-primary">
+          <CoachButton type="submit" form={FORM_ID} loading={saving} loadingLabel="Saving…">
             Save schedule
-          </button>
+          </CoachButton>
         </CoachSheetFooter>
       }
     >
@@ -60,14 +63,21 @@ export function ScheduleTbdSessionSheet({
         className="coach-form"
         onSubmit={async (e) => {
           e.preventDefault();
+          setSaving(true);
+          try {
           const fd = new FormData(e.currentTarget);
           const courtId = String(fd.get("courtId") ?? session.courtId);
           const endTime = endTimeOneHourAfter(time);
           await updateSessionScheduleAction(session.id, { date, time, endTime, courtId });
-          window.dispatchEvent(new Event("koaches-sessions-updated"));
+          invalidateCoachSessions(session.coachId);
           showToast("Session scheduled");
           onScheduled();
           onClose();
+          } catch (err) {
+            showToast(err instanceof Error ? err.message : "Could not save schedule", "error");
+          } finally {
+            setSaving(false);
+          }
         }}
       >
         <CoachSheetField label="Date">

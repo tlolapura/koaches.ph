@@ -13,6 +13,8 @@ import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { ScheduleTbdSessionSheet } from "@/components/koaches/coach/ScheduleTbdSessionSheet";
 import { useSessionStatus } from "@/hooks/useSessionStatus";
 import { updateSessionNotesAction } from "@/lib/koaches/actions/sessions";
+import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { formatSessionTimeRange } from "@/lib/koaches/session-time";
 import {
   isSessionDateScheduled,
@@ -37,6 +39,8 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [notes, setNotes] = useState(session.notes ?? "");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [markingDone, setMarkingDone] = useState(false);
   const { showToast } = useCoachToast();
   const { status, displayStatus, markDone, markCanceled } = useSessionStatus(session);
   const participants = getSessionParticipants(session);
@@ -126,16 +130,27 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="How did the session go?"
         />
-        <button
+        <CoachButton
           type="button"
-          className="coach-btn-outline mt-3 text-sm"
+          variant="outline"
+          className="mt-3 text-sm"
+          loading={savingNotes}
+          loadingLabel="Saving…"
           onClick={async () => {
-            await updateSessionNotesAction(session.id, notes);
-            showToast("Notes saved");
+            setSavingNotes(true);
+            try {
+              await updateSessionNotesAction(session.id, notes);
+              invalidateCoachSessions(session.coachId);
+              showToast("Notes saved");
+            } catch (e) {
+              showToast(e instanceof Error ? e.message : "Could not save notes", "error");
+            } finally {
+              setSavingNotes(false);
+            }
           }}
         >
           Save notes
-        </button>
+        </CoachButton>
       </div>
 
       <SessionSkillRatingsSection session={session} />
@@ -143,17 +158,25 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
       {status !== "canceled" && (
         <div className="coach-session-actions">
           {status === "upcoming" && (
-            <button
+            <CoachButton
               type="button"
-              className="coach-btn-primary"
+              loading={markingDone}
+              loadingLabel="Saving…"
               onClick={async () => {
-                await markDone();
-                showToast("Session marked done — add skill ratings when ready");
+                setMarkingDone(true);
+                try {
+                  await markDone();
+                  showToast("Session marked done — add skill ratings when ready");
+                } catch (e) {
+                  showToast(e instanceof Error ? e.message : "Could not update session", "error");
+                } finally {
+                  setMarkingDone(false);
+                }
               }}
             >
               <CircleCheck className="h-4 w-4" strokeWidth={2.5} />
               Mark done
-            </button>
+            </CoachButton>
           )}
 
           <button
@@ -182,7 +205,7 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
         open={scheduleOpen}
         onClose={() => setScheduleOpen(false)}
         session={session}
-        onScheduled={() => window.dispatchEvent(new Event("koaches-sessions-updated"))}
+        onScheduled={() => invalidateCoachSessions(session.coachId)}
       />
     </CoachPageShell>
   );

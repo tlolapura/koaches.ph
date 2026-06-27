@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { fetchSessionsAction } from "@/lib/koaches/actions/sessions";
 import { coachKeys } from "@/lib/koaches/queries/keys";
 import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
@@ -14,6 +14,7 @@ export function useCoachSessions(coachId: string) {
     queryKey: coachKeys.sessions(coachId),
     queryFn: () => fetchSessionsAction(coachId),
     enabled: !!coachId,
+    placeholderData: keepPreviousData,
   });
 
   const refresh = useCallback(() => {

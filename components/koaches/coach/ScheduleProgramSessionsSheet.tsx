@@ -28,6 +28,7 @@ import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/Co
 import { SessionPaymentFields } from "@/components/koaches/coach/SessionPaymentFields";
 import { SessionTimeFields } from "@/components/koaches/coach/SessionTimeFields";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 
 const FORM_ID = "add-program-session-form";
 
@@ -71,6 +72,7 @@ export function ScheduleProgramSessionsSheet({
   const [endTime, setEndTime] = useState("09:00");
   const [courtId, setCourtId] = useState(() => courts[0]?.id ?? "");
   const [paymentStatus, setPaymentStatus] = useState<SessionPaymentStatus>("unpaid");
+  const [saving, setSaving] = useState(false);
 
   const student = enrolled.find((s) => s.id === studentId) ?? enrolled[0];
 
@@ -124,14 +126,15 @@ export function ScheduleProgramSessionsSheet({
       subtitle={`${program.name} · book one session at a time`}
       footer={
         <CoachSheetFooter>
-          <button
+          <CoachButton
             type="submit"
             form={FORM_ID}
-            className="coach-btn-primary"
+            loading={saving}
+            loadingLabel="Saving…"
             disabled={!canSave}
           >
             {nextSessionNumber ? `Save session ${nextSessionNumber}` : "Nothing to schedule"}
-          </button>
+          </CoachButton>
         </CoachSheetFooter>
       }
     >
@@ -145,8 +148,10 @@ export function ScheduleProgramSessionsSheet({
           className="space-y-4"
           onSubmit={async (e) => {
             e.preventDefault();
-            if (!student || !nextSessionNumber || !canSave) return;
+            if (!student || !nextSessionNumber || !canSave || saving) return;
 
+            setSaving(true);
+            try {
             const session = buildProgramSession({
               coachId,
               program,
@@ -166,6 +171,11 @@ export function ScheduleProgramSessionsSheet({
                 : `Session ${nextSessionNumber} saved — add a date when ready`
             );
             onClose();
+            } catch (e) {
+              showToast(e instanceof Error ? e.message : "Could not save session", "error");
+            } finally {
+              setSaving(false);
+            }
           }}
         >
           <CoachSheetField label="Student">

@@ -19,3 +19,9 @@ export function invalidateCoachPrograms(coachId: string) {
 export function invalidateCoachProgram(programId: string) {
   void getQueryClient().invalidateQueries({ queryKey: coachKeys.program(programId) });
 }
+
+export function invalidateCoachProfile(coachId: string) {
+  void getQueryClient().invalidateQueries({
+    queryKey: [...coachKeys.all, "profile", coachId],
+  });
+}

@@ -215,7 +215,6 @@ export function StudentProfileView({ student }: { student: Student }) {
           await archiveStudentAction(student.id);
           notifyRosterUpdated(coachId);
           showToast(crudToast.deleted("Student"));
-          setArchiveOpen(false);
           router.push("/coach/students");
         }}
       />

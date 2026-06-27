@@ -114,7 +114,7 @@ export function CoachBottomSheet({
 type ConfirmSheetProps = {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   message?: string;
   confirmLabel?: string;
 };
@@ -126,29 +126,40 @@ export function ConfirmSheet({
   message = "Are you sure?",
   confirmLabel = "Confirm",
 }: ConfirmSheetProps) {
+  const [pending, setPending] = useState(false);
+
+  const handleConfirm = async () => {
+    setPending(true);
+    try {
+      await onConfirm();
+      onClose();
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <CoachBottomSheet
       open={open}
-      onClose={onClose}
+      onClose={pending ? () => {} : onClose}
       title={message}
       footer={
         <CoachSheetFooterActions>
           <button
             type="button"
             onClick={onClose}
-            className="font-heading min-h-[48px] flex-1 rounded-xl border border-[#E5E7EB] font-semibold text-[#6B7280]"
+            disabled={pending}
+            className="font-heading min-h-[48px] flex-1 rounded-xl border border-[#E5E7EB] font-semibold text-[#6B7280] disabled:opacity-60"
           >
             Cancel
           </button>
           <button
             type="button"
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }}
-            className="font-heading min-h-[48px] flex-1 rounded-xl bg-[#EF4444] font-semibold text-white"
+            onClick={() => void handleConfirm()}
+            disabled={pending}
+            className="font-heading min-h-[48px] flex-1 rounded-xl bg-[#EF4444] font-semibold text-white disabled:opacity-60"
           >
-            {confirmLabel}
+            {pending ? "Working…" : confirmLabel}
           </button>
         </CoachSheetFooterActions>
       }

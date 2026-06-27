@@ -24,6 +24,7 @@ import { CoachContactSocialsCard } from "@/components/koaches/coach/CoachContact
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
 import { CoachChangePasswordCard } from "@/components/koaches/coach/CoachChangePasswordCard";
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
+import { invalidateCoachProfile } from "@/lib/koaches/queries/invalidate";
 import type { SkillRubricId } from "@/lib/koaches/types";
 
 const EDIT_BIO_FORM_ID = "edit-bio-form";
@@ -190,6 +191,8 @@ export default function ProfilePage() {
             setSavingBio(true);
             try {
               await updateCoachBioAction(coachId, bio, coach.specialization);
+              invalidateCoachProfile(coachId);
+              await refresh();
               showToast("Bio updated!");
               setEditOpen(false);
             } catch (err) {
@@ -227,6 +230,8 @@ export default function ProfilePage() {
                 setSavingPricing(true);
                 try {
                   await updateCoachPricingAction(coachId, pricing);
+                  invalidateCoachProfile(coachId);
+                  await refresh();
                   showToast("Pricing saved!");
                   setPricingOpen(false);
                 } catch (err) {
@@ -259,6 +264,8 @@ export default function ProfilePage() {
                 setSavingTemplate(true);
                 try {
                   await updateCoachSkillTemplateAction(coachId, skillTemplateId);
+                  invalidateCoachProfile(coachId);
+                  await refresh();
                   showToast("Template saved!");
                   setTemplateOpen(false);
                 } catch (err) {

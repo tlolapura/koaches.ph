@@ -43,6 +43,7 @@ export function CoachAchievementsCard() {
   const { achievements, setAchievements } = useCoachAchievements(coachId);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CoachAchievementDraft[]>([]);
+  const [saving, setSaving] = useState(false);
   const { showToast } = useCoachToast();
 
   const openEditor = () => {
@@ -100,8 +101,8 @@ export function CoachAchievementsCard() {
         subtitle="Shown on your public coach profile"
         footer={
           <CoachSheetFooter>
-            <button type="submit" form={ACHIEVEMENTS_FORM_ID} className="coach-btn-primary">
-              Save achievements
+            <button type="submit" form={ACHIEVEMENTS_FORM_ID} className="coach-btn-primary" disabled={saving}>
+              {saving ? "Saving…" : "Save achievements"}
             </button>
           </CoachSheetFooter>
         }
@@ -121,9 +122,18 @@ export function CoachAchievementsCard() {
                 return;
               }
             }
-            setAchievements(draftsToAchievements(draft));
-            showToast("Achievements saved");
-            setOpen(false);
+            void (async () => {
+              setSaving(true);
+              try {
+                await setAchievements(draftsToAchievements(draft));
+                showToast("Achievements saved");
+                setOpen(false);
+              } catch {
+                showToast("Could not save achievements. Please try again.", "error");
+              } finally {
+                setSaving(false);
+              }
+            })();
           }}
         >
           <div className="space-y-3">
