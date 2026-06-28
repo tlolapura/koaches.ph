@@ -59,7 +59,7 @@ export function AdminSidebar() {
       </nav>
       <div className="shrink-0 border-t border-[#E5E7EB] p-4">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">Signed in as</p>
-        <p className="font-heading mt-1 truncate text-sm font-semibold text-[#111827]">Koaches Admin</p>
+        <p className="font-heading mt-1 truncate text-sm font-semibold text-[#111827]">PickleKoach Admin</p>
         <AdminSignOutButton className="mt-2 w-full justify-start rounded-xl px-0 py-2 text-[#6B7280] hover:text-[#374151]" />
       </div>
     </aside>

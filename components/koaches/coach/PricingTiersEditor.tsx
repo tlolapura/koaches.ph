@@ -8,13 +8,19 @@ import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 type PricingTiersEditorProps = {
   pricing: CoachSessionPricing;
   onChange: (pricing: CoachSessionPricing) => void;
+  /** basics = group size & duration; tiers = rate tiers; primary-rate = 1-on-1 only; full = everything */
+  mode?: "full" | "basics" | "tiers" | "primary-rate";
 };
 
 function newTierId(): string {
   return `tier-${Date.now()}`;
 }
 
-export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProps) {
+export function PricingTiersEditor({
+  pricing,
+  onChange,
+  mode = "full",
+}: PricingTiersEditorProps) {
   const updateTier = (id: string, patch: Partial<SessionRateTier>) => {
     onChange({
       ...pricing,
@@ -46,6 +52,8 @@ export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProp
 
   return (
     <div className="space-y-4">
+      {(mode === "full" || mode === "basics") && (
+        <>
       <div className="grid grid-cols-2 gap-3">
         <CoachSheetField
           label="Minimum players"
@@ -97,8 +105,34 @@ export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProp
           }
         />
       </CoachSheetField>
+        </>
+      )}
 
+      {(mode === "full" || mode === "tiers" || mode === "primary-rate") && (
       <div>
+        {mode === "primary-rate" ? (
+          <CoachSheetField label="1-on-1 rate (₱ per session)" htmlFor="pricing-primary-rate">
+            <input
+              id="pricing-primary-rate"
+              type="number"
+              min={0}
+              step={50}
+              className="coach-input"
+              placeholder="800"
+              value={pricing.tiers[0]?.rate ?? 800}
+              onChange={(e) => {
+                const rate = Math.max(0, Number(e.target.value));
+                const [first, ...rest] = pricing.tiers;
+                if (!first) return;
+                onChange({
+                  ...pricing,
+                  tiers: [{ ...first, rate }, ...rest],
+                });
+              }}
+            />
+          </CoachSheetField>
+        ) : (
+        <>
         <div className="flex items-center justify-between">
           <span className="coach-label">Rates by group size</span>
           <button
@@ -179,7 +213,10 @@ export function PricingTiersEditor({ pricing, onChange }: PricingTiersEditorProp
             </div>
           ))}
         </div>
+        </>
+        )}
       </div>
+      )}
     </div>
   );
 }

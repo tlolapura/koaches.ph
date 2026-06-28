@@ -4,7 +4,7 @@ import { CoachMarketingLanding } from "@/components/koaches/public/CoachMarketin
 export const metadata: Metadata = {
   title: "For Coaches",
   description:
-    "Join KoachesPH — manage students, sessions, programs, progress cards, and social marketing from one dashboard.",
+    "Join PickleKoach — manage students, sessions, programs, progress cards, and social marketing from one dashboard.",
 };
 
 export default function ForCoachesPage() {

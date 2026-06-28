@@ -1,5 +1,6 @@
 import { getQueryClient } from "@/lib/koaches/queries/client";
 import { coachKeys } from "@/lib/koaches/queries/keys";
+import type { CoachProfile } from "@/lib/koaches/types";
 
 export function invalidateCoachSessions(coachId: string) {
   void getQueryClient().invalidateQueries({ queryKey: coachKeys.sessions(coachId) });
@@ -24,4 +25,13 @@ export function invalidateCoachProfile(coachId: string) {
   void getQueryClient().invalidateQueries({
     queryKey: [...coachKeys.all, "profile", coachId],
   });
+}
+
+export function setCoachProfileCache(coachId: string, coach: CoachProfile) {
+  getQueryClient().setQueryData([...coachKeys.all, "profile", coachId], coach);
+}
+
+/** Drop all cached coach portal data — call on sign-out or before a new login. */
+export function clearCoachPortalCache() {
+  getQueryClient().removeQueries({ queryKey: coachKeys.all });
 }

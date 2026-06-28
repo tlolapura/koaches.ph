@@ -27,12 +27,25 @@ export function CoachAuthProvider({
   initialCoachId = "",
   initialEmail = null,
 }: CoachAuthProviderProps) {
-  const hasServerAuth = initialCoachId.length > 0;
-  const [state, setState] = useState<CoachAuthState>({
+  const [state, setState] = useState<CoachAuthState>(() => ({
     coachId: initialCoachId,
-    loading: !hasServerAuth && isSupabaseConfigured(),
+    loading: !initialCoachId && isSupabaseConfigured(),
     email: initialEmail,
-  });
+  }));
+
+  // Keep in sync when the server layout resolves a different signed-in coach.
+  useEffect(() => {
+    setState((prev) => {
+      if (prev.coachId === initialCoachId && prev.email === initialEmail) {
+        return prev;
+      }
+      return {
+        coachId: initialCoachId,
+        email: initialEmail,
+        loading: !initialCoachId && isSupabaseConfigured(),
+      };
+    });
+  }, [initialCoachId, initialEmail]);
 
   useEffect(() => {
     if (!isSupabaseConfigured()) {
@@ -40,8 +53,7 @@ export function CoachAuthProvider({
       return;
     }
 
-    // Server layout already resolved coach auth for portal routes.
-    if (hasServerAuth) return;
+    if (initialCoachId) return;
 
     let cancelled = false;
 
@@ -62,7 +74,7 @@ export function CoachAuthProvider({
     return () => {
       cancelled = true;
     };
-  }, [hasServerAuth]);
+  }, [initialCoachId]);
 
   return <CoachAuthContext.Provider value={state}>{children}</CoachAuthContext.Provider>;
 }

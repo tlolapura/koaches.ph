@@ -2,13 +2,13 @@
 export const KOACHES_PAYMENT_DETAILS = {
   gcash: {
     label: "GCash",
-    accountName: "KoachesPH",
+    accountName: "PickleKoach",
     number: "0917 800 1234",
     note: "Send as Send Money. Use your invoice number as reference.",
   },
   bank: {
     label: "BDO Unibank",
-    accountName: "KoachesPH Inc.",
+    accountName: "PickleKoach Inc.",
     accountNumber: "0123 4567 8901",
     branch: "BGC High Street",
     note: "Include invoice number in transfer notes.",

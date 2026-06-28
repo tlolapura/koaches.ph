@@ -2,20 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
-  ArrowRight,
-  BarChart3,
   Check,
   CheckCircle2,
   ClipboardCheck,
+  Link2,
   Mail,
   MessageCircle,
+  Send,
   Sparkles,
   User,
-  Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
   CoachApplicationFields,
@@ -30,51 +29,46 @@ import {
   validateCoachingStep,
   validateIdentityStep,
 } from "@/lib/koaches/application-form";
+import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
+import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { cn } from "@/lib/utils";
 
-type WizardStep = "welcome" | ApplicationFieldStep | "review" | "success";
-
-const FLOW_STEPS: { id: ApplicationFieldStep | "review"; label: string }[] = [
-  { id: "identity", label: "You" },
-  { id: "coaching", label: "Coaching" },
-  { id: "business", label: "Profile" },
-  { id: "review", label: "Send" },
-];
-
-const STEP_COPY: Record<ApplicationFieldStep | "review", { title: string; subtitle: string }> = {
-  identity: {
-    title: "Let's start with you",
-    subtitle: "We'll use this to set up your coach account and keep you in the loop.",
-  },
-  coaching: {
-    title: "Tell your coaching story",
-    subtitle: "This becomes your public profile — help players know what makes you great.",
-  },
-  business: {
-    title: "Your public profile",
-    subtitle: "Choose your profile link and the player levels you work with.",
-  },
-  review: {
-    title: "Ready to join the court?",
-    subtitle: "Give it a quick look, then hit send. We're excited to have you.",
-  },
-};
-
-const BENEFITS = [
+const STEPS = [
   {
-    icon: Users,
-    title: "Students & sessions",
-    body: "Manage bookings, programs, and progress in one place.",
-  },
-  {
+    id: "welcome",
+    title: "Join PickleKoach",
+    subtitle: "Apply for your coach portal",
     icon: Sparkles,
-    title: "Your public profile",
-    body: "A shareable page so new players can find and book you.",
   },
   {
-    icon: BarChart3,
-    title: "Progress tracking",
-    body: "Skill rubrics and progress cards that keep students coming back.",
+    id: "identity",
+    title: "Let's start with you",
+    subtitle: "We'll use this to set up your account and keep you in the loop",
+    icon: User,
+  },
+  {
+    id: "coaching",
+    title: "Tell your coaching story",
+    subtitle: "This becomes your public profile",
+    icon: Sparkles,
+  },
+  {
+    id: "business",
+    title: "Your public profile",
+    subtitle: "Profile link and player levels you coach",
+    icon: Link2,
+  },
+  {
+    id: "review",
+    title: "Ready to join?",
+    subtitle: "Give it a quick look, then send",
+    icon: ClipboardCheck,
+  },
+  {
+    id: "success",
+    title: "You're on the list!",
+    subtitle: "Here's what happens next",
+    icon: CheckCircle2,
   },
 ] as const;
 
@@ -82,17 +76,17 @@ const NEXT_STEPS = [
   {
     icon: ClipboardCheck,
     title: "We review your application",
-    body: "Our team checks your details — usually within 1–2 business days.",
+    body: "Usually within 1–2 business days.",
   },
   {
     icon: MessageCircle,
-    title: "Admin reaches out via SMS & email",
-    body: "You'll hear from us to walk through payment and onboarding.",
+    title: "We reach out via SMS & email",
+    body: "Payment and onboarding details.",
   },
   {
     icon: CheckCircle2,
     title: "Your portal goes live",
-    body: "Sign in, finish your profile, and start coaching on Koaches.",
+    body: "Sign in and start coaching on PickleKoach.",
   },
 ] as const;
 
@@ -104,69 +98,6 @@ type CoachApplicationWizardProps = {
   className?: string;
 };
 
-function WizardNavButtons({
-  onBack,
-  onNext,
-  nextLabel,
-  loading,
-  loadingLabel,
-  hideBack,
-}: {
-  onBack: () => void;
-  onNext: () => void;
-  nextLabel: string;
-  loading?: boolean;
-  loadingLabel?: string;
-  hideBack?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-      {!hideBack ? (
-        <button
-          type="button"
-          className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
-      ) : null}
-      <CoachButton
-        type="button"
-        className={cn(hideBack ? "w-full" : "sm:flex-[2]")}
-        loading={loading}
-        loadingLabel={loadingLabel ?? "Sending…"}
-        onClick={onNext}
-      >
-        {nextLabel}
-        {nextLabel !== "Submit application" && !loading && <ArrowRight className="h-4 w-4" />}
-      </CoachButton>
-    </div>
-  );
-}
-
-function WizardFooter({
-  children,
-  error,
-}: {
-  children: React.ReactNode;
-  error?: string | null;
-}) {
-  return (
-    <div className="sticky bottom-0 z-20 shrink-0 border-t border-[#E5E7EB] bg-[#FAFAF8]/98 px-1 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
-      {error ? (
-        <p
-          role="alert"
-          className="mb-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-center text-xs font-medium text-[#B91C1C]"
-        >
-          {error}
-        </p>
-      ) : null}
-      {children}
-    </div>
-  );
-}
-
 export function CoachApplicationWizard({
   backHref,
   backLabel,
@@ -175,52 +106,62 @@ export function CoachApplicationWizard({
   className,
 }: CoachApplicationWizardProps) {
   const { draft, patch } = useCoachApplicationDraft();
-  const [step, setStep] = useState<WizardStep>("welcome");
+  const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  const flowIndex = FLOW_STEPS.findIndex((s) => s.id === step);
-  const progress = step === "welcome" || step === "success" ? 0 : ((flowIndex + 1) / FLOW_STEPS.length) * 100;
+  const current = STEPS[step];
+  const StepIcon = current.icon;
+  const progress = Math.round(((step + 1) / STEPS.length) * 100);
+  const isFirst = step === 0;
+  const isReview = current.id === "review";
+  const isSuccess = current.id === "success";
+  const review = isReview || isSuccess ? formatApplicationReview(draft) : null;
 
   const goNext = () => {
     setError(null);
 
-    if (step === "identity") {
+    if (current.id === "welcome") {
+      setStep((s) => s + 1);
+      return;
+    }
+
+    if (current.id === "identity") {
       const err = validateIdentityStep(draft);
       if (err) {
         setError(err);
         return;
       }
-      setStep("coaching");
+      setStep((s) => s + 1);
       return;
     }
 
-    if (step === "coaching") {
+    if (current.id === "coaching") {
       const err = validateCoachingStep(draft);
       if (err) {
         setError(err);
         return;
       }
-      setStep("business");
+      setStep((s) => s + 1);
       return;
     }
 
-    if (step === "business") {
+    if (current.id === "business") {
       const err = validateBusinessStep(draft);
       if (err) {
         setError(err);
         return;
       }
-      setStep("review");
+      setStep((s) => s + 1);
       return;
     }
 
-    if (step === "review") {
+    if (current.id === "review") {
       setPending(true);
       void (async () => {
         try {
           await submitCoachApplicationAction(draftToSubmitInput(draft));
-          setStep("success");
+          setStep((s) => s + 1);
         } catch {
           setError("Couldn't submit your application. Please try again.");
         } finally {
@@ -232,313 +173,285 @@ export function CoachApplicationWizard({
 
   const goBack = () => {
     setError(null);
-    if (step === "welcome") return;
-    if (step === "identity") {
-      setStep("welcome");
-      return;
-    }
-    if (step === "review") {
-      setStep("business");
-      return;
-    }
-    const prevIdx = FLOW_STEPS.findIndex((s) => s.id === step) - 1;
-    if (prevIdx >= 0) setStep(FLOW_STEPS[prevIdx].id);
+    if (step > 0) setStep((s) => s - 1);
   };
 
-  const review = step === "review" || step === "success" ? formatApplicationReview(draft) : null;
-  const showStickyFooter = step !== "success";
-
-  if (step === "success" && review) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className={cn("coach-card p-6 sm:p-8", className)}
-      >
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", stiffness: 260, damping: 18, delay: 0.1 }}
-            className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#4F8FF7]"
-          >
-            <Check className="h-8 w-8 text-white" strokeWidth={2.5} />
-          </motion.div>
-          <p className="font-heading mt-5 text-2xl font-bold text-[#111827]">
-            You&apos;re on the list!
-          </p>
-          <p className="mt-2 text-sm text-[#6B7280]">
-            Thanks for applying{review.email ? `, ${review.email.split("@")[0]}` : ""}. Here&apos;s what happens next.
-          </p>
-        </div>
-
-        <ol className="mt-8 space-y-4">
-          {NEXT_STEPS.map((item, i) => (
-            <motion.li
-              key={item.title}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 + i * 0.1 }}
-              className="flex gap-3"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#4F8FF7] text-white">
-                <item.icon className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[#111827]">{item.title}</p>
-                <p className="text-xs text-[#6B7280]">{item.body}</p>
-              </div>
-            </motion.li>
-          ))}
-        </ol>
-
-        <div className="mt-6 rounded-xl border border-[#E5E7EB] bg-[#EFF6FF]/50 p-4 text-sm">
-          <p className="font-semibold text-[#1D4ED8]">Watch for a message from us</p>
-          <p className="mt-1 text-xs text-[#6B7280]">
-            We&apos;ll contact you via SMS ({review.mobile}) and email ({review.email}) for payment and onboarding.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#6B7280]">
-              <MessageCircle className="h-3.5 w-3.5" /> SMS
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#6B7280]">
-              <Mail className="h-3.5 w-3.5" /> Email
-            </span>
-          </div>
-        </div>
-
-        <Link href={successHref} className="coach-btn-primary mt-6 inline-flex w-full justify-center">
-          {successCta}
-        </Link>
-      </motion.div>
-    );
-  }
-
   return (
-    <div className={cn("flex min-h-0 flex-1 flex-col", className)}>
-      {step !== "welcome" && (
-        <div className="mb-5 shrink-0">
-          <div className="mb-2 flex items-center justify-between text-xs font-semibold text-[#6B7280]">
-            <span>
-              Step {Math.max(flowIndex + 1, 1)} of {FLOW_STEPS.length}
-            </span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
-            <motion.div
-              className="h-full rounded-full bg-[#16A34A]"
-              initial={false}
-              animate={{ width: `${progress}%` }}
-              transition={{ type: "spring", stiffness: 120, damping: 20 }}
-            />
-          </div>
-          <div className="mt-3 hidden gap-1 sm:flex">
-            {FLOW_STEPS.map((s, i) => {
-              const done = flowIndex > i;
-              const active = s.id === step;
-              return (
-                <div
-                  key={s.id}
-                  className={cn(
-                    "flex flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[10px] font-semibold uppercase tracking-wide transition-colors",
-                    active && "bg-[#EFF6FF] text-[#1D4ED8]",
-                    done && !active && "text-[#1D4ED8]",
-                    !active && !done && "text-[#9CA3AF]"
-                  )}
-                >
-                  {done && !active ? <Check className="h-3 w-3" /> : null}
-                  {s.label}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+    <div className={cn("coach-portal relative flex h-dvh flex-col overflow-hidden bg-white", className)}>
+      <PickleballBallBackdrop variant="landing" />
 
-      <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain pb-2">
-      <AnimatePresence mode="wait">
-        {step === "welcome" && (
-          <motion.div
-            key="welcome"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
-            className="coach-card overflow-hidden p-6 sm:p-8"
-          >
-            <div className="text-center sm:text-left">
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#1D4ED8]">Join KoachesPH</p>
-              <h2 className="font-heading mt-1 text-2xl font-bold">
-                Ready to coach on the platform players trust?
-              </h2>
-              <p className="mt-2 text-sm text-[#6B7280]">
-                A few quick steps — about 5 minutes — and you&apos;re in the queue for your coach portal.
+      <header className="relative z-[1] shrink-0 border-b border-[#E5E7EB] bg-white/95 px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur-sm">
+        <div className="mx-auto max-w-lg">
+          <div className="flex items-center justify-between gap-3">
+            <KoachesWordmark size="sm" />
+            <span className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">
+              Apply
+            </span>
+          </div>
+
+          <div className="mt-5 flex items-end justify-between gap-4">
+            <div>
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0FDF4] text-[#16A34A]"
+                aria-hidden
+              >
+                <StepIcon className="h-5 w-5" strokeWidth={2} />
+              </div>
+              <h1 className="font-heading mt-2.5 text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
+                {current.title}
+              </h1>
+              <p className="mt-0.5 text-sm text-[#6B7280]">{current.subtitle}</p>
+            </div>
+            <div className="text-right">
+              <p className="font-heading text-2xl font-bold leading-none text-[#16A34A]">{progress}%</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                Step {step + 1}/{STEPS.length}
               </p>
             </div>
+          </div>
 
-            <ul className="mt-8 space-y-3">
-              {BENEFITS.map((b, i) => (
-                <motion.li
-                  key={b.title}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.08 }}
-                  className="flex gap-3 rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] p-3"
-                >
-                  <div
-                    className={cn(
-                      "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white",
-                      i % 2 === 0 ? "bg-[#16A34A]" : "bg-[#4F8FF7]"
-                    )}
-                  >
-                    <b.icon className="h-4 w-4" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-semibold text-[#111827]">{b.title}</p>
-                    <p className="text-xs text-[#6B7280]">{b.body}</p>
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-
-        {(step === "identity" || step === "coaching" || step === "business") && (
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22 }}
-            className="coach-card p-6 sm:p-8"
-          >
-            <div className="mb-6 flex items-start gap-3">
-              <div
-                className={cn(
-                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white",
-                  step === "coaching" ? "bg-[#4F8FF7]" : "bg-[#16A34A]"
-                )}
-              >
-                {step === "identity" ? (
-                  <User className="h-5 w-5" />
-                ) : step === "coaching" ? (
-                  <Sparkles className="h-5 w-5" />
-                ) : (
-                  <BarChart3 className="h-5 w-5" />
-                )}
-              </div>
-              <div>
-                <h2 className="font-heading text-xl font-bold">{STEP_COPY[step].title}</h2>
-                <p className="mt-1 hidden text-sm text-[#6B7280] md:block">{STEP_COPY[step].subtitle}</p>
-              </div>
-            </div>
-
-            <CoachApplicationFields step={step} draft={draft} onDraftChange={patch} />
-          </motion.div>
-        )}
-
-        {step === "review" && review && (
-          <motion.div
-            key="review"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22 }}
-            className="coach-card p-6 sm:p-8"
-          >
-            <div className="mb-6">
-              <h2 className="font-heading text-xl font-bold">{STEP_COPY.review.title}</h2>
-              <p className="mt-1 hidden text-sm text-[#6B7280] md:block">{STEP_COPY.review.subtitle}</p>
-            </div>
-
-            <dl className="space-y-3 rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] p-4 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-[#6B7280]">Name</dt>
-                <dd className="text-right font-medium text-[#111827]">{review.fullName}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-[#6B7280]">Contact</dt>
-                <dd className="text-right font-medium text-[#111827]">
-                  {review.mobile}
-                  <br />
-                  <span className="text-xs text-[#6B7280]">{review.email}</span>
-                </dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-[#6B7280]">Specialization</dt>
-                <dd className="text-right font-medium text-[#1D4ED8]">{review.specialization}</dd>
-              </div>
-              <div>
-                <dt className="text-[#6B7280]">Bio</dt>
-                <dd className="mt-1 text-[#374151]">{review.bio}</dd>
-              </div>
-              {(review.instagram || review.facebook) && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-[#6B7280]">Social</dt>
-                  <dd className="text-right text-xs text-[#374151]">
-                    {[review.instagram, review.facebook].filter(Boolean).join(" · ")}
-                  </dd>
-                </div>
-              )}
-              <div className="flex justify-between gap-4">
-                <dt className="text-[#6B7280]">Player levels</dt>
-                <dd className="text-right font-medium">{review.coachingLevelsLabel}</dd>
-              </div>
-              {review.students > 0 && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-[#6B7280]">Current students</dt>
-                  <dd className="font-medium">{review.students}</dd>
-                </div>
-              )}
-              {review.preferredSlug && (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-[#6B7280]">Profile URL</dt>
-                  <dd className="font-medium">/coaches/{review.preferredSlug}</dd>
-                </div>
-              )}
-            </dl>
-
-            <p className="mt-4 text-xs text-[#6B7280]">
-              After you submit, our admin team will reach out via SMS and email to complete payment and onboarding.
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      </div>
-
-      {showStickyFooter && (
-        <WizardFooter error={step === "welcome" ? null : error}>
-          {step === "welcome" ? (
-            <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-              <Link
-                href={backHref}
-                className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                {backLabel}
-              </Link>
-              <button
-                type="button"
-                className="coach-btn-primary flex min-h-[48px] items-center justify-center gap-1 sm:flex-[2]"
-                onClick={() => setStep("identity")}
-              >
-                Let&apos;s go
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          ) : step === "review" ? (
-            <WizardNavButtons
-              onBack={goBack}
-              onNext={goNext}
-              nextLabel="Submit application"
-              loading={pending}
-              loadingLabel="Sending…"
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
+            <div
+              className="h-full rounded-full bg-[#16A34A] transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
             />
-          ) : (
-            <WizardNavButtons onBack={goBack} onNext={goNext} nextLabel="Continue" />
+          </div>
+
+          <div className="mt-3 flex justify-between gap-1">
+            {STEPS.map((s, i) => (
+              <StepDot key={s.id} icon={s.icon} active={i === step} done={i < step} />
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <main className="relative z-[1] min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-lg px-4 py-5">
+          <div className="coach-card p-5 shadow-sm">
+            {current.id === "welcome" && (
+              <div className="space-y-4">
+                <p className="text-sm leading-relaxed text-[#6B7280]">
+                  A few quick steps — about 5 minutes — and you&apos;re in the queue for your coach portal.
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    "Your details and contact info",
+                    "Coaching story for your public page",
+                    "Profile link and player levels",
+                    "Quick review, then we reach out",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm text-[#374151]">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
+                        <Check className="h-3 w-3" strokeWidth={3} />
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {(current.id === "identity" ||
+              current.id === "coaching" ||
+              current.id === "business") && (
+              <CoachApplicationFields
+                step={current.id as ApplicationFieldStep}
+                draft={draft}
+                onDraftChange={patch}
+              />
+            )}
+
+            {current.id === "review" && review && (
+              <div>
+                <dl className="space-y-3 rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 text-sm">
+                  <ReviewRow label="Name" value={review.fullName} />
+                  <ReviewRow
+                    label="Contact"
+                    value={
+                      <>
+                        {review.mobile}
+                        <br />
+                        <span className="text-xs text-[#6B7280]">{review.email}</span>
+                      </>
+                    }
+                  />
+                  <ReviewRow label="Specialization" value={review.specialization} highlight />
+                  <div>
+                    <dt className="text-[#6B7280]">Bio</dt>
+                    <dd className="mt-1 text-[#374151]">{review.bio}</dd>
+                  </div>
+                  {(review.instagram || review.facebook) && (
+                    <ReviewRow
+                      label="Social"
+                      value={[review.instagram, review.facebook].filter(Boolean).join(" · ")}
+                    />
+                  )}
+                  <ReviewRow label="Player levels" value={review.coachingLevelsLabel} />
+                  {review.students > 0 && (
+                    <ReviewRow label="Current students" value={String(review.students)} />
+                  )}
+                  {review.preferredSlug && (
+                    <ReviewRow label="Profile URL" value={`/coach/${review.preferredSlug}`} />
+                  )}
+                </dl>
+                <p className="mt-4 text-xs text-[#6B7280]">
+                  After you submit, our team will reach out via SMS and email for payment and onboarding.
+                </p>
+              </div>
+            )}
+
+            {current.id === "success" && review && (
+              <div className="space-y-5">
+                <p className="text-sm text-[#6B7280]">
+                  Thanks for applying{review.email ? ` — we'll contact ${review.email}` : ""}.
+                </p>
+                <ol className="space-y-3">
+                  {NEXT_STEPS.map((item) => (
+                    <li key={item.title} className="flex gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#4F8FF7]">
+                        <item.icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[#111827]">{item.title}</p>
+                        <p className="text-xs text-[#6B7280]">{item.body}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+                <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 text-sm">
+                  <p className="font-semibold text-[#111827]">Watch for a message from us</p>
+                  <p className="mt-1 text-xs text-[#6B7280]">
+                    SMS to {review.mobile} and email to {review.email}.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#6B7280] ring-1 ring-[#E5E7EB]">
+                      <MessageCircle className="h-3.5 w-3.5" /> SMS
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#6B7280] ring-1 ring-[#E5E7EB]">
+                      <Mail className="h-3.5 w-3.5" /> Email
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      <footer className="relative z-[1] shrink-0 border-t border-[#E5E7EB] bg-white/95 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+        <div className="mx-auto w-full max-w-lg">
+          {error ? (
+            <p
+              role="alert"
+              className="mb-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-center text-xs font-medium text-[#B91C1C]"
+            >
+              {error}
+            </p>
+          ) : null}
+
+          <div className="flex gap-3">
+            {isSuccess ? (
+              <Link href={successHref} className="coach-btn-primary min-h-[48px] w-full justify-center">
+                {successCta}
+              </Link>
+            ) : isFirst ? (
+              <>
+                <Link
+                  href={backHref}
+                  className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  {backLabel}
+                </Link>
+                <CoachButton type="button" className="min-h-[48px] flex-[2]" onClick={goNext}>
+                  Let&apos;s go
+                </CoachButton>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
+                  disabled={pending}
+                  onClick={goBack}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back
+                </button>
+                <CoachButton
+                  type="button"
+                  className="min-h-[48px] flex-[2]"
+                  loading={pending}
+                  loadingLabel="Sending…"
+                  onClick={goNext}
+                >
+                  {isReview ? (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Submit application
+                    </>
+                  ) : (
+                    "Continue"
+                  )}
+                </CoachButton>
+              </>
+            )}
+          </div>
+
+          {!isSuccess && (
+            <p className="mt-2 text-center text-xs text-[#9CA3AF]">
+              Free to apply · We&apos;ll reach out within 1–2 business days
+            </p>
           )}
-        </WizardFooter>
-      )}
+        </div>
+      </footer>
     </div>
+  );
+}
+
+function ReviewRow({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: React.ReactNode;
+  highlight?: boolean;
+}) {
+  return (
+    <div className="flex justify-between gap-4">
+      <dt className="text-[#6B7280]">{label}</dt>
+      <dd
+        className={cn(
+          "text-right font-medium",
+          highlight ? "text-[#4F8FF7]" : "text-[#111827]"
+        )}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function StepDot({
+  icon: Icon,
+  active,
+  done,
+}: {
+  icon: LucideIcon;
+  active: boolean;
+  done: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-full transition-all",
+        done && "bg-[#F0FDF4] text-[#16A34A]",
+        active && !done && "bg-[#EFF6FF] text-[#4F8FF7] ring-2 ring-[#BFDBFE] scale-110",
+        !active && !done && "bg-[#F3F4F6] text-[#9CA3AF]"
+      )}
+    >
+      {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Icon className="h-3.5 w-3.5" />}
+    </span>
   );
 }

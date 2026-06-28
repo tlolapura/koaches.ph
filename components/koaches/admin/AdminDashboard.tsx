@@ -79,7 +79,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
               Platform overview
             </p>
-            <p className="font-heading mt-1 text-2xl font-bold text-[#111827]">Koaches Admin</p>
+            <p className="font-heading mt-1 text-2xl font-bold text-[#111827]">PickleKoach Admin</p>
           </div>
           <div className="rounded-xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] px-4 py-3 text-right text-white md:ml-auto">
             <p className="text-[10px] font-medium uppercase tracking-wide text-white/60">MRR</p>

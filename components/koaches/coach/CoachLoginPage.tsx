@@ -8,6 +8,8 @@ import { LogIn } from "lucide-react";
 import { KoachesLogo } from "@/components/koaches/KoachesLogo";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { coachSignInAction } from "@/lib/koaches/actions/auth";
+import { SITE_DOMAIN } from "@/lib/koaches/constants";
+import { clearCoachPortalCache } from "@/lib/koaches/queries/invalidate";
 import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
 
 export function CoachLoginPage() {
@@ -17,6 +19,10 @@ export function CoachLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    clearCoachPortalCache();
+  }, []);
 
   useEffect(() => {
     if (searchParams.get("error") === "unauthorized") {
@@ -43,6 +49,7 @@ export function CoachLoginPage() {
               void (async () => {
                 try {
                   const next = searchParams.get("next") ?? "/coach/dashboard";
+                  clearCoachPortalCache();
                   const result = await coachSignInAction(email.trim(), password, next);
                   if (result && !result.ok) setError(result.error ?? "Sign in failed");
                 } finally {
@@ -68,7 +75,7 @@ export function CoachLoginPage() {
                   className="coach-input mt-1.5"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@koaches.ph"
+                  placeholder={`you@${SITE_DOMAIN}`}
                   autoComplete="email"
                   required
                 />

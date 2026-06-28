@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const description =
     coach.bio?.trim() ||
-    `Book pickleball coaching with ${coach.name}. View programs, courts, and availability on KoachesPH.`;
+    `Book pickleball coaching with ${coach.name}. View programs, courts, and availability on PickleKoach.`;
 
   return {
     title: coach.name,

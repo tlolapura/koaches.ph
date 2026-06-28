@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Loader2, LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/koaches/actions/auth";
+import { clearCoachPortalCache } from "@/lib/koaches/queries/invalidate";
 import { cn } from "@/lib/utils";
 
 type CoachSignOutButtonProps = {
@@ -27,6 +28,7 @@ export function CoachSignOutButton({
       aria-label={ariaLabel ?? (label || "Sign out")}
       onClick={() =>
         startTransition(async () => {
+          clearCoachPortalCache();
           await signOutAction("/coach/login");
         })
       }

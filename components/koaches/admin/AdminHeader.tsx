@@ -24,9 +24,9 @@ export function AdminHeader({ pathname }: { pathname: string }) {
           <AdminNotificationBell />
           <div
             className="font-heading flex h-10 w-10 items-center justify-center rounded-full bg-[#4F8FF7] text-sm font-semibold text-white"
-            title="Koaches Admin"
+            title="PickleKoach Admin"
           >
-            {getInitials("Koaches Admin")}
+            {getInitials("PickleKoach Admin")}
           </div>
         </div>
       </div>

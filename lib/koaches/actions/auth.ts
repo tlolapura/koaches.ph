@@ -23,7 +23,16 @@ export async function coachSignInAction(email: string, password: string, nextPat
     return { ok: false as const, error: "This account is not authorized for the coach portal." };
   }
 
-  redirect(nextPath && nextPath.startsWith("/coach") ? nextPath : "/coach/dashboard");
+  const { data: coachRow } = await supabase
+    .from("coaches")
+    .select("onboarding_completed_at")
+    .eq("id", profile.coach_id)
+    .maybeSingle();
+
+  const defaultPath =
+    coachRow && !coachRow.onboarding_completed_at ? "/coach/onboarding" : "/coach/dashboard";
+
+  redirect(nextPath && nextPath.startsWith("/coach") ? nextPath : defaultPath);
 }
 
 export async function adminSignInAction(email: string, password: string) {

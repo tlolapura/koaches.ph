@@ -29,6 +29,7 @@ export type DbCoach = {
   instagram: string | null;
   facebook: string | null;
   skill_template_id: string;
+  coaching_levels: string[];
   free_trial_enabled: boolean;
   free_trial_weekly_cap: number;
   subscription_plan: string;
@@ -37,6 +38,7 @@ export type DbCoach = {
   total_students: number;
   total_sessions: number;
   created_at: string;
+  onboarding_completed_at: string | null;
 };
 
 export type DbProgram = {
@@ -203,6 +205,12 @@ export function mapCoach(row: DbCoach): CoachProfile {
     instagram: row.instagram ?? undefined,
     facebook: row.facebook ?? undefined,
     skillTemplateId: row.skill_template_id as CoachProfile["skillTemplateId"],
+    coachingLevels: (row.coaching_levels?.length
+      ? row.coaching_levels
+      : [row.skill_template_id]
+    ).filter((id): id is CoachProfile["coachingLevels"][number] =>
+      id === "beginner" || id === "intermediate" || id === "advanced"
+    ),
     freeTrialEnabled: row.free_trial_enabled,
     freeTrialWeeklyCap: row.free_trial_weekly_cap,
     subscriptionPlan: row.subscription_plan as CoachProfile["subscriptionPlan"],
@@ -211,6 +219,7 @@ export function mapCoach(row: DbCoach): CoachProfile {
     totalStudents: row.total_students,
     totalSessions: row.total_sessions,
     createdAt: row.created_at,
+    onboardingCompletedAt: row.onboarding_completed_at ?? undefined,
   };
 }
 
@@ -364,6 +373,7 @@ export function coachInsertFromApplication(
     instagram: app.instagram ?? null,
     facebook: app.facebook ?? null,
     skill_template_id: app.skillTemplateId,
+    coaching_levels: app.coachingLevels,
     free_trial_enabled: false,
     free_trial_weekly_cap: 0,
     subscription_plan: "early-bird",
@@ -371,6 +381,7 @@ export function coachInsertFromApplication(
     is_active: true,
     total_students: app.currentStudentCount,
     total_sessions: 0,
+    onboarding_completed_at: null,
   };
 }
 

@@ -157,6 +157,8 @@ export type CoachProfile = {
   instagram?: string;
   facebook?: string;
   skillTemplateId: SkillRubricId;
+  /** Player levels this coach works with */
+  coachingLevels: Array<Exclude<SkillRubricId, "custom">>;
   freeTrialEnabled: boolean;
   freeTrialWeeklyCap: number;
   subscriptionPlan: "early-bird" | "regular";
@@ -165,6 +167,7 @@ export type CoachProfile = {
   totalStudents: number;
   totalSessions: number;
   createdAt: string;
+  onboardingCompletedAt?: string;
 };
 
 export type CoachInvoiceStatus = "issued" | "payment_submitted" | "paid" | "overdue" | "void";

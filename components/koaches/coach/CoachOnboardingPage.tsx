@@ -2,40 +2,90 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Camera,
+  Check,
+  Link2,
+  PartyPopper,
+  Phone,
+  Sparkles,
+  Target,
+  Wallet,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
-import { CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
-import { CoachProfileSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { PricingTiersEditor } from "@/components/koaches/coach/PricingTiersEditor";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
+import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
 import {
+  completeCoachOnboardingAction,
   updateCoachBioAction,
   updateCoachContactAction,
   updateCoachPricingAction,
-  updateCoachSkillTemplateAction,
+  updateCoachCoachingLevelsAction,
 } from "@/lib/koaches/actions/coach-profile";
-import { markCoachOnboardingComplete } from "@/lib/koaches/coach-onboarding";
-import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
+import type { CoachingLevelId } from "@/lib/koaches/application-form";
+import { resolveCoachCoachingLevels } from "@/lib/koaches/application-form";
 import { DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
-import type { CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
+import { coachGreetingLabel } from "@/lib/koaches/person-name";
+import { BRAND_NAME } from "@/lib/koaches/constants";
+import { needsCoachOnboarding } from "@/lib/koaches/coach-onboarding";
+import { coachKeys } from "@/lib/koaches/queries/keys";
+import { invalidateCoachProfile, setCoachProfileCache } from "@/lib/koaches/queries/invalidate";
+import type { CoachSessionPricing } from "@/lib/koaches/types";
 import { cn } from "@/lib/utils";
+import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
+import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 
 const STEPS = [
-  { id: "welcome", title: "Welcome" },
-  { id: "profile", title: "Photo & bio" },
-  { id: "contact", title: "Contact" },
-  { id: "rates", title: "Drop-in rates" },
-  { id: "skills", title: "Skill template" },
-  { id: "share", title: "Your link" },
+  {
+    id: "welcome",
+    title: "Welcome aboard",
+    subtitle: "Let's set up your coach profile",
+    icon: Sparkles,
+  },
+  {
+    id: "profile",
+    title: "Photo & bio",
+    subtitle: "Help players get to know you",
+    icon: Camera,
+  },
+  {
+    id: "contact",
+    title: "Contact",
+    subtitle: "How students reach you",
+    icon: Phone,
+  },
+  {
+    id: "rates",
+    title: "Drop-in rates",
+    subtitle: "Price your hourly sessions",
+    icon: Wallet,
+  },
+  {
+    id: "levels",
+    title: "Player levels",
+    subtitle: "Who you coach",
+    icon: Target,
+  },
+  {
+    id: "share",
+    title: "You're ready!",
+    subtitle: "Share your profile link",
+    icon: PartyPopper,
+  },
 ] as const;
 
 export function CoachOnboardingPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const coachId = usePortalCoachId();
   const { coach, loading, refresh } = useCoachProfile(coachId);
   const { showToast } = useCoachToast();
@@ -45,7 +95,7 @@ export function CoachOnboardingPage() {
   const [specialization, setSpecialization] = useState("");
   const [mobile, setMobile] = useState("");
   const [pricing, setPricing] = useState<CoachSessionPricing>(DEFAULT_SESSION_PRICING);
-  const [skillTemplateId, setSkillTemplateId] = useState<SkillRubricId>("intermediate");
+  const [coachingLevels, setCoachingLevels] = useState<CoachingLevelId[]>(["intermediate"]);
 
   useEffect(() => {
     if (!coach) return;
@@ -53,15 +103,34 @@ export function CoachOnboardingPage() {
     setSpecialization(coach.specialization ?? "");
     setMobile(coach.mobile ?? "");
     setPricing(coach.sessionPricing ?? DEFAULT_SESSION_PRICING);
-    setSkillTemplateId(coach.skillTemplateId);
+    setCoachingLevels(resolveCoachCoachingLevels(coach));
   }, [coach]);
 
-  if (loading || !coach) {
-    return <CoachProfileSkeleton />;
+  useEffect(() => {
+    if (loading || !coach) return;
+    if (!needsCoachOnboarding(coach)) {
+      router.replace("/coach/dashboard");
+    }
+  }, [coach, loading, router]);
+
+  if (loading || !coach || !coachId) {
+    return (
+      <div className="coach-portal relative flex h-dvh flex-col overflow-hidden bg-white">
+        <PickleballBallBackdrop variant="landing" />
+        <div className="relative z-[1] animate-pulse p-6 pt-10">
+          <div className="mx-auto h-8 w-40 rounded-lg bg-[#E5E7EB]" />
+          <div className="mx-auto mt-8 h-64 max-w-md rounded-2xl bg-[#E5E7EB]/80" />
+        </div>
+      </div>
+    );
   }
 
   const current = STEPS[step];
+  const StepIcon = current.icon;
+  const progress = Math.round(((step + 1) / STEPS.length) * 100);
+  const isFirst = step === 0;
   const isLast = step === STEPS.length - 1;
+  const greeting = coachGreetingLabel(coach);
 
   const saveStep = async (): Promise<boolean> => {
     setSaving(true);
@@ -84,9 +153,14 @@ export function CoachOnboardingPage() {
         });
       } else if (current.id === "rates") {
         await updateCoachPricingAction(coachId, pricing);
-      } else if (current.id === "skills") {
-        await updateCoachSkillTemplateAction(coachId, skillTemplateId);
+      } else if (current.id === "levels") {
+        if (coachingLevels.length === 0) {
+          showToast("Select at least one player level", "error");
+          return false;
+        }
+        await updateCoachCoachingLevelsAction(coachId, coachingLevels);
       }
+      invalidateCoachProfile(coachId);
       await refresh();
       return true;
     } catch (e) {
@@ -103,8 +177,20 @@ export function CoachOnboardingPage() {
       return;
     }
     if (current.id === "share") {
-      markCoachOnboardingComplete();
-      router.push("/coach/dashboard");
+      setSaving(true);
+      try {
+        const updatedCoach = await completeCoachOnboardingAction(coachId);
+        setCoachProfileCache(coachId, updatedCoach);
+        await queryClient.refetchQueries({
+          queryKey: [...coachKeys.all, "profile", coachId],
+        });
+        showToast("Welcome to the court!");
+        router.replace("/coach/dashboard");
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "Could not finish setup", "error");
+      } finally {
+        setSaving(false);
+      }
       return;
     }
     const ok = await saveStep();
@@ -112,163 +198,223 @@ export function CoachOnboardingPage() {
   };
 
   return (
-    <CoachPageShell className="max-w-lg pb-10">
-      <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
-          Setup · Step {step + 1} of {STEPS.length}
-        </p>
-        <h1 className="font-heading mt-1 text-2xl font-bold text-[#111827]">{current.title}</h1>
-        <div className="mt-3 flex gap-1">
-          {STEPS.map((s, i) => (
+    <div className="coach-portal relative flex h-dvh flex-col overflow-hidden bg-white">
+      <PickleballBallBackdrop variant="landing" />
+
+      <header className="relative z-[1] shrink-0 border-b border-[#E5E7EB] bg-white/95 px-5 pb-5 pt-[max(1.25rem,env(safe-area-inset-top))] backdrop-blur-sm">
+        <div className="mx-auto max-w-lg">
+          <div className="flex items-center justify-between gap-3">
+            <KoachesWordmark size="sm" />
+            <span className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">
+              Setup
+            </span>
+          </div>
+
+          <div className="mt-5 flex items-end justify-between gap-4">
+            <div>
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0FDF4] text-[#16A34A]"
+                aria-hidden
+              >
+                <StepIcon className="h-5 w-5" strokeWidth={2} />
+              </div>
+              <h1 className="font-heading mt-2.5 text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
+                {current.title}
+              </h1>
+              <p className="mt-0.5 text-sm text-[#6B7280]">{current.subtitle}</p>
+            </div>
+            <div className="text-right">
+              <p className="font-heading text-2xl font-bold leading-none text-[#16A34A]">{progress}%</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                Step {step + 1}/{STEPS.length}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
             <div
-              key={s.id}
-              className={cn(
-                "h-1 flex-1 rounded-full",
-                i <= step ? "bg-[#16A34A]" : "bg-[#E5E7EB]"
-              )}
+              className="h-full rounded-full bg-[#16A34A] transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
             />
-          ))}
+          </div>
+
+          <div className="mt-3 flex justify-between gap-1">
+            {STEPS.map((s, i) => (
+              <StepDot key={s.id} icon={s.icon} active={i === step} done={i < step} />
+            ))}
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="coach-card p-5">
-        {current.id === "welcome" && (
-          <div className="space-y-3 text-sm text-[#6B7280]">
-            <p>
-              Let&apos;s set up your coach profile so students know who you are and how to reach you.
-            </p>
-            <ul className="space-y-2">
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#3D5C47]" />
-                Photo, bio, and contact for your public page
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#3D5C47]" />
-                Drop-in session rates and skill rating template
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#3D5C47]" />
-                Your shareable profile link
-              </li>
-            </ul>
-            <p className="text-xs text-[#9CA3AF]">Takes about 3 minutes. You can change everything later in Profile.</p>
-          </div>
-        )}
+      <main className="relative z-[1] min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-lg px-4 py-5">
+          <div className="coach-card p-5 shadow-sm">
+            {current.id === "welcome" && (
+              <div className="space-y-4">
+                <p className="text-sm leading-relaxed text-[#6B7280]">
+                  Hey {greeting}! PickleKoach is your home court for students, sessions, and progress.
+                  This quick setup takes about 3 minutes — then you&apos;re ready to coach.
+                </p>
+                <ul className="space-y-3">
+                  {[
+                    "Photo & bio for your public page",
+                    "Contact info so players can reach you",
+                    "Drop-in rates and player levels",
+                    "Your shareable profile link",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm text-[#374151]">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
+                        <Check className="h-3 w-3" strokeWidth={3} />
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-        {current.id === "profile" && (
-          <div className="space-y-4">
-            <CoachProfilePhoto
-              coachId={coachId}
-              name={coach.name}
-              defaultPhoto={coach.photo}
-              size="xl"
-              editable
-              className="mx-auto"
-              onUpdated={refresh}
-            />
-            <CoachSheetField label="Bio *">
-              <textarea
-                className="coach-input min-h-[100px] resize-none"
-                placeholder="Tell students about your coaching style..."
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-              />
-            </CoachSheetField>
-            <CoachSheetField label="Specialization">
-              <input
-                className="coach-input"
-                placeholder="e.g. Beginners, competitive doubles"
-                value={specialization}
-                onChange={(e) => setSpecialization(e.target.value)}
-              />
-            </CoachSheetField>
-          </div>
-        )}
-
-        {current.id === "contact" && (
-          <CoachSheetField label="Mobile number *" hint="Shown on your public profile for bookings">
-            <input
-              className="coach-input"
-              type="tel"
-              placeholder="09XX XXX XXXX"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-            />
-          </CoachSheetField>
-        )}
-
-        {current.id === "rates" && (
-          <div>
-            <p className="mb-3 text-sm text-[#6B7280]">Set rates for drop-in sessions. Programs have their own pricing.</p>
-            <PricingTiersEditor pricing={pricing} onChange={setPricing} />
-          </div>
-        )}
-
-        {current.id === "skills" && (
-          <div className="space-y-3">
-            <p className="text-sm text-[#6B7280]">Default rubric when rating students after sessions.</p>
-            {(Object.keys(SKILL_RUBRICS) as Array<keyof typeof SKILL_RUBRICS>).map((id) => {
-              const rubric = SKILL_RUBRICS[id];
-              return (
-                <label key={id} className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] p-3">
-                  <input
-                    type="radio"
-                    name="onboard-rubric"
-                    checked={skillTemplateId === id}
-                    onChange={() => setSkillTemplateId(id)}
+            {current.id === "profile" && (
+              <div className="space-y-4">
+                <div className="flex justify-center rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-[#EFF6FF] p-5">
+                  <CoachProfilePhoto
+                    coachId={coachId}
+                    name={coach.name}
+                    defaultPhoto={coach.photo}
+                    size="hero"
+                    editable
+                    onUpdated={refresh}
                   />
-                  <div>
-                    <span className="text-sm font-medium">{rubric.name}</span>
-                    <p className="text-xs text-[#6B7280]">{rubric.subtitle}</p>
-                  </div>
-                </label>
-              );
-            })}
+                </div>
+                <CoachSheetField label="Bio *">
+                  <textarea
+                    className="coach-input min-h-[100px] resize-none"
+                    placeholder="Tell students about your coaching style, experience, and what makes your sessions fun..."
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                  />
+                </CoachSheetField>
+                <CoachSheetField label="Specialization">
+                  <input
+                    className="coach-input"
+                    placeholder="e.g. Beginners, competitive doubles, juniors"
+                    value={specialization}
+                    onChange={(e) => setSpecialization(e.target.value)}
+                  />
+                </CoachSheetField>
+              </div>
+            )}
+
+            {current.id === "contact" && (
+              <div className="space-y-3">
+                <p className="text-sm text-[#6B7280]">
+                  Students will see this on your public profile when they want to book.
+                </p>
+                <CoachSheetField label="Mobile number *">
+                  <input
+                    className="coach-input"
+                    type="tel"
+                    placeholder="09XX XXX XXXX"
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                  />
+                </CoachSheetField>
+              </div>
+            )}
+
+            {current.id === "rates" && (
+              <div>
+                <p className="mb-3 text-sm text-[#6B7280]">
+                  Set your drop-in session rates. Programs have their own bundle pricing.
+                </p>
+                <PricingTiersEditor pricing={pricing} onChange={setPricing} />
+              </div>
+            )}
+
+            {current.id === "levels" && (
+              <CoachingLevelsPicker value={coachingLevels} onChange={setCoachingLevels} />
+            )}
+
+            {current.id === "share" && (
+              <div className="text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDF4] text-[#16A34A]">
+                  <PartyPopper className="h-7 w-7" strokeWidth={1.75} />
+                </div>
+                <p className="font-heading mt-4 text-lg font-bold text-[#111827]">
+                  Nice work, {greeting}!
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
+                  Your profile is live. Share this link when you&apos;re ready for students to find you.
+                </p>
+                <div className="mt-5 text-left">
+                  <CoachPublicProfileLinkCard coach={coach} />
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      </main>
 
-        {current.id === "share" && (
-          <div>
-            <p className="mb-4 text-sm text-[#6B7280]">
-              You&apos;re all set. Share this link when you&apos;re ready for students to find you.
-            </p>
-            <CoachPublicProfileLinkCard coach={coach} />
+      <footer className="relative z-[1] shrink-0 border-t border-[#E5E7EB] bg-white/95 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+        <div className="mx-auto w-full max-w-lg">
+          <div className="flex gap-3">
+            {!isFirst && (
+              <button
+                type="button"
+                className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
+                disabled={saving}
+                onClick={() => setStep((s) => s - 1)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back
+              </button>
+            )}
+            <CoachButton
+              type="button"
+              className={cn("min-h-[48px]", isFirst ? "w-full" : "flex-[2]")}
+              loading={saving}
+              loadingLabel={isLast ? "Finishing…" : "Saving…"}
+              onClick={() => void handleNext()}
+            >
+              {current.id === "welcome" ? (
+                "Let's go"
+              ) : isLast ? (
+                <>
+                  <Link2 className="h-4 w-4" />
+                  Enter dashboard
+                </>
+              ) : (
+                "Continue"
+              )}
+            </CoachButton>
           </div>
-        )}
-      </div>
+          <p className="mt-2 text-center text-xs text-[#9CA3AF]">
+            Required one-time setup · You can edit everything later in Profile
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}
 
-      <div className="mt-6 flex gap-3">
-        {step > 0 && (
-          <button
-            type="button"
-            className="coach-btn-outline flex-1"
-            disabled={saving}
-            onClick={() => setStep((s) => s - 1)}
-          >
-            Back
-          </button>
-        )}
-        <CoachButton
-          type="button"
-          className="flex-1"
-          loading={saving}
-          loadingLabel="Saving…"
-          onClick={() => void handleNext()}
-        >
-          {isLast ? "Go to dashboard" : "Continue"}
-        </CoachButton>
-      </div>
-
-      <button
-        type="button"
-        className="mt-4 w-full text-center text-sm font-medium text-[#9CA3AF] hover:text-[#6B7280]"
-        onClick={() => {
-          markCoachOnboardingComplete();
-          router.push("/coach/dashboard");
-        }}
-      >
-        Skip for now
-      </button>
-    </CoachPageShell>
+function StepDot({
+  icon: Icon,
+  active,
+  done,
+}: {
+  icon: LucideIcon;
+  active: boolean;
+  done: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-full transition-all",
+        done && "bg-[#F0FDF4] text-[#16A34A]",
+        active && !done && "bg-[#EFF6FF] text-[#4F8FF7] ring-2 ring-[#BFDBFE] scale-110",
+        !active && !done && "bg-[#F3F4F6] text-[#9CA3AF]"
+      )}
+    >
+      {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Icon className="h-3.5 w-3.5" />}
+    </span>
   );
 }

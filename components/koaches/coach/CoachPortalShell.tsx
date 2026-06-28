@@ -9,6 +9,7 @@ import { CoachSidebar, CoachSidebarCompact } from "@/components/koaches/coach/Co
 import { CoachAuthProvider } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachToastProvider } from "@/components/koaches/coach/CoachUi";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import { CoachOnboardingGuard } from "@/components/koaches/coach/CoachOnboardingGuard";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 
 type CoachPortalShellProps = {
@@ -38,7 +39,9 @@ export function CoachPortalShell({
 function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isStandalone =
-    pathname.startsWith("/coach/login") || pathname.startsWith("/coach/apply");
+    pathname.startsWith("/coach/login") ||
+    pathname.startsWith("/coach/apply") ||
+    pathname.startsWith("/coach/onboarding");
   const isPublicProfile = !!coachSlugFromPublicPath(pathname);
   const isPublicJoin = isPublicCoachJoinPath(pathname);
 
@@ -48,6 +51,7 @@ function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <CoachToastProvider>
+      <CoachOnboardingGuard />
       <div className="coach-portal relative flex min-h-screen bg-[#FAFAF8]">
         <CoachSidebar />
         <CoachSidebarCompact />

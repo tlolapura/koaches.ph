@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { BRAND_NAME } from "@/lib/koaches/constants";
 
 const SIZE_CLASS = {
   sm: "text-base",
@@ -42,8 +45,8 @@ function WordmarkText({
     <span
       className={cn("font-heading font-bold leading-none tracking-tight", SIZE_CLASS[size], className)}
     >
-      <span className="text-[#16A34A]">Koaches</span>
-      <span className={light ? "text-white" : "text-[#4F8FF7]"}>PH</span>
+      <span className="text-[#16A34A]">Pickle</span>
+      <span className={light ? "text-white" : "text-[#4F8FF7]"}>Koach</span>
     </span>
   );
 }
@@ -55,7 +58,7 @@ type KoachesLogoProps = {
   className?: string;
 };
 
-/** KoachesPH wordmark with mascot */
+/** PickleKoach wordmark with mascot */
 export function KoachesLogo({
   size = "md",
   showText = true,
@@ -64,14 +67,14 @@ export function KoachesLogo({
 }: KoachesLogoProps) {
   if (!showText) {
     return (
-      <div className={cn("inline-flex", className)} aria-label="KoachesPH">
+      <div className={cn("inline-flex", className)} aria-label={BRAND_NAME}>
         <KoachaMascot size={size} />
       </div>
     );
   }
 
   return (
-    <div className={cn("inline-flex items-center gap-2", className)} aria-label="KoachesPH">
+    <div className={cn("inline-flex items-center gap-2", className)} aria-label={BRAND_NAME}>
       <KoachaMascot size={size} />
       <WordmarkText size={size} light={light} />
     </div>
@@ -88,7 +91,7 @@ export function KoachesMark({
   className?: string;
 }) {
   return (
-    <span className={cn("inline-flex items-center justify-center", className)} aria-label="KoachesPH">
+    <span className={cn("inline-flex items-center justify-center", className)} aria-label={BRAND_NAME}>
       <KoachaMascot size={size} />
     </span>
   );

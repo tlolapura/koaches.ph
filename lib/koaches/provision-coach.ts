@@ -14,6 +14,7 @@ export type ProvisionCoachProfile = {
   specialization?: string;
   bio?: string;
   skillTemplateId?: SkillRubricId;
+  coachingLevels?: Array<Exclude<SkillRubricId, "custom">>;
   subscriptionPlan?: CoachProfile["subscriptionPlan"];
   sessionPricing?: CoachSessionPricing;
 };
@@ -64,6 +65,9 @@ function buildCoachRow(
     instagram: null,
     facebook: null,
     skill_template_id: profile.skillTemplateId ?? "intermediate",
+    coaching_levels: profile.coachingLevels?.length
+      ? profile.coachingLevels
+      : [profile.skillTemplateId ?? "intermediate"],
     free_trial_enabled: false,
     free_trial_weekly_cap: 0,
     subscription_plan: profile.subscriptionPlan ?? "early-bird",
@@ -71,6 +75,7 @@ function buildCoachRow(
     is_active: true,
     total_students: 0,
     total_sessions: 0,
+    onboarding_completed_at: null,
   };
 }
 

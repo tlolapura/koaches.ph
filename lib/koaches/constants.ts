@@ -3,8 +3,9 @@ import type { DuprLevel, SkillCategory, SkillDefinition, SkillRubricId } from ".
 /** @deprecated Use SkillRubricId */
 export type SkillTemplateId = SkillRubricId | "all-around";
 
-export const BRAND_NAME = "KoachesPH";
-export const SITE_TAGLINE = "Laro na.";
+export const BRAND_NAME = "PickleKoach";
+export const SITE_DOMAIN = "picklekoach.com";
+export const SITE_TAGLINE = "Coach smarter.";
 
 export const RESERVED_SLUGS = new Set([
   "coach",

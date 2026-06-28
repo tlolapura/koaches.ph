@@ -1,8 +1,6 @@
 import type { CoachProfile } from "@/lib/koaches/types";
 import { getStartingRate } from "@/lib/koaches/pricing";
 
-export const COACH_ONBOARDING_KEY = "koaches-coach-onboarded";
-
 export function isCoachProfileSetupComplete(coach: CoachProfile): boolean {
   return Boolean(
     coach.bio?.trim() &&
@@ -11,15 +9,11 @@ export function isCoachProfileSetupComplete(coach: CoachProfile): boolean {
   );
 }
 
-export function shouldShowCoachOnboarding(coach: CoachProfile): boolean {
-  if (typeof window !== "undefined" && localStorage.getItem(COACH_ONBOARDING_KEY) === "1") {
-    return false;
-  }
-  return !isCoachProfileSetupComplete(coach);
+/** True until the coach finishes the required one-time setup wizard. */
+export function needsCoachOnboarding(coach: CoachProfile): boolean {
+  return !coach.onboardingCompletedAt;
 }
 
-export function markCoachOnboardingComplete(): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(COACH_ONBOARDING_KEY, "1");
-  }
+export function shouldShowCoachOnboarding(coach: CoachProfile): boolean {
+  return needsCoachOnboarding(coach);
 }

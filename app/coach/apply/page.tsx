@@ -4,9 +4,9 @@ export default function CoachApplyRoute() {
   return (
     <CoachApplyShell
       backHref="/coach/login"
-      backLabel="Back to sign in"
+      backLabel="Sign in"
       successHref="/coach/login"
-      successCta="Back to sign in"
+      successCta="Sign in"
     />
   );
 }

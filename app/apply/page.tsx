@@ -3,7 +3,7 @@ import { CoachApplyShell } from "@/components/koaches/coach/CoachApplyPage";
 
 export const metadata: Metadata = {
   title: "Apply as a Coach",
-  description: "Join KoachesPH and manage your students, programs, and progress tracking in one place.",
+  description: "Join PickleKoach and manage your students, programs, and progress tracking in one place.",
 };
 
 export default function ApplyPage() {

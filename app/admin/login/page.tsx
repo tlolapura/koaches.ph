@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { adminSignInAction } from "@/lib/koaches/actions/auth";
+import { SITE_DOMAIN } from "@/lib/koaches/constants";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -51,7 +52,7 @@ export default function AdminLoginPage() {
               className="coach-input mt-1.5"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@koaches.ph"
+              placeholder={`admin@${SITE_DOMAIN}`}
               required
             />
           </div>

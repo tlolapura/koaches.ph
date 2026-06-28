@@ -6,7 +6,7 @@ import { Menu, X } from "lucide-react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
 import { PublicBrand } from "@/components/koaches/public/BrandMark";
-import { BRAND_NAME, SITE_TAGLINE } from "@/lib/koaches/constants";
+import { BRAND_NAME, SITE_DOMAIN, SITE_TAGLINE } from "@/lib/koaches/constants";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -168,7 +168,7 @@ export function PublicFooter() {
             </ul>
             <ul className="space-y-2">
               <li><FooterLink href="/coach/login">Coach login</FooterLink></li>
-              <li className="text-white/45">hello@koaches.ph</li>
+              <li className="text-white/45">hello@{SITE_DOMAIN}</li>
             </ul>
           </div>
         </div>

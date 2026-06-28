@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createProgramAction,
   fetchProgramByIdAction,
@@ -19,7 +19,6 @@ export function useCoachPrograms(coachId: string) {
     queryKey: coachKeys.programs(coachId),
     queryFn: () => fetchProgramsAction(coachId),
     enabled: !!coachId,
-    placeholderData: keepPreviousData,
   });
 
   const refresh = useCallback(() => {

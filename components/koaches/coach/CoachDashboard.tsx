@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { endOfWeek, format, isWithinInterval, parseISO, startOfWeek } from "date-fns";
 import {
   ChevronRight,
@@ -29,7 +28,6 @@ import { CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachDashboardSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { coachGreetingLabel } from "@/lib/koaches/person-name";
 import { isCollectedSession } from "@/lib/koaches/session-payment";
-import { shouldShowCoachOnboarding } from "@/lib/koaches/coach-onboarding";
 import type { Session } from "@/lib/koaches/types";
 
 function getGreeting() {
@@ -53,7 +51,6 @@ type AttentionItem = {
 };
 
 export function CoachDashboard() {
-  const router = useRouter();
   const coachId = usePortalCoachId();
   const { coach } = useCoachProfile(coachId);
   const today = new Date();
@@ -61,11 +58,6 @@ export function CoachDashboard() {
   const todayLabel = format(today, "EEEE, MMM d");
   const { sessions: allSessions, loading } = useCoachSessions(coachId);
   const { cards, candidates } = useProgressCards(coachId);
-  useEffect(() => {
-    if (coach && shouldShowCoachOnboarding(coach)) {
-      router.replace("/coach/onboarding");
-    }
-  }, [coach, router]);
 
   const weekInterval = useMemo(() => {
     const start = startOfWeek(today, { weekStartsOn: 1 });

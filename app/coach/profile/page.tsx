@@ -4,7 +4,12 @@ import Link from "next/link";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useEffect, useState } from "react";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
-import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
+import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
+import {
+  formatCoachingLevelsLabel,
+  resolveCoachCoachingLevels,
+  type CoachingLevelId,
+} from "@/lib/koaches/application-form";
 import { formatTierRate, formatTierLabel, DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
@@ -19,7 +24,7 @@ import { CoachProfileSkeleton } from "@/components/koaches/coach/CoachSkeletons"
 import {
   updateCoachBioAction,
   updateCoachPricingAction,
-  updateCoachSkillTemplateAction,
+  updateCoachCoachingLevelsAction,
 } from "@/lib/koaches/actions/coach-profile";
 import { CoachContactSocialsCard } from "@/components/koaches/coach/CoachContactSocialsCard";
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
@@ -27,7 +32,6 @@ import { CoachChangePasswordCard } from "@/components/koaches/coach/CoachChangeP
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import { invalidateCoachProfile } from "@/lib/koaches/queries/invalidate";
 import { coachGreetingLabel } from "@/lib/koaches/person-name";
-import type { SkillRubricId } from "@/lib/koaches/types";
 import { formatDisplayDate } from "@/lib/utils";
 
 const EDIT_BIO_FORM_ID = "edit-bio-form";
@@ -40,7 +44,7 @@ export default function ProfilePage() {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [bio, setBio] = useState("");
   const [pricing, setPricing] = useState<import("@/lib/koaches/types").CoachSessionPricing>(DEFAULT_SESSION_PRICING);
-  const [skillTemplateId, setSkillTemplateId] = useState<SkillRubricId>("intermediate");
+  const [coachingLevels, setCoachingLevels] = useState<CoachingLevelId[]>(["intermediate"]);
   const [savingBio, setSavingBio] = useState(false);
   const [savingPricing, setSavingPricing] = useState(false);
   const [savingTemplate, setSavingTemplate] = useState(false);
@@ -50,7 +54,7 @@ export default function ProfilePage() {
     if (!coach) return;
     setBio(coach.bio);
     setPricing(coach.sessionPricing ?? DEFAULT_SESSION_PRICING);
-    setSkillTemplateId(coach.skillTemplateId);
+    setCoachingLevels(resolveCoachCoachingLevels(coach));
   }, [coach]);
 
   if (!coachId) {
@@ -178,13 +182,13 @@ export default function ProfilePage() {
       <div className="coach-card mt-4 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-heading font-semibold">Skill Template</p>
+            <p className="font-heading font-semibold">Player levels</p>
             <p className="text-sm text-[#6B7280]">
-              {SKILL_RUBRICS[skillTemplateId as keyof typeof SKILL_RUBRICS]?.name ?? "Custom"} rubric
+              {formatCoachingLevelsLabel(coachingLevels)}
             </p>
           </div>
           <button type="button" className="text-sm font-semibold text-[#4F8FF7]" onClick={() => setTemplateOpen(true)}>
-            Customize
+            Change
           </button>
         </div>
       </div>
@@ -284,8 +288,8 @@ export default function ProfilePage() {
       <CoachBottomSheet
         open={templateOpen}
         onClose={() => setTemplateOpen(false)}
-        title="Skill Categories"
-        subtitle="Default rubric for rating students"
+        title="Player levels"
+        subtitle="Select all levels you coach"
         footer={
           <CoachSheetFooter>
             <CoachButton
@@ -295,10 +299,10 @@ export default function ProfilePage() {
               onClick={async () => {
                 setSavingTemplate(true);
                 try {
-                  await updateCoachSkillTemplateAction(coachId, skillTemplateId);
+                  await updateCoachCoachingLevelsAction(coachId, coachingLevels);
                   invalidateCoachProfile(coachId);
                   await refresh();
-                  showToast("Template saved!");
+                  showToast("Player levels saved!");
                   setTemplateOpen(false);
                 } catch (err) {
                   showToast(err instanceof Error ? err.message : "Could not save template", "error");
@@ -307,30 +311,12 @@ export default function ProfilePage() {
                 }
               }}
             >
-              Save Template
+              Save
             </CoachButton>
           </CoachSheetFooter>
         }
       >
-        <div className="space-y-3">
-          {(Object.keys(SKILL_RUBRICS) as Array<keyof typeof SKILL_RUBRICS>).map((id) => {
-            const rubric = SKILL_RUBRICS[id];
-            return (
-              <label key={id} className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] p-3">
-                <input
-                  type="radio"
-                  name="rubric"
-                  checked={skillTemplateId === id}
-                  onChange={() => setSkillTemplateId(id)}
-                />
-                <div>
-                  <span className="text-sm font-medium">{rubric.name}</span>
-                  <p className="text-xs text-[#6B7280]">{rubric.subtitle}</p>
-                </div>
-              </label>
-            );
-          })}
-        </div>
+        <CoachingLevelsPicker value={coachingLevels} onChange={setCoachingLevels} hint="" />
       </CoachBottomSheet>
     </CoachPageShell>
   );

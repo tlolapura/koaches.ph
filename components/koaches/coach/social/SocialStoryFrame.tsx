@@ -87,8 +87,8 @@ export function SocialStoryBrandBar() {
       />
       <div className="min-w-0">
         <p className="font-heading text-[42px] font-bold leading-none tracking-tight">
-          <span className="text-[#16A34A]">Koaches</span>
-          <span className="text-[#4F8FF7]">PH</span>
+          <span className="text-[#16A34A]">Pickle</span>
+          <span className="text-[#4F8FF7]">Koach</span>
         </p>
         <p className="mt-2 text-[22px] font-semibold uppercase tracking-[0.2em] text-[#6B7280]">
           Pickleball coaching

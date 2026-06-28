@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export const alt = "KoachesPH — Pickleball Coaching Platform";
+export const alt = "PickleKoach — Pickleball Coaching Platform";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -55,8 +55,8 @@ export default async function Image() {
                 lineHeight: 1,
               }}
             >
-              <span style={{ color: "#16A34A" }}>Koaches</span>
-              <span style={{ color: "#4F8FF7" }}>PH</span>
+              <span style={{ color: "#16A34A" }}>Pickle</span>
+              <span style={{ color: "#4F8FF7" }}>Koach</span>
             </div>
             <div style={{ fontSize: 34, color: "#6B7280", fontWeight: 600, lineHeight: 1.3 }}>
               Pickleball coaching in the Philippines

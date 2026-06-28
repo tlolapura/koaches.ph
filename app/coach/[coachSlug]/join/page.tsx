@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!coach) return { title: "Join roster" };
   return {
     title: `Join ${coach.name}'s roster`,
-    description: `Sign up for ${coach.name}'s coaching roster on KoachesPH.`,
+    description: `Sign up for ${coach.name}'s coaching roster on PickleKoach.`,
   };
 }
 

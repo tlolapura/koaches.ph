@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCoachProfileAction } from "@/lib/koaches/actions/coach-profile";
 import { coachKeys } from "@/lib/koaches/queries/keys";
 
@@ -14,7 +14,6 @@ export function useCoachProfile(coachId: string) {
     queryKey: [...coachKeys.all, "profile", coachId] as const,
     queryFn: () => fetchCoachProfileAction(coachId),
     enabled: !!coachId,
-    placeholderData: keepPreviousData,
   });
 
   useEffect(() => {
@@ -35,6 +34,7 @@ export function useCoachProfile(coachId: string) {
   return {
     coach: query.data,
     loading: !!coachId && query.isPending && !query.data,
+    fetching: query.isFetching,
     error: query.error ?? null,
     refresh: () => query.refetch(),
   };

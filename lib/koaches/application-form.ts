@@ -1,4 +1,4 @@
-import type { CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
+import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 import type { SubmitApplicationInput } from "@/lib/koaches/actions/applications";
 import { joinPersonName } from "@/lib/koaches/person-name";
 import { DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
@@ -52,6 +52,16 @@ export function primarySkillTemplateFromLevels(levels: CoachingLevelId[]): Skill
     if (levels.includes(id)) return id;
   }
   return "intermediate";
+}
+
+/** Read stored levels, or infer from legacy single rubric field. */
+export function resolveCoachCoachingLevels(
+  coach: Pick<CoachProfile, "coachingLevels" | "skillTemplateId">
+): CoachingLevelId[] {
+  if (coach.coachingLevels?.length) return coach.coachingLevels;
+  const id = coach.skillTemplateId;
+  if (id === "beginner" || id === "intermediate" || id === "advanced") return [id];
+  return ["intermediate"];
 }
 
 export function formatCoachingLevelsLabel(levels: CoachingLevelId[]): string {

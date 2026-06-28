@@ -15,6 +15,7 @@ import {
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { useCoachSessions } from "@/hooks/useCoachSessions";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
+import { SITE_URL } from "@/lib/koaches/site-metadata";
 import { useCoachAvailability } from "@/hooks/useCoachAvailability";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
@@ -76,8 +77,8 @@ export function CoachSocialPage() {
   }, []);
 
   const profileUrl = coach
-    ? `${origin || "https://koaches.ph"}${buildPublicCoachPath(coach.slug)}`
-    : "https://koaches.ph";
+    ? `${origin || SITE_URL}${buildPublicCoachPath(coach.slug)}`
+    : SITE_URL;
 
   const dailySlots = useMemo(
     () => getDailyStorySlots(sessions, date, workingHours, blockedSlots),
@@ -124,7 +125,7 @@ export function CoachSocialPage() {
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: `${coach.name} — KoachesPH story`,
+          title: `${coach.name} — PickleKoach story`,
         });
         return;
       }

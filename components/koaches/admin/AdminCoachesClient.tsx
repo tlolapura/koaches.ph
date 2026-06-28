@@ -20,6 +20,7 @@ import {
 } from "@/lib/koaches/subscription-billing";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
+import { SITE_DOMAIN } from "@/lib/koaches/constants";
 import { cn, formatCurrency, formatDisplayDate } from "@/lib/utils";
 
 type AdminCoachesClientProps = {
@@ -185,7 +186,7 @@ export function AdminCoachesClient({
                       {billing.label}
                     </span>
                   </div>
-                  <p className="text-sm text-[#6B7280]">koaches.ph/{c.slug}</p>
+                  <p className="text-sm text-[#6B7280]">{SITE_DOMAIN}/coach/{c.slug}</p>
                   {c.specialization && (
                     <p className="mt-1 text-sm text-[#6B7280]">{c.specialization}</p>
                   )}

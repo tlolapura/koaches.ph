@@ -139,7 +139,7 @@ export function getCoachBillingMessage(
   const amount = `₱${billing.amount.toLocaleString("en-PH")}`;
   switch (billing.status) {
     case "inactive":
-      return "Your account is inactive. Contact KoachesPH if you need help restoring access.";
+      return "Your account is inactive. Contact PickleKoach if you need help restoring access.";
     case "not_set":
       return "Your renewal date is being set up. You'll see your first invoice here soon.";
     case "active":

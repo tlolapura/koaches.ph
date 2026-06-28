@@ -27,6 +27,7 @@ function isCoachPublicRoute(pathname: string) {
       "promos",
       "free-trial",
       "billing",
+      "onboarding",
       "login",
       "apply",
     ];
@@ -48,6 +49,7 @@ function isCoachPublicRoute(pathname: string) {
       "promos",
       "free-trial",
       "billing",
+      "onboarding",
       "login",
       "apply",
     ];

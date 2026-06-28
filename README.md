@@ -1,8 +1,8 @@
-# KoachesPH
+# PickleKoach
 
 Pickleball coaching platform for the Philippines — find coaches, book sessions, track student progress, and share availability on social.
 
-**Live site:** [koaches.ph](https://koaches.ph)
+**Live site:** [picklekoach.com](https://picklekoach.com)
 
 ## What's in the app
 

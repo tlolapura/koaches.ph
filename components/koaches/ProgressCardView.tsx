@@ -86,7 +86,7 @@ export function ProgressCardView({ card }: ProgressCardViewProps) {
         </div>
       </div>
 
-      <p className="mt-8 text-center text-xs text-[#6B7280]">Powered by Koaches</p>
+      <p className="mt-8 text-center text-xs text-[#6B7280]">Powered by PickleKoach</p>
 
       <button
         type="button"

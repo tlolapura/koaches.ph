@@ -51,7 +51,7 @@ export const CoachQrShareImage = forwardRef<HTMLDivElement, CoachQrShareImagePro
         style={{ width: QR_SHARE_WIDTH, height: QR_SHARE_HEIGHT }}
       >
         <div className="px-8 pb-5 pt-10 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#FDE047]">Koaches</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#FDE047]">PickleKoach</p>
           <p className="mt-2 text-xs font-medium text-white/70">{copy.eyebrow}</p>
 
           {coach.photo ? (

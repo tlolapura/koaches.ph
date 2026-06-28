@@ -1,24 +1,20 @@
 "use client";
 
 import { useState, type ChangeEvent } from "react";
-import type { ApplicationDraft, CoachingLevelId } from "@/lib/koaches/application-form";
+import type { ApplicationDraft } from "@/lib/koaches/application-form";
 import {
-  COACHING_LEVEL_OPTIONS,
   EMPTY_APPLICATION_DRAFT,
   formatCoachingLevelsLabel,
-  toggleCoachingLevel,
 } from "@/lib/koaches/application-form";
 import { joinPersonName } from "@/lib/koaches/person-name";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
+import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
 
 export type ApplicationFieldStep = "identity" | "coaching" | "business";
 
 const fieldStyles = {
   section: "font-heading text-sm font-semibold text-[#111827]",
   hint: "mt-0.5 text-xs text-[#6B7280]",
-  levelCard:
-    "flex cursor-pointer items-start gap-3 rounded-xl border border-[#E5E7EB] p-3 transition-colors hover:border-[#4F8FF7]/40",
-  levelCardActive: "border-[#16A34A] bg-[#F0FDF4]",
 } as const;
 
 type CoachApplicationFieldsProps = {
@@ -50,41 +46,8 @@ function field(
   };
 }
 
-function LevelCheckbox({
-  id,
-  label,
-  dupr,
-  checked,
-  onToggle,
-}: {
-  id: CoachingLevelId;
-  label: string;
-  dupr: string;
-  checked: boolean;
-  onToggle: (id: CoachingLevelId) => void;
-}) {
-  return (
-    <label htmlFor={id} className={`${fieldStyles.levelCard} ${checked ? fieldStyles.levelCardActive : ""}`}>
-      <input
-        id={id}
-        type="checkbox"
-        className="mt-0.5 h-4 w-4 shrink-0 rounded border-[#D1D5DB] text-[#1D4ED8] focus:ring-[#16A34A]"
-        checked={checked}
-        onChange={() => onToggle(id)}
-      />
-      <div>
-        <span className="text-sm font-medium text-[#111827]">{label}</span>
-        <p className="text-xs text-[#6B7280]">{dupr} DUPR</p>
-      </div>
-    </label>
-  );
-}
 
 export function CoachApplicationFields({ step, draft, onDraftChange }: CoachApplicationFieldsProps) {
-  const toggleLevel = (id: CoachingLevelId) => {
-    onDraftChange({ coachingLevels: toggleCoachingLevel(draft.coachingLevels, id) });
-  };
-
   if (step === "identity") {
     return (
       <div className="coach-form">
@@ -198,7 +161,7 @@ export function CoachApplicationFields({ step, draft, onDraftChange }: CoachAppl
       <CoachSheetField
         label="Preferred profile URL"
         htmlFor="apply-slug"
-        hint="Optional — your public page on KoachesPH (e.g. koaches.ph/coaches/your-name)."
+        hint="Optional — your public page on PickleKoach (e.g. picklekoach.com/coach/your-name)."
       >
         <div className="flex items-center gap-2">
           <span className="shrink-0 text-sm text-[#6B7280]">/coaches/</span>
@@ -213,19 +176,12 @@ export function CoachApplicationFields({ step, draft, onDraftChange }: CoachAppl
 
       <div>
         <p className={fieldStyles.section}>Which player levels do you coach?</p>
-        <p className={fieldStyles.hint}>Select all that apply — beginner, intermediate, or advanced players.</p>
-        <div className="mt-3 space-y-2">
-          {COACHING_LEVEL_OPTIONS.map((option) => (
-            <LevelCheckbox
-              key={option.id}
-              id={option.id}
-              label={option.label}
-              dupr={option.dupr}
-              checked={draft.coachingLevels.includes(option.id)}
-              onToggle={toggleLevel}
-            />
-          ))}
-        </div>
+        <CoachingLevelsPicker
+          className="mt-2"
+          value={draft.coachingLevels}
+          onChange={(coachingLevels) => onDraftChange({ coachingLevels })}
+          hint=""
+        />
       </div>
     </div>
   );

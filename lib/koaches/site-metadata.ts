@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { SITE_DOMAIN } from "@/lib/koaches/constants";
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://koaches.ph";
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? `https://${SITE_DOMAIN}`;
 
-export const SITE_NAME = "KoachesPH";
+export const SITE_NAME = "PickleKoach";
 
 export const SITE_DESCRIPTION =
   "Find pickleball coaches in the Philippines, book sessions, track progress, and grow your game.";
