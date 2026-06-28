@@ -2,11 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import {
+  AuthLoginCard,
+  AuthLoginError,
+  AuthLoginField,
+  AuthLoginIntro,
+  AuthLoginScreen,
+} from "@/components/koaches/shared/AuthLoginLayout";
+import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
 import { adminSignInAction } from "@/lib/koaches/actions/auth";
 import { SITE_DOMAIN } from "@/lib/koaches/constants";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
-import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export default function AdminLoginPage() {
@@ -17,9 +23,8 @@ export default function AdminLoginPage() {
   const [pending, startTransition] = useTransition();
 
   return (
-    <div className="flex h-full min-h-0 w-full items-center justify-center overflow-hidden px-4">
+    <AuthLoginScreen>
       <form
-        className="coach-card w-full max-w-sm p-6"
         onSubmit={(e) => {
           e.preventDefault();
           setError(null);
@@ -34,53 +39,51 @@ export default function AdminLoginPage() {
           });
         }}
       >
-        <KoachesWordmark size="md" />
-        <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-[#6B7280]">Admin sign in</p>
-        <p className="mt-1 text-sm text-[#6B7280]">
-          {isSupabaseConfigured() ? "Platform admin account" : "Demo — any credentials work"}
-        </p>
+        <AuthLoginCard>
+          <AuthLoginIntro
+            portalLabel="Admin"
+            subtitle={
+              isSupabaseConfigured() ? "Sign in to your dashboard" : "Demo — any credentials work"
+            }
+          />
 
-        <div className="coach-form mt-6">
-          <div>
-            <label htmlFor="admin-email" className="coach-label">
-              Email
-            </label>
-            <input
-              id="admin-email"
-              type="email"
-              autoComplete="email"
-              className="coach-input mt-1.5"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={`admin@${SITE_DOMAIN}`}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="admin-password" className="coach-label">
-              Password
-            </label>
-            <PasswordInput
-              id="admin-password"
-              wrapperClassName="mt-1.5"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-          </div>
-        </div>
+          <div className="coach-form mt-6 space-y-3">
+            <AuthLoginField label="Email" htmlFor="admin-email">
+              <input
+                id="admin-email"
+                type="email"
+                autoComplete="email"
+                className="coach-input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={`admin@${SITE_DOMAIN}`}
+                required
+              />
+            </AuthLoginField>
 
-        {error && (
-          <p className="mt-3 rounded-xl bg-[#FEF2F2] px-3 py-2 text-xs text-[#B91C1C]" role="alert">
-            {error}
-          </p>
-        )}
-        <CoachButton type="submit" className="mt-6" loading={pending} loadingLabel="Signing in…">
-          Sign in
-        </CoachButton>
+            <AuthLoginField label="Password" htmlFor="admin-password">
+              <PasswordInput
+                id="admin-password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+              />
+            </AuthLoginField>
+          </div>
+
+          {error ? (
+            <div className="mt-4">
+              <AuthLoginError message={error} />
+            </div>
+          ) : null}
+
+          <CoachButton type="submit" className="mt-6 w-full" loading={pending} loadingLabel="Signing in…">
+            Sign in
+          </CoachButton>
+        </AuthLoginCard>
       </form>
-    </div>
+    </AuthLoginScreen>
   );
 }

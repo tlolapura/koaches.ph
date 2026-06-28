@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { LogIn } from "lucide-react";
-import { KoachesLogo } from "@/components/koaches/KoachesLogo";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
+import {
+  AuthLoginCard,
+  AuthLoginError,
+  AuthLoginField,
+  AuthLoginIntro,
+  AuthLoginScreen,
+} from "@/components/koaches/shared/AuthLoginLayout";
 import { coachSignInAction } from "@/lib/koaches/actions/auth";
 import { SITE_DOMAIN } from "@/lib/koaches/constants";
 import { clearCoachPortalCache } from "@/lib/koaches/queries/invalidate";
@@ -28,98 +34,93 @@ export function CoachLoginPage() {
     if (searchParams.get("error") === "unauthorized") {
       setError("This account isn't set up for the coach portal.");
     }
+    if (searchParams.get("error") === "auth") {
+      setError("That link expired. Please try signing in again.");
+    }
   }, [searchParams]);
 
   return (
     <div className="coach-portal relative flex h-dvh max-h-dvh w-full overflow-hidden bg-[#FAFAF8]">
       <PickleballBallBackdrop variant="login" />
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#F0FDF4] opacity-60 blur-3xl" />
-        <div className="absolute -bottom-32 -right-16 h-80 w-80 rounded-full bg-[#EFF6FF] opacity-70 blur-3xl" />
-      </div>
 
-      <div className="relative z-10 flex min-h-0 w-full flex-1 flex-col items-center justify-center px-4">
-        <div className="w-full max-w-sm">
-          <form
-            className="coach-card w-full p-6 shadow-[0_8px_30px_rgba(30,58,95,0.08)]"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setError(null);
-              setPending(true);
-              void (async () => {
-                try {
-                  const next = searchParams.get("next") ?? "/coach/dashboard";
-                  clearCoachPortalCache();
-                  const result = await coachSignInAction(email.trim(), password, next);
-                  if (result && !result.ok) setError(result.error ?? "Sign in failed");
-                } finally {
-                  setPending(false);
-                }
-              })();
-            }}
-          >
-            <KoachesLogo size="md" />
-            <p className="font-heading mt-4 text-xs font-semibold uppercase tracking-wide text-[#4F8FF7]">
-              Coach portal
-            </p>
-            <p className="mt-1 text-sm text-[#6B7280]">Sign in to your dashboard</p>
+      <AuthLoginScreen>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setError(null);
+            setPending(true);
+            void (async () => {
+              try {
+                const next = searchParams.get("next") ?? "/coach/dashboard";
+                clearCoachPortalCache();
+                const result = await coachSignInAction(email.trim(), password, next);
+                if (result && !result.ok) setError(result.error ?? "Sign in failed");
+              } finally {
+                setPending(false);
+              }
+            })();
+          }}
+        >
+          <AuthLoginCard>
+            <AuthLoginIntro portalLabel="Coach portal" subtitle="Sign in to your dashboard" />
 
             <div className="mt-6 space-y-3">
-              <div>
-                <label htmlFor="coach-email" className="font-heading text-xs font-semibold text-[#374151]">
-                  Email
-                </label>
+              <AuthLoginField label="Email" htmlFor="coach-email">
                 <input
                   id="coach-email"
                   type="email"
-                  className="coach-input mt-1.5"
+                  className="coach-input"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={`you@${SITE_DOMAIN}`}
                   autoComplete="email"
                   required
                 />
-              </div>
+              </AuthLoginField>
 
-              <div>
-                <label htmlFor="coach-password" className="font-heading text-xs font-semibold text-[#374151]">
-                  Password
-                </label>
+              <AuthLoginField
+                label="Password"
+                htmlFor="coach-password"
+                hint={
+                  <Link
+                    href="/coach/forgot-password"
+                    className="text-xs font-medium text-[#4F8FF7] hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                }
+              >
                 <PasswordInput
                   id="coach-password"
-                  wrapperClassName="mt-1.5"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
                 />
-              </div>
+              </AuthLoginField>
             </div>
 
-            {error && (
-              <p
-                role="alert"
-                className="mt-4 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-center text-xs font-medium text-[#B91C1C]"
-              >
-                {error}
-              </p>
-            )}
+            {error ? (
+              <div className="mt-4">
+                <AuthLoginError message={error} />
+              </div>
+            ) : null}
 
-            <CoachButton type="submit" className="mt-6" loading={pending} loadingLabel="Signing in…">
+            <CoachButton type="submit" className="mt-6 w-full" loading={pending} loadingLabel="Signing in…">
               <LogIn className="h-4 w-4" strokeWidth={2.5} />
               Sign in
             </CoachButton>
-          </form>
+          </AuthLoginCard>
+        </form>
 
-          <p className="mt-6 text-center text-xs text-[#9CA3AF]">
-            New coach?{" "}
-            <Link href="/coach/apply" className="font-semibold text-[#4F8FF7] hover:underline">
-              Apply to join
-            </Link>
-          </p>
-        </div>
-      </div>
+        <p className="mt-6 text-center text-xs text-[#9CA3AF]">
+          New coach?{" "}
+          <Link href="/coach/apply" className="font-semibold text-[#4F8FF7] hover:underline">
+            Apply to join
+          </Link>
+        </p>
+      </AuthLoginScreen>
     </div>
   );
 }

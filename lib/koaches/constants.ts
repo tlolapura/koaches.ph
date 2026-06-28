@@ -17,6 +17,7 @@ export const RESERVED_SLUGS = new Set([
   "coaches",
   "for-coaches",
   "about",
+  "proposal",
   "login",
   "reports",
   "api",

@@ -41,6 +41,8 @@ function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
   const isStandalone =
     pathname.startsWith("/coach/login") ||
     pathname.startsWith("/coach/apply") ||
+    pathname.startsWith("/coach/forgot-password") ||
+    pathname.startsWith("/coach/reset-password") ||
     pathname.startsWith("/coach/onboarding");
   const isPublicProfile = !!coachSlugFromPublicPath(pathname);
   const isPublicJoin = isPublicCoachJoinPath(pathname);

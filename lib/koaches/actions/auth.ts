@@ -5,6 +5,8 @@ import type { Profile } from "@/lib/koaches/auth/profile";
 import { isAdminRole, isCoachRole } from "@/lib/koaches/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 
+import { SITE_URL } from "@/lib/koaches/site-metadata";
+
 import { validateCoachLoginPassword } from "@/lib/koaches/provision-coach";
 
 export async function coachSignInAction(email: string, password: string, nextPath?: string) {
@@ -112,4 +114,50 @@ export async function changeCoachPasswordAction(
   if (updateError) return { ok: false, error: updateError.message };
 
   return { ok: true };
+}
+
+export async function coachForgotPasswordAction(email: string) {
+  const trimmed = email.trim();
+  if (!trimmed) return { ok: false as const, error: "Email is required." };
+
+  const supabase = await createClient();
+  const redirectTo = `${SITE_URL}/auth/callback?next=${encodeURIComponent("/coach/reset-password")}`;
+
+  const { error } = await supabase.auth.resetPasswordForEmail(trimmed, { redirectTo });
+  if (error) return { ok: false as const, error: error.message };
+
+  return { ok: true as const };
+}
+
+export async function coachResetPasswordAction(newPassword: string) {
+  const passwordError = validateCoachLoginPassword(newPassword);
+  if (passwordError) return { ok: false as const, error: passwordError };
+
+  const supabase = await createClient();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    return {
+      ok: false as const,
+      error: "This reset link has expired. Please request a new one.",
+    };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, coach_id")
+    .eq("id", session.user.id)
+    .maybeSingle();
+
+  if (!isCoachRole(profile?.role) || !profile?.coach_id) {
+    await supabase.auth.signOut();
+    return { ok: false as const, error: "This account is not authorized for the coach portal." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) return { ok: false as const, error: error.message };
+
+  redirect("/coach/dashboard");
 }

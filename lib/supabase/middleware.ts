@@ -7,7 +7,7 @@ import {
 import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseConfigured } from "./config";
 
 function isCoachPublicRoute(pathname: string) {
-  if (pathname === "/coach/login" || pathname === "/coach/apply") {
+  if (pathname === "/coach/login" || pathname === "/coach/apply" || pathname === "/coach/forgot-password" || pathname === "/coach/reset-password") {
     return true;
   }
   if (/^\/coach\/[^/]+\/join$/.test(pathname)) {
