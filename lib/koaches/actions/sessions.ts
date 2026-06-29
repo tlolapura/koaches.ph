@@ -85,6 +85,22 @@ export async function updateSessionPaymentAction(
   revalidatePath(`/coach/sessions/${sessionId}`);
 }
 
+export async function updateSessionTipAction(sessionId: string, tip: number) {
+  await assertCoachOwnsSession(sessionId);
+  const amount = Math.round(tip);
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw new Error("Tip must be zero or a positive amount.");
+  }
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("sessions")
+    .update({ tip: amount, updated_at: new Date().toISOString() })
+    .eq("id", sessionId);
+  if (error) throw error;
+  revalidatePath(`/coach/sessions/${sessionId}`);
+  revalidatePath("/coach/reports");
+}
+
 export async function updateSessionNotesAction(sessionId: string, notes: string) {
   await assertCoachOwnsSession(sessionId);
   const supabase = createServiceClient();

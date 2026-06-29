@@ -338,6 +338,8 @@ export type Session = {
   paymentStatus: SessionPaymentStatus;
   /** Amount charged for this session (for revenue tracking) */
   price: number;
+  /** Optional tip on top of session price (PHP, whole pesos) */
+  tip?: number;
   /** Group size billed for this session */
   playerCount: number;
   /** All players in this session — each can get their own progress report */

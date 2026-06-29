@@ -26,3 +26,13 @@ export function isCollectedSession(
 ): boolean {
   return isDoneStatus(session.status) && paymentStatus === "paid";
 }
+
+export function sessionTipAmount(session: Pick<Session, "tip">): number {
+  const tip = session.tip ?? 0;
+  return tip > 0 ? tip : 0;
+}
+
+/** Session fee + optional tip — total cash collected when paid */
+export function sessionCollectedAmount(session: Pick<Session, "price" | "tip">): number {
+  return session.price + sessionTipAmount(session);
+}

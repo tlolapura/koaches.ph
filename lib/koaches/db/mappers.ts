@@ -96,6 +96,7 @@ export type DbSession = {
   status: string;
   payment_status: string;
   price: number;
+  tip: number;
   player_count: number;
   participants: Session["participants"];
   notes: string | null;
@@ -297,6 +298,7 @@ export function mapSession(row: DbSession): Session {
     status: row.status as Session["status"],
     paymentStatus: row.payment_status as Session["paymentStatus"],
     price: row.price,
+    tip: row.tip ?? 0,
     playerCount: row.player_count,
     participants: row.participants ?? [],
     notes: row.notes ?? undefined,
@@ -486,6 +488,7 @@ export function sessionToDb(session: Session): DbSession {
     status: session.status,
     payment_status: session.paymentStatus,
     price: session.price,
+    tip: session.tip ?? 0,
     player_count: session.playerCount,
     participants: session.participants,
     notes: session.notes ?? null,

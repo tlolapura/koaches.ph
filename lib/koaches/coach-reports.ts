@@ -17,7 +17,7 @@ import {
 } from "@/lib/koaches/application-form";
 import type { DuprLevel, Session, Student } from "@/lib/koaches/types";
 import { isCanceledStatus, isDoneStatus } from "@/lib/koaches/session-status";
-import { isCollectedSession } from "@/lib/koaches/session-payment";
+import { isCollectedSession, sessionCollectedAmount, sessionTipAmount } from "@/lib/koaches/session-payment";
 
 export type ReportPeriod = "week" | "month" | "all";
 
@@ -39,6 +39,7 @@ export type CoachReportSummary = {
   period: ReportPeriod;
   periodLabel: string;
   collected: number;
+  tipsCollected: number;
   outstanding: number;
   expected: number;
   sessionsDone: number;
@@ -144,7 +145,7 @@ function buildEarningsTrend(
       const daySessions = collectedSessions.filter((s) => s.date === key);
       return {
         label: format(day, "EEE"),
-        collected: daySessions.reduce((sum, s) => sum + s.price, 0),
+        collected: daySessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0),
         sessions: daySessions.length,
       };
     });
@@ -168,7 +169,7 @@ function buildEarningsTrend(
       });
       buckets.push({
         label: `W${weekNum}`,
-        collected: weekSessions.reduce((sum, s) => sum + s.price, 0),
+        collected: weekSessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0),
         sessions: weekSessions.length,
       });
       cursor = addWeeks(cursor, 1);
@@ -187,7 +188,7 @@ function buildEarningsTrend(
     });
     points.push({
       label: format(monthStart, "MMM"),
-      collected: monthSessions.reduce((sum, s) => sum + s.price, 0),
+      collected: monthSessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0),
       sessions: monthSessions.length,
     });
   }
@@ -205,6 +206,7 @@ export function buildCoachReport(
   const activeStudents = students.filter((s) => !s.isArchived);
 
   let collected = 0;
+  let tipsCollected = 0;
   let outstanding = 0;
   let expected = 0;
   let programRevenue = 0;
@@ -241,13 +243,15 @@ export function buildCoachReport(
     if (isDoneStatus(session.status)) {
       sessionsDone += 1;
       const ids = studentIdsOnSession(session);
-      const share = ids.length > 0 ? session.price / ids.length : session.price;
+      const total = sessionCollectedAmount(session);
+      const share = ids.length > 0 ? total / ids.length : total;
 
       if (isCollectedSession(session)) {
-        collected += session.price;
+        collected += total;
+        tipsCollected += sessionTipAmount(session);
         collectedSessionCount += 1;
-        if (session.type === "program") programRevenue += session.price;
-        else dropInRevenue += session.price;
+        if (session.type === "program") programRevenue += total;
+        else dropInRevenue += total;
         for (const id of ids) bumpStudent(id, 1, share);
       } else {
         outstanding += session.price;
@@ -286,6 +290,7 @@ export function buildCoachReport(
     period,
     periodLabel: periodLabel(period),
     collected,
+    tipsCollected,
     outstanding,
     expected,
     sessionsDone,

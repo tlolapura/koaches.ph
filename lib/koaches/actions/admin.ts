@@ -2,7 +2,7 @@
 
 import { createServiceClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/koaches/actions/guards";
-import { isCollectedSession } from "@/lib/koaches/session-payment";
+import { isCollectedSession, sessionCollectedAmount } from "@/lib/koaches/session-payment";
 import { mapApplication, mapCoach, mapSession, mapStudent, type DbApplication, type DbCoach, type DbSession, type DbStudent } from "@/lib/koaches/db/mappers";
 import { SUBSCRIPTION_PRICES, type AdminDashboardData, type CoachSummary } from "@/lib/koaches/admin-data";
 import { EARLY_BIRD_SLOTS_TOTAL } from "@/lib/koaches/early-bird";
@@ -57,8 +57,8 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
   const doneThisMonth = sessionRows.filter(
     (s) => s.status === "done" && Boolean(s.date?.startsWith(month))
   );
-  const revenueThisMonth = collectedThisMonth.reduce((sum, s) => sum + s.price, 0);
-  const totalRevenue = sessionRows.filter((s) => isCollectedSession(s)).reduce((sum, s) => sum + s.price, 0);
+  const revenueThisMonth = collectedThisMonth.reduce((sum, s) => sum + sessionCollectedAmount(s), 0);
+  const totalRevenue = sessionRows.filter((s) => isCollectedSession(s)).reduce((sum, s) => sum + sessionCollectedAmount(s), 0);
   const activeCoaches = coachRows.filter((c) => c.is_active);
   const mrr = activeCoaches.reduce(
     (sum, c) => sum + SUBSCRIPTION_PRICES[c.subscription_plan as keyof typeof SUBSCRIPTION_PRICES],
@@ -82,7 +82,7 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
     );
     const monthRevenue = coachSessions
       .filter((s) => isCollectedSession(s) && Boolean(s.date?.startsWith(month)))
-      .reduce((sum, s) => sum + s.price, 0);
+      .reduce((sum, s) => sum + sessionCollectedAmount(s), 0);
 
     return {
       id: mapped.id,

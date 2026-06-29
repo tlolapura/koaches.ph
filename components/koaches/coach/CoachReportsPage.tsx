@@ -133,6 +133,8 @@ export function CoachReportsPage() {
                   {report.sessionsDone} completed session{report.sessionsDone === 1 ? "" : "s"}
                   {report.avgPerCollectedSession > 0 &&
                     ` · avg ${formatCurrency(report.avgPerCollectedSession)}`}
+                  {report.tipsCollected > 0 &&
+                    ` · ${formatCurrency(report.tipsCollected)} tips`}
                 </p>
               </div>
               <div className="grid grid-cols-2 divide-x divide-[#E5E7EB] border-t border-[#E5E7EB]">
@@ -153,6 +155,17 @@ export function CoachReportsPage() {
                   </p>
                 </div>
               </div>
+              {report.tipsCollected > 0 && (
+                <div className="border-t border-[#E5E7EB] px-5 py-3">
+                  <p className="text-xs text-[#6B7280]">
+                    Tips this period{" "}
+                    <span className="font-heading font-semibold text-[#14532D]">
+                      {formatCurrency(report.tipsCollected)}
+                    </span>
+                    <span className="text-[#9CA3AF]"> · included in collected total</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="coach-card mt-3 p-4">

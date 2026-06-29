@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
   ALL_SKILL_CATEGORIES,
@@ -226,33 +226,18 @@ export function SkillRatingPanel({
     );
   };
 
-  const copyStartToAfter = () => {
-    setAfter(before.map((b) => ({ ...b })));
-  };
-
   const ratedCount = before.filter((s) => !s.skipped).length;
   const skippedCount = before.length - ratedCount;
 
   return (
     <div className="space-y-4">
       <div className="coach-card p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-[#6B7280]">
-            {ratedCount} to rate
-            {skippedCount > 0 && (
-              <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
-            )}
-          </p>
-          <button
-            type="button"
-            onClick={copyStartToAfter}
-            className="inline-flex min-h-[44px] items-center gap-1 rounded-lg px-3 text-sm font-semibold text-[#4F8FF7] active:bg-[#EFF6FF]"
-          >
-            Copy before
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-            after
-          </button>
-        </div>
+        <p className="text-sm text-[#6B7280]">
+          {ratedCount} to rate
+          {skippedCount > 0 && (
+            <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
+          )}
+        </p>
 
         <div className="mt-5 space-y-8">
           {skillsByCategory.map(({ category, skills }) => (

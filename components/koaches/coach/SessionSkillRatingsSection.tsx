@@ -47,7 +47,7 @@ function ParticipantProgressPanel({
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div className="mb-3">
         <span className="rounded-full bg-[#F0FDF4] px-3 py-1 text-[11px] font-semibold text-[#166534]">
           {formatParticipantProgramLabel(ctx)}
           {ctx.sessionNumber != null && ctx.totalSessions != null && (
@@ -57,14 +57,6 @@ function ParticipantProgressPanel({
             </span>
           )}
         </span>
-        {participant.studentId && (
-          <Link
-            href={`/coach/students/${participant.studentId}`}
-            className="text-xs font-semibold text-[#4F8FF7]"
-          >
-            Full progress →
-          </Link>
-        )}
       </div>
 
       <SkillRatingPanel
