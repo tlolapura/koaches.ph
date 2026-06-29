@@ -11,11 +11,11 @@ import {
 
 const LETTER_DATE = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
 
-export function InternalProposalToSarahPage() {
+export function InternalProposalToSarazasPage() {
   return (
-    <ProposalPageShell subtitle={`A personal letter for Sarah · ${LETTER_DATE}`}>
+    <ProposalPageShell subtitle={`A personal letter for Kim and Meds · ${LETTER_DATE}`}>
       <div className="space-y-5">
-        <p>Hi Sarah,</p>
+        <p>Hi Kim and Meds,</p>
         <p>
           My name is Leigh. I'm a developer based here in the Philippines. I play pickleball, probably
           watch too much of it on YouTube, and I built an app called PickleKoach because I kept seeing
@@ -24,17 +24,17 @@ export function InternalProposalToSarahPage() {
         <p>
           I hope it's okay that I'm reaching out this way. I'm not sure a web page is the right format
           for this. I've never written anything like a co-founder proposal before. But I wanted to put
-          my thoughts down properly, and I wanted you to be the first person to read them.
+          my thoughts down properly, and I wanted you both to read them.
         </p>
         <p>
-          You've been top of my mind for a long time. I've been following your journey for years through
-          your socials, your matches, your camps, and the things you post about what actually matters.
-          This isn't something I'm copying and sending around. I put your name on it because I mean it.
+          You two have been on my mind for a while. I've been following what you do through your
+          matches, your posts, and everything happening around The Pickle Yard. This isn't something
+          I'm copying and sending around. I put your names on it because I mean it.
         </p>
         <p>
-          A big part of why I'm writing is that I feel like we share the same values in so many ways.
-          Progress over winning. People over medals. Staying grounded. Doing the work even when no one's
-          watching. That matters to me more than any title ever could.
+          A big part of why I'm writing is that I feel like we care about the same things. Building
+          something real. Putting people first. Growing the sport without losing what makes it good.
+          Showing up consistently, not just when the cameras are on. That matters to me.
         </p>
       </div>
 
@@ -51,9 +51,14 @@ export function InternalProposalToSarahPage() {
           has to be a better way.
         </p>
         <p>
-          I know your world looks different. You compete internationally, run elite camps, and build the
-          next generation of players. But I still feel that anyone serious about coaching shouldn't have
-          to fight their phone for an hour before they can do the work they actually love.
+          You actually know her. I can tell you more when we talk. And if you're interested in meeting up
+          to discuss this, I can bring her with me.
+        </p>
+        <p>
+          I know your world is bigger than a notebook problem. You're building community, training
+          players, and helping the sport grow in ways most people never see. But I still feel that coaches
+          everywhere deserve better tools behind the scenes. Less chaos on the phone. More time on court
+          with the people who matter.
         </p>
         <p>So I started building one.</p>
       </LetterSection>
@@ -95,44 +100,47 @@ export function InternalProposalToSarahPage() {
         </p>
       </LetterSection>
 
-      <LetterSection title="Why you, Sarah">
+      <LetterSection title="Why you both">
         <p>
-          I'll be honest. You're not the only person I could talk to. But when I imagined who could run
-          this with me, you were the first name that came up. And you've stayed there.
+          I'll be honest. You're not the only people I could talk to. But when I imagined who could run
+          this with me, you two kept coming up. Together.
         </p>
         <p>
-          I've been following you for a long time. And it's not just because of what you've achieved on
-          court. It's how you carry yourself off it. The way you show up on social media. The things you
-          choose to say when you could easily just post highlights.
+          I've been watching what you build as a couple in this sport. You're married, and it shows in
+          how you move together. Not just on court, but around it. Kim, you coach. You're certified. You
+          know what it feels like to plan sessions, track where a student is, and actually help them get
+          better. Meds, you compete and you understand the discipline it takes to keep showing up. You
+          both live this every day.
         </p>
         <p>
-          We share the same values in more ways than I can list. Faith. Humility. Putting people first.
-          Caring about growth more than trophies. I don't take that lightly. If we ever built something
-          together, I'd want it to reflect that. Not just be another app with a logo on it.
+          And you're embedded in something bigger. The Pickle Yard. Team Philippines. A community of
+          players who trust the people around them. That's rare. Most apps are built by developers who
+          have never spent a full day at a court. You know what coaches and players actually need because
+          you're already in the middle of it.
         </p>
         <p>
-          You coach. You run structured camps. You develop young
-          players who want more than casual rallies. You know what it takes to track progress, give
-          honest feedback, and build trust with students over time. Because you do it yourself.
+          What I built lines up with how you already think about the game. Structured programs. Real
+          progress students can see. Not just booking a slot and calling it coaching. Skill rubrics,
+          progress cards, the stuff that helps someone feel like they're actually improving. That's the
+          heart of PickleKoach.
         </p>
         <p>
-          Something you said stuck with me. You're not chasing wins, you're chasing progress. That's
-          exactly what I built the skill rubrics and progress cards around. Real feedback students can
-          see and grow from. And your line about people over medals matters. This isn't about helping
-          coaches fill slots. It's about helping coaches who actually care about their students' growth
-          run a better business behind the scenes.
+          You also have something I simply don't. Trust. People know you. Players listen because you've
+          earned it. Coaches would take a recommendation from you seriously. If we ever launched this
+          together, that credibility isn't something I can code into an app. But it's the thing that
+          would make coaches give us a real shot on day one.
         </p>
         <p>
-          You also have something I simply don't. Trust. Coaches know you. Players look up to you. Young
-          athletes in your camps listen because you've earned it. If we ever launched this together,
-          that credibility isn't something I can code into an app. But it's the thing that would make
-          coaches take us seriously on day one.
+          And honestly, I think you have the brain to run this. You know how to communicate. You know how
+          to build a team. You know how to think long-term. You've already proven you can build something
+          together as husband and wife. That matters a lot to me.
         </p>
         <p>
-          And honestly, I think you have the brain to run this. You understand the sport and the
-          grassroots coaching side. You know how to communicate, how to build a team, how to think
-          long-term. The network would come naturally with someone who already belongs in this space.
-          Because you already do.
+          I'll also say this, and I mean it in a light way. If this is something you two ever wanted to
+          explore, I imagine it could be fun bonding. Late-night ideas over coffee. Arguing about pricing
+          over dinner. Building something that's yours, not just another tournament on the calendar. I
+          don't know if that's how you'd see it, but from the outside, it feels like the kind of project
+          a couple like you could actually enjoy.
         </p>
       </LetterSection>
 
@@ -238,20 +246,22 @@ export function InternalProposalToSarahPage() {
       <ProposalOnTheNameSection />
 
       <ProposalNextStepsSection
-        demoEmail="sarah@picklekoach.com"
+        demoEmail="kim@picklekoach.com"
         closingParagraphs={
           <>
             <p>
-              Whenever you have a quiet moment between training, camps, and everything else on your
+              Whenever you have a quiet moment between training, coaching, and everything else on your
               plate, I'd really appreciate you clicking around and seeing if this feels like something
-              coaches would genuinely benefit from. Your perspective as both a competitor and a coach
-              would mean a lot.
+              coaches would genuinely benefit from. Your perspective, both as coaches and as people deep
+              in the community, would mean a lot.
             </p>
             <p>
               If you'd ever want to talk about running this together, I'd be so happy to hear from you.
-              Happy to grab coffee somewhere, Makati or wherever works for you, and talk it through if
-              you're interested. And if you're busy right now, or this just isn't the right fit, please
-              don't worry about it at all. I completely understand. I'll keep building either way.
+              Happy to grab coffee somewhere, maybe near Parañaque or wherever works for you both, and
+              talk it through if you're interested. No pressure at all. But if you did want to explore it,
+              I think it could be a really fun thing to build on together. And if you're busy right now,
+              or this just isn't the right fit, please don't worry about it at all. I completely
+              understand. I'll keep building either way.
             </p>
             <p>
               If you do get a chance to look at it, even a short note with your honest thoughts would
@@ -259,7 +269,7 @@ export function InternalProposalToSarahPage() {
               your perspective would genuinely help.
             </p>
             <p>
-              Thank you so much for reading this far, Sarah. I know your time is precious, and it
+              Thank you so much for reading this far, Kim and Meds. I know your time is precious, and it
               means a lot that you even opened it.
             </p>
           </>

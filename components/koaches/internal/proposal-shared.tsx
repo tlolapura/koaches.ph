@@ -87,10 +87,14 @@ export function ProposalOnTheNameSection() {
   );
 }
 
+export const PROPOSAL_DEMO_PASSWORD = "password";
+
 export function ProposalNextStepsSection({
   closingParagraphs,
+  demoEmail = "sample@picklekoach.com",
 }: {
   closingParagraphs: React.ReactNode;
+  demoEmail?: string;
 }) {
   return (
     <LetterSection title="Next step">
@@ -141,10 +145,10 @@ export function ProposalNextStepsSection({
       <div className="rounded-xl border border-[#E5E7EB] bg-white px-4 py-4 text-base sm:px-5">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">Demo login</p>
         <p className="mt-2 text-[#111827]">
-          Email: <span className="font-mono text-sm">sample@picklekoach.com</span>
+          Email: <span className="font-mono text-sm">{demoEmail}</span>
         </p>
         <p className="text-[#111827]">
-          Password: <span className="font-mono text-sm">password</span>
+          Password: <span className="font-mono text-sm">{PROPOSAL_DEMO_PASSWORD}</span>
         </p>
       </div>
       {closingParagraphs}
