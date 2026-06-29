@@ -11,51 +11,64 @@ import {
 
 const LETTER_DATE = new Date().toLocaleString("en-US", { month: "long", year: "numeric" });
 
-export function InternalProposalPage() {
+export function InternalProposalToSarahPage() {
   return (
-    <ProposalPageShell subtitle={`A personal letter · ${LETTER_DATE}`}>
+    <ProposalPageShell subtitle={`A personal letter for Sarah · ${LETTER_DATE}`}>
       <div className="space-y-5">
+        <p>Hi Sarah,</p>
+        <p>
+          My name is Leigh. I'm a developer based here in the Philippines. I play pickleball, probably
+          watch too much of it on YouTube, and I built an app called PickleKoach because I kept seeing
+          a problem I couldn't ignore.
+        </p>
         <p>
           I hope it's okay that I'm reaching out this way. I'm not sure a web page is the right format
-          for this, honestly. I've never written anything like a co-founder proposal before.
+          for this. I've never written anything like a co-founder proposal before. But I wanted to put
+          my thoughts down properly, and I wanted you to be the first person to read them.
         </p>
         <p>
-          I'm writing this to you personally. You came to mind, and I'm reaching out one person at a
-          time. This isn't something I'm copying and sending around.
+          You've been top of my mind for a long time. I've been following your journey for years through
+          your socials, your matches, your camps, and the things you post about what actually matters.
+          This isn't something I'm copying and sending around. I put your name on it because I mean it.
         </p>
         <p>
-          I'm a developer who plays pickleball, probably watches too much pickleball on YouTube, and
-          started building an app because I couldn't stop thinking about a problem I kept seeing up
-          close.
+          A big part of why I'm writing is that I feel like we share the same values in so many ways.
+          Progress over winning. People over medals. Staying grounded. Doing the work even when no one's
+          watching. That matters to me more than any title ever could.
         </p>
       </div>
 
       <LetterSection title="Where it started">
         <p>
-          A friend of mine is a coach. Freelance, not in-house at one club. She's at different courts
-          all week, different students, different schedules. There's no one place to see everything.
-          Just a notebook, handwritten schedules, GCash confirmations screenshot and filed in a chat.
-          Names, session notes, skill notes. All in a list on her phone.
+          A friend of mine is a coach. Freelance, not tied to one club. She's at different courts all
+          week, different students, different schedules. There's no one place to see everything. Just a
+          notebook, handwritten schedules, GCash screenshots filed in a chat. Names, session notes, skill
+          notes. All in a list on her phone.
         </p>
         <p>
-          Her students love her. They improve. They trust her. But I'd watch her scroll through that
-          list before every session and think: she is too good at coaching to be doing this much admin.
-          There has to be a better way.
+          Her students love her. They improve. They trust her. But I'd watch her scroll through that list
+          before every session and think: she is too good at coaching to be doing this much admin. There
+          has to be a better way.
+        </p>
+        <p>
+          I know your world looks different. You compete internationally, run elite camps, and build the
+          next generation of players. But I still feel that anyone serious about coaching shouldn't have
+          to fight their phone for an hour before they can do the work they actually love.
         </p>
         <p>So I started building one.</p>
       </LetterSection>
 
       <LetterSection title="What I built">
         <p>
-          I built this in about a week. I build fast, and I'm proud of what's already there. The
-          portal, the programs, the progress cards. Most of what you're reading about, you can actually
-          click through today.
+          I built this in about a week. I build fast, and I'm proud of what's already there. The portal,
+          the programs, the progress cards. Most of what you're reading about, you can actually click
+          through today.
         </p>
         <p>
-          What I know I'm not great at is running the business side of this. I'm a developer. I can
-          write code and fix things at midnight. But who to go after first, how to price it, how to
-          grow it, what the pitch to a coach should sound like, when to launch and when to wait. Those
-          are the decisions I need help with.
+          What I'm not great at is the business side. I'm a developer. I can write code and fix things
+          at midnight. But who to go after first, how to price it, how to grow it, what the pitch to a
+          coach should sound like, when to launch and when to wait. Those are the decisions I need help
+          with.
         </p>
         <p>That's really why I'm writing to you.</p>
         <BuiltFeaturesList />
@@ -68,8 +81,8 @@ export function InternalProposalPage() {
         </p>
         <p>
           I'd love to find someone who genuinely wants to build this alongside me. Vision, strategy,
-          which coaches to bring on first, how we talk to the community, what we launch and what we
-          wait on. The parts that aren't code.
+          which coaches to bring on first, how we talk to the community, what we launch and what we wait
+          on. The parts that aren't code.
         </p>
         <p>
           In my head, this should feel like a coach's company with a developer behind it. Someone
@@ -77,23 +90,49 @@ export function InternalProposalPage() {
           world.
         </p>
         <p>
-          I'm hoping for a co-founder, if that's something you'd ever be open to. Equity, real
-          involvement, your name on it because you believed in it. Not because anyone asked you to pose
-          for a photo.
+          I'm hoping for a co-founder, if that's something you'd ever be open to. Real involvement, your
+          name on it because you believed in it. Not because anyone asked you to pose for a photo.
         </p>
       </LetterSection>
 
-      <LetterSection title="Why you specifically">
+      <LetterSection title="Why you, Sarah">
         <p>
-          I'll be reaching out to coaches and players in the PH on my own too, one conversation at a
-          time. That works, but it's slow, and I know a lot of doors are harder to open when you're a
-          developer people haven't met yet.
+          I'll be honest. You're not the only person I could talk to. But when I imagined who could run
+          this with me, you were the first name that came up. And you've stayed there.
         </p>
         <p>
-          You already have something I don't: trust. Coaches and players know you. That would mean a lot
-          if we ever launched together. But honestly, the bigger reason I'm writing is that I think you
-          have the brain to run this. The network would come naturally with someone who actually
-          belongs in this space.
+          I've been following you for a long time. And it's not just because of what you've achieved on
+          court. It's how you carry yourself off it. The way you show up on social media. The things you
+          choose to say when you could easily just post highlights.
+        </p>
+        <p>
+          We share the same values in more ways than I can list. Faith. Humility. Putting people first.
+          Caring about growth more than trophies. I don't take that lightly. If we ever built something
+          together, I'd want it to reflect that. Not just be another app with a logo on it.
+        </p>
+        <p>
+          You coach. You run structured camps. You develop young
+          players who want more than casual rallies. You know what it takes to track progress, give
+          honest feedback, and build trust with students over time. Because you do it yourself.
+        </p>
+        <p>
+          Something you said stuck with me. You're not chasing wins, you're chasing progress. That's
+          exactly what I built the skill rubrics and progress cards around. Real feedback students can
+          see and grow from. And your line about people over medals matters. This isn't about helping
+          coaches fill slots. It's about helping coaches who actually care about their students' growth
+          run a better business behind the scenes.
+        </p>
+        <p>
+          You also have something I simply don't. Trust. Coaches know you. Players look up to you. Young
+          athletes in your camps listen because you've earned it. If we ever launched this together,
+          that credibility isn't something I can code into an app. But it's the thing that would make
+          coaches take us seriously on day one.
+        </p>
+        <p>
+          And honestly, I think you have the brain to run this. You understand the sport and the
+          grassroots coaching side. You know how to communicate, how to build a team, how to think
+          long-term. The network would come naturally with someone who already belongs in this space.
+          Because you already do.
         </p>
       </LetterSection>
 
@@ -103,9 +142,9 @@ export function InternalProposalPage() {
           out the business side as I stumble through it.
         </p>
         <p>
-          But it would take a long time. And coaches are dealing with the notebook mess right now.
-          Every week without a better tool is another week of admin eating into the coaching they
-          actually love doing.
+          But it would take a long time. And coaches are dealing with the notebook mess right now. Every
+          week without a better tool is another week of admin eating into the coaching they actually love
+          doing.
         </p>
         <p className="font-medium text-[#111827]">
           I'd love to launch this sooner rather than later, if the timing works for everyone.
@@ -137,8 +176,8 @@ export function InternalProposalPage() {
 
       <LetterSection title="The business side">
         <p>
-          I'm still figuring this out, and I'd want your input on all of it. But here's the rough
-          picture in my head, in case it helps you see where I'm coming from.
+          I'm still figuring this out, and I'd want your input on all of it. But here's the rough picture
+          in my head, in case it helps you see where I'm coming from.
         </p>
         <p className="font-medium text-[#111827]">
           Subscription. About ₱{SUBSCRIPTION_MONTHLY_PHP.toLocaleString("en-PH")} per month per coach
@@ -153,8 +192,8 @@ export function InternalProposalPage() {
         </p>
         <p>
           There are already thousands of pickleball coaches in the Philippines alone. Certified,
-          part-time, teaching at clubs on the side. And the sport is still growing here. That's just
-          the starting point.
+          part-time, teaching at clubs on the side. And the sport is still growing here. That's just the
+          starting point.
         </p>
         <p>
           And if you picture it globally, pickleball is growing fast everywhere. Same notebook problem,
@@ -191,7 +230,8 @@ export function InternalProposalPage() {
         </p>
         <p>
           What I can promise is that I'll keep building, I'll keep listening, and I genuinely care
-          about getting this right. For coaches like my friend, who deserve better than a notebook.
+          about getting this right. For coaches who deserve better than a notebook, and for the students
+          who trust them to help them grow.
         </p>
       </LetterSection>
 
@@ -201,14 +241,16 @@ export function InternalProposalPage() {
         closingParagraphs={
           <>
             <p>
-              Whenever you have a quiet moment, I'd really appreciate you clicking around and seeing if
-              this feels like something coaches would genuinely benefit from.
+              Whenever you have a quiet moment between training, camps, and everything else on your
+              plate, I'd really appreciate you clicking around and seeing if this feels like something
+              coaches would genuinely benefit from. Your perspective as both a competitor and a coach
+              would mean a lot.
             </p>
             <p>
               If you'd ever want to talk about running this together, I'd be so happy to hear from you.
-              Happy to grab coffee somewhere and talk it through if you're interested. And if you're
-              busy right now, or this just isn't the right fit, please don't worry about it at all. I
-              completely understand. I'll keep building either way.
+              Happy to grab coffee somewhere, Makati or wherever works for you, and talk it through if
+              you're interested. And if you're busy right now, or this just isn't the right fit, please
+              don't worry about it at all. I completely understand. I'll keep building either way.
             </p>
             <p>
               If you do get a chance to look at it, even a short note with your honest thoughts would
@@ -216,8 +258,8 @@ export function InternalProposalPage() {
               your perspective would genuinely help.
             </p>
             <p>
-              Thank you so much for reading this far. I know your time is precious, and it means a lot
-              that you even opened it.
+              Thank you so much for reading this far, Sarah. I know your time is precious, and it
+              means a lot that you even opened it.
             </p>
           </>
         }
