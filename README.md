@@ -65,8 +65,7 @@ Without Supabase env vars, some flows fall back to demo/local behaviour (e.g. ad
 
 Migrations:
 
-- `001_initial_schema.sql` — core tables (coaches, sessions, students, programs, etc.)
-- `002_coach_billing.sql` — subscription billing
+- `001_initial_schema.sql` — full schema (coaches, sessions, students, programs, billing, etc.)
 
 ## Scripts
 

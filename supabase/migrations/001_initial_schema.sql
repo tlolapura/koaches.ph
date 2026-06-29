@@ -9,6 +9,8 @@ create table if not exists coaches (
   user_id uuid unique references auth.users (id) on delete set null,
   slug text unique not null,
   name text not null,
+  first_name text not null default '',
+  last_name text not null default '',
   photo_url text,
   bio text not null default '',
   specialization text not null default '',
@@ -19,6 +21,10 @@ create table if not exists coaches (
   instagram text,
   facebook text,
   skill_template_id text not null default 'intermediate',
+  coaching_levels text[] not null default '{}',
+  custom_skill_ids text[],
+  skill_label_overrides jsonb not null default '{}',
+  custom_skills jsonb not null default '[]',
   free_trial_enabled boolean not null default false,
   free_trial_weekly_cap integer not null default 0,
   subscription_plan text not null default 'regular',
@@ -26,6 +32,7 @@ create table if not exists coaches (
   is_active boolean not null default true,
   total_students integer not null default 0,
   total_sessions integer not null default 0,
+  onboarding_completed_at timestamptz,
   working_hours jsonb not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -45,6 +52,8 @@ create table if not exists programs (
   source text not null,
   target_level text not null default '',
   custom_skill_ids text[],
+  skill_label_overrides jsonb not null default '{}',
+  custom_skills jsonb not null default '[]',
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -57,6 +66,8 @@ create table if not exists students (
   id text primary key,
   coach_id text not null references coaches (id) on delete cascade,
   name text not null,
+  first_name text not null default '',
+  last_name text not null default '',
   mobile text not null default '',
   email text not null default '',
   status text not null default 'active',
@@ -96,6 +107,7 @@ create table if not exists sessions (
   status text not null default 'upcoming',
   payment_status text not null default 'unpaid',
   price integer not null default 0,
+  tip integer not null default 0 check (tip >= 0),
   player_count integer not null default 1,
   participants jsonb not null default '[]',
   notes text,
@@ -197,6 +209,41 @@ create table if not exists coach_achievements (
   sort_order integer not null default 0
 );
 
+-- ── Coach billing ─────────────────────────────────────────────────────────
+create table if not exists coach_subscription_invoices (
+  id text primary key,
+  coach_id text not null references coaches (id) on delete cascade,
+  invoice_number text not null,
+  period_start date not null,
+  period_end date not null,
+  amount integer not null,
+  plan text not null,
+  status text not null default 'issued',
+  issued_at timestamptz not null default now(),
+  paid_at timestamptz,
+  created_at timestamptz not null default now(),
+  unique (coach_id, period_end)
+);
+
+create index if not exists coach_invoices_coach_idx on coach_subscription_invoices (coach_id, period_end desc);
+
+create table if not exists coach_payment_submissions (
+  id text primary key,
+  coach_id text not null references coaches (id) on delete cascade,
+  invoice_id text not null references coach_subscription_invoices (id) on delete cascade,
+  amount integer not null,
+  method text not null,
+  receipt_path text not null,
+  receipt_file_name text not null,
+  notes text,
+  status text not null default 'pending',
+  submitted_at timestamptz not null default now(),
+  reviewed_at timestamptz
+);
+
+create index if not exists coach_payments_coach_idx on coach_payment_submissions (coach_id, submitted_at desc);
+create index if not exists coach_payments_invoice_idx on coach_payment_submissions (invoice_id);
+
 -- ── Profiles (auth roles) ───────────────────────────────────────────────────
 do $$ begin
   create type public.app_role as enum ('coach', 'admin', 'super_admin');
@@ -222,31 +269,35 @@ create index if not exists profiles_role_idx on profiles (role);
 create index if not exists profiles_coach_id_idx on profiles (coach_id) where coach_id is not null;
 
 -- ── sessions_completed trigger ─────────────────────────────────────────────
+-- Program progress counts only done program sessions for the student's current program.
 create or replace function sync_sessions_completed_on_done()
 returns trigger as $$
 begin
   if new.status = 'done' and (old.status is distinct from 'done') then
-    update students
-    set sessions_completed = sessions_completed + 1,
-        updated_at = now()
-    where id = new.student_id;
-
-    if new.program_id is not null then
-      update students
-      set program_id = coalesce(program_id, new.program_id),
-          updated_at = now()
-      where id = new.student_id;
-
+    if new.program_id is not null and new.type = 'program' then
       insert into program_enrollments (program_id, student_id)
       values (new.program_id, new.student_id)
       on conflict do nothing;
     end if;
-  elsif old.status = 'done' and new.status is distinct from 'done' then
-    update students
-    set sessions_completed = greatest(0, sessions_completed - 1),
-        updated_at = now()
-    where id = new.student_id;
   end if;
+
+  if new.type = 'program'
+     and new.program_id is not null
+     and new.status is distinct from old.status then
+    update students
+    set sessions_completed = (
+      select count(*)::int
+      from sessions s
+      where s.student_id = students.id
+        and s.program_id = students.program_id
+        and s.type = 'program'
+        and s.status = 'done'
+    ),
+    updated_at = now()
+    where id = new.student_id
+      and program_id = new.program_id;
+  end if;
+
   new.updated_at = now();
   return new;
 end;
@@ -293,6 +344,8 @@ alter table progress_cards enable row level security;
 alter table coach_working_hours enable row level security;
 alter table coach_blocked_slots enable row level security;
 alter table coach_achievements enable row level security;
+alter table coach_subscription_invoices enable row level security;
+alter table coach_payment_submissions enable row level security;
 alter table coach_applications enable row level security;
 alter table profiles enable row level security;
 
@@ -398,6 +451,26 @@ drop policy if exists achievements_coach on coach_achievements;
 create policy achievements_coach on coach_achievements for all
   using (coach_id = current_coach_id());
 
+drop policy if exists invoices_coach on coach_subscription_invoices;
+create policy invoices_coach on coach_subscription_invoices for select
+  using (coach_id = current_coach_id());
+
+drop policy if exists invoices_admin on coach_subscription_invoices;
+create policy invoices_admin on coach_subscription_invoices for all
+  using (is_platform_admin());
+
+drop policy if exists payments_coach_select on coach_payment_submissions;
+create policy payments_coach_select on coach_payment_submissions for select
+  using (coach_id = current_coach_id());
+
+drop policy if exists payments_coach_insert on coach_payment_submissions;
+create policy payments_coach_insert on coach_payment_submissions for insert
+  with check (coach_id = current_coach_id());
+
+drop policy if exists payments_admin on coach_payment_submissions;
+create policy payments_admin on coach_payment_submissions for all
+  using (is_platform_admin());
+
 drop policy if exists applications_admin on coach_applications;
 create policy applications_admin on coach_applications for all
   using (is_platform_admin());
@@ -427,3 +500,36 @@ create policy courts_public_read on courts for select
 drop policy if exists courts_admin on courts;
 create policy courts_admin on courts for all
   using (is_platform_admin());
+
+-- ── Storage: coach receipt uploads (private bucket) ────────────────────────
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'coach-receipts',
+  'coach-receipts',
+  false,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp', 'application/pdf']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists coach_receipts_insert on storage.objects;
+create policy coach_receipts_insert on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'coach-receipts'
+    and (storage.foldername(name))[1] = current_coach_id()
+  );
+
+drop policy if exists coach_receipts_select on storage.objects;
+create policy coach_receipts_select on storage.objects for select
+  to authenticated
+  using (
+    bucket_id = 'coach-receipts'
+    and (
+      (storage.foldername(name))[1] = current_coach_id()
+      or is_platform_admin()
+    )
+  );

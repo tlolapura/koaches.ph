@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { stripCoachTitle } from "@/lib/koaches/person-name";
 import { cn } from "@/lib/utils";
-import { COACH_COLORS } from "@/lib/koaches/coach-colors";
 
 /** Instagram & Facebook Story — 9:16 at 1080×1920 px */
 export const STORY_WIDTH = 1080;
@@ -12,8 +12,6 @@ export const STORY_HEIGHT = 1920;
 export const STORY_SAFE_TOP = 270;
 export const STORY_SAFE_BOTTOM = 380;
 export const STORY_SAFE_SIDES = 65;
-
-export const STORY_EXPORT_LABEL = "1080×1920 · IG & FB Story";
 
 type SocialStoryPreviewProps = {
   children: ReactNode;
@@ -62,14 +60,33 @@ function StoryBackground() {
   return (
     <>
       <div className="absolute inset-0 bg-[#FAFAF8]" />
-      <div
-        className="absolute inset-0 opacity-[0.035]"
-        style={{
-          backgroundImage:
-            "repeating-linear-gradient(0deg, transparent, transparent 79px, #16A34A 79px, #16A34A 80px), repeating-linear-gradient(90deg, transparent, transparent 79px, #16A34A 79px, #16A34A 80px)",
-        }}
-        aria-hidden
-      />
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+        {/* Plain img for story PNG export (same ball art as login) */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- story export */}
+        <img
+          src="/illustrations/ball.png"
+          alt=""
+          crossOrigin="anonymous"
+          className="absolute opacity-[0.16] rotate-12"
+          style={{ right: -32, top: -16, width: 440, height: 440 }}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element -- story export */}
+        <img
+          src="/illustrations/ball.png"
+          alt=""
+          crossOrigin="anonymous"
+          className="absolute opacity-[0.16] -rotate-[18deg]"
+          style={{ bottom: -120, left: -100, width: 560, height: 560 }}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element -- story export */}
+        <img
+          src="/illustrations/ball.png"
+          alt=""
+          crossOrigin="anonymous"
+          className="absolute opacity-[0.14] rotate-[8deg]"
+          style={{ top: "36%", right: "6%", width: 320, height: 320 }}
+        />
+      </div>
     </>
   );
 }
@@ -109,7 +126,7 @@ export function SocialStoryHeader({
   photo?: string | null;
   specialization?: string;
 }) {
-  const initials = coachName
+  const initials = stripCoachTitle(coachName)
     .split(" ")
     .map((part) => part[0])
     .join("")
@@ -157,9 +174,39 @@ export function SocialStoryFooter({ url }: { url: string }) {
   );
 }
 
-export function SocialStorySlotPill({ label }: { label: string }) {
+export function storySlotCellClass(status?: "open" | "booked" | "blocked") {
+  if (status === "open") return "bg-[#F0FDF4] ring-2 ring-[#16A34A]";
+  if (status === "booked") return "bg-[#EDF2F7] ring-1 ring-[#D1D5DB]";
+  if (status === "blocked") return "bg-[#E5E7EB] ring-1 ring-[#9CA3AF]";
+  return "bg-transparent";
+}
+
+export function storySlotLabel(status: "open" | "booked" | "blocked"): string | null {
+  if (status === "open") return "Open";
+  if (status === "booked") return "Booked";
+  return null;
+}
+
+export function SocialStorySlotPill({
+  label,
+  variant = "open",
+}: {
+  label: string;
+  variant?: "open" | "booked";
+}) {
+  if (variant === "booked") {
+    return (
+      <span className="inline-flex min-w-[7rem] flex-col items-center justify-center rounded-2xl border-2 border-[#D1D5DB] bg-[#EDF2F7] px-5 py-3 text-center shadow-sm">
+        <span className="text-[28px] font-bold text-[#374151]">{label}</span>
+        <span className="mt-0.5 text-[18px] font-bold uppercase tracking-wide text-[#6B7280]">
+          Booked
+        </span>
+      </span>
+    );
+  }
+
   return (
-    <span className="inline-flex min-w-[7rem] items-center justify-center rounded-2xl border-2 border-[#4F8FF7] bg-[#EFF6FF] px-5 py-4 text-[28px] font-bold text-[#1D4ED8] shadow-sm">
+    <span className="inline-flex min-w-[7rem] items-center justify-center rounded-2xl border-2 border-[#16A34A] bg-[#F0FDF4] px-5 py-4 text-[28px] font-bold text-[#166534] shadow-sm">
       {label}
     </span>
   );
@@ -189,7 +236,7 @@ export function SocialStoryStatBadge({
 
 export function SocialStoryLegend() {
   const items = [
-    { color: COACH_COLORS.blueLight, border: COACH_COLORS.blue, label: "Open" },
+    { color: "#F0FDF4", border: "#16A34A", label: "Open" },
     { color: "#EDF2F7", border: "#D1D5DB", label: "Booked" },
     { color: "#E5E7EB", border: "#9CA3AF", label: "Blocked" },
   ] as const;

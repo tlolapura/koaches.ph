@@ -4,7 +4,7 @@ import { format, parse } from "date-fns";
 import type { CoachProfile } from "@/lib/koaches/types";
 import type {
   CalendarStoryWeek,
-  DailyStorySlot,
+  DailyStoryDay,
 } from "@/lib/koaches/social-stories";
 import {
   SocialStoryBrandBar,
@@ -12,9 +12,11 @@ import {
   SocialStoryHeader,
   SocialStoryLegend,
   SocialStoryPreview,
-  SocialStorySlotPill,
   SocialStoryStatBadge,
+  storySlotCellClass,
+  storySlotLabel,
 } from "@/components/koaches/coach/social/SocialStoryFrame";
+import { socialStoryCoachName } from "@/lib/koaches/person-name";
 import { cn } from "@/lib/utils";
 
 type SocialStoryCardProps = {
@@ -25,30 +27,31 @@ type SocialStoryCardProps = {
 };
 
 function cellClass(status: CalendarStoryWeek["days"][0]["cells"][0]["status"]) {
-  if (status === "open") return "bg-[#EFF6FF] ring-2 ring-[#4F8FF7]";
-  if (status === "booked") return "bg-[#EDF2F7] ring-1 ring-[#D1D5DB]";
-  if (status === "blocked") return "bg-[#E5E7EB] ring-1 ring-[#9CA3AF]";
-  return "bg-transparent";
+  return storySlotCellClass(status === "off" ? undefined : status);
 }
 
 export function SocialStoryDailyCard({
   coach,
   date,
-  slots,
+  day,
   profileUrl,
   exportRef,
   previewWidth,
-}: SocialStoryCardProps & { date: string; slots: DailyStorySlot[] }) {
+}: SocialStoryCardProps & { date: string; day: DailyStoryDay }) {
   const d = parse(date, "yyyy-MM-dd", new Date());
   const dayName = format(d, "EEEE");
   const dateShort = format(d, "MMM d");
+  const { rows, openCount, bookedCount } = day;
+  const hasSlots = rows.length > 0;
+
+  const coachLabel = socialStoryCoachName(coach);
 
   return (
     <SocialStoryPreview exportRef={exportRef} previewWidth={previewWidth}>
       <SocialStoryBrandBar />
       <SocialStoryHeader
-        coachName={coach.name}
-        eyebrow="Open slots today"
+        coachName={coachLabel}
+        eyebrow="Today's schedule"
         photo={coach.photo}
         specialization={coach.specialization}
       />
@@ -58,25 +61,59 @@ export function SocialStoryDailyCard({
             <p className="font-heading text-[72px] font-bold leading-none text-[#14532D]">{dayName}</p>
             <p className="mt-2 text-[32px] font-semibold text-[#6B7280]">{dateShort}</p>
           </div>
-          <SocialStoryStatBadge
-            label="Open"
-            value={slots.length > 0 ? String(slots.length) : "—"}
-            className="shrink-0"
-          />
+          <div className="flex shrink-0 gap-3">
+            <SocialStoryStatBadge
+              label="Open"
+              value={openCount > 0 ? String(openCount) : "—"}
+              className="!px-4 !py-3"
+            />
+            <SocialStoryStatBadge
+              label="Booked"
+              value={bookedCount > 0 ? String(bookedCount) : "—"}
+              className="!px-4 !py-3"
+            />
+          </div>
         </div>
 
-        {slots.length === 0 ? (
+        {!hasSlots ? (
           <div className="mt-10 rounded-3xl border-2 border-dashed border-[#D1D5DB] bg-white px-8 py-12 text-center">
-            <p className="font-heading text-[36px] font-semibold text-[#14532D]">Fully booked</p>
+            <p className="font-heading text-[36px] font-semibold text-[#14532D]">No sessions today</p>
             <p className="mt-3 text-[28px] leading-relaxed text-[#6B7280]">
-              Message me to join the waitlist or grab another day.
+              Update your availability in Schedule or pick another day.
             </p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-3 gap-4">
-            {slots.map((slot) => (
-              <SocialStorySlotPill key={slot.timeLabel} label={slot.timeLabel} />
-            ))}
+          <div className="mt-8 flex flex-1 flex-col overflow-hidden rounded-3xl border-2 border-[#E5EFE8] bg-white p-4 shadow-sm">
+            <div className="grid grid-cols-[88px_1fr] gap-2">
+              {rows.map((row) => (
+                <div key={row.timeLabel} className="contents">
+                  <div className="flex items-center justify-end pr-2 text-[24px] font-semibold text-[#6B7280]">
+                    {row.timeLabel}
+                  </div>
+                  <div
+                    className={cn(
+                      "flex min-h-[56px] items-center justify-center rounded-xl px-2 text-center font-bold",
+                      storySlotCellClass(row.status)
+                    )}
+                  >
+                    {storySlotLabel(row.status) ? (
+                      <span
+                        className={cn(
+                          "text-[20px] font-bold uppercase tracking-wide",
+                          row.status === "open" ? "text-[#166534]" : "text-[#6B7280]"
+                        )}
+                      >
+                        {storySlotLabel(row.status)}
+                      </span>
+                    ) : row.status === "blocked" ? (
+                      <span className="text-[18px] font-bold uppercase tracking-wide text-[#9CA3AF]">
+                        Blocked
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -98,11 +135,13 @@ export function SocialStoryCalendarCard({
 }: SocialStoryCardProps & { week: CalendarStoryWeek }) {
   const hasGrid = week.hours.length > 0;
 
+  const coachLabel = socialStoryCoachName(coach);
+
   return (
     <SocialStoryPreview exportRef={exportRef} previewWidth={previewWidth}>
       <SocialStoryBrandBar />
       <SocialStoryHeader
-        coachName={coach.name}
+        coachName={coachLabel}
         eyebrow="Week at a glance"
         photo={coach.photo}
         specialization={coach.specialization}
@@ -148,18 +187,27 @@ export function SocialStoryCalendarCard({
                   </div>
                   {week.days.map((day) => {
                     const cell = day.cells[rowIndex];
-                    const initial =
-                      cell?.bookedLabel?.trim().split(/\s+/)[0]?.[0]?.toUpperCase() ?? "";
                     return (
                       <div
                         key={`${day.date}-${hour.timeLabel}`}
                         className={cn(
-                          "flex min-h-[52px] items-center justify-center rounded-xl text-[18px] font-bold",
+                          "flex min-h-[52px] items-center justify-center rounded-xl px-1 text-center font-bold",
                           cellClass(cell?.status ?? "off")
                         )}
                       >
-                        {cell?.status === "booked" && initial ? (
-                          <span className="text-[#374151]">{initial}</span>
+                        {cell?.status === "open" || cell?.status === "booked" ? (
+                          <span
+                            className={cn(
+                              "text-[14px] font-bold uppercase tracking-wide",
+                              cell.status === "open" ? "text-[#166534]" : "text-[#6B7280]"
+                            )}
+                          >
+                            {storySlotLabel(cell.status)}
+                          </span>
+                        ) : cell?.status === "blocked" ? (
+                          <span className="text-[12px] font-bold uppercase tracking-wide text-[#9CA3AF]">
+                            Blocked
+                          </span>
                         ) : null}
                       </div>
                     );

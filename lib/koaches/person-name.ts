@@ -51,6 +51,19 @@ export function progressCardCoachName(
   return stripCoachTitle(display).trim() || "Coach";
 }
 
+/** Name on social story graphics: "Coach Marco Reyes" */
+export function socialStoryCoachName(
+  coach: { firstName?: string; lastName?: string; name?: string }
+): string {
+  const display = personDisplayName({
+    firstName: coach.firstName ?? "",
+    lastName: coach.lastName,
+    name: coach.name,
+  });
+  const stripped = stripCoachTitle(display).trim() || "Coach";
+  return `Coach ${stripped}`;
+}
+
 export function coachFirstName(
   coach: { firstName: string; lastName?: string; name?: string }
 ): string {

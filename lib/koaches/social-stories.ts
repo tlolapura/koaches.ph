@@ -16,7 +16,7 @@ export const SOCIAL_STORY_TEMPLATES: Array<{
   {
     id: "daily-slots",
     label: "Today's openings",
-    description: "Open hourly slots for one day",
+    description: "Open & booked slots for one day",
   },
   {
     id: "week-calendar",
@@ -27,6 +27,13 @@ export const SOCIAL_STORY_TEMPLATES: Array<{
 
 export type DailyStorySlot = {
   timeLabel: string;
+  status: "open" | "booked" | "blocked";
+};
+
+export type DailyStoryDay = {
+  rows: DailyStorySlot[];
+  openCount: number;
+  bookedCount: number;
 };
 
 export type CalendarStoryCell = {
@@ -71,25 +78,46 @@ function slotGridOptions(
   };
 }
 
-function openRows(rows: HourlySlotRow[]): DailyStorySlot[] {
-  return rows
-    .filter((row) => row.status === "open")
-    .map((row) => ({ timeLabel: formatTimeDisplay(row.startValue).replace(":00", "") }));
+function storySlotFromRow(row: HourlySlotRow): DailyStorySlot {
+  return {
+    timeLabel: formatTimeDisplay(row.startValue).replace(":00", ""),
+    status: row.status,
+  };
 }
 
-export function getDailyStorySlots(
+export function getDailyStoryDay(
   sessions: Session[],
   date: string,
   workingHours: CoachWorkingHours,
   blockedSlots: BlockedSlot[]
-): DailyStorySlot[] {
+): DailyStoryDay {
   const rows = getHourlySlotRows(
     sessions,
     date,
     60,
     slotGridOptions(workingHours, blockedSlots, date)
   );
-  return openRows(rows);
+  let openCount = 0;
+  let bookedCount = 0;
+  for (const row of rows) {
+    if (row.status === "open") openCount += 1;
+    if (row.status === "booked") bookedCount += 1;
+  }
+  return {
+    rows: rows.map(storySlotFromRow),
+    openCount,
+    bookedCount,
+  };
+}
+
+/** @deprecated Use getDailyStoryDay */
+export function getDailyStorySlots(
+  sessions: Session[],
+  date: string,
+  workingHours: CoachWorkingHours,
+  blockedSlots: BlockedSlot[]
+): DailyStorySlot[] {
+  return getDailyStoryDay(sessions, date, workingHours, blockedSlots).rows;
 }
 
 export function getCalendarStoryWeek(

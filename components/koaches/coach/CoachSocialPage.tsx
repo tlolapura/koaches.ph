@@ -3,26 +3,18 @@
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { addDays, format, isToday, parse, startOfWeek } from "date-fns";
-import {
-  CalendarDays,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  LayoutGrid,
-  Share2,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Share2 } from "lucide-react";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { useCoachSessions } from "@/hooks/useCoachSessions";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
+import { socialStoryCoachName } from "@/lib/koaches/person-name";
 import { SITE_URL } from "@/lib/koaches/site-metadata";
 import { useCoachAvailability } from "@/hooks/useCoachAvailability";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
 import {
   getCalendarStoryWeek,
-  getDailyStorySlots,
-  SOCIAL_STORY_TEMPLATES,
+  getDailyStoryDay,
   type SocialStoryTemplate,
 } from "@/lib/koaches/social-stories";
 import { exportStoryAsPng, storyPngBlob } from "@/lib/koaches/social-story-export";
@@ -30,16 +22,11 @@ import {
   SocialStoryCalendarCard,
   SocialStoryDailyCard,
 } from "@/components/koaches/coach/social/SocialStoryCards";
-import { STORY_EXPORT_LABEL } from "@/components/koaches/coach/social/SocialStoryFrame";
-import { cn } from "@/lib/utils";
+import { SocialStoryStepper } from "@/components/koaches/coach/social/SocialStoryStepper";
+import { SocialTemplatePicker } from "@/components/koaches/coach/social/SocialTemplatePicker";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachSocialSkeleton } from "@/components/koaches/coach/CoachSkeletons";
-
-const TEMPLATE_ICONS = {
-  "daily-slots": CalendarDays,
-  "week-calendar": LayoutGrid,
-} as const;
 
 function useStoryPreviewWidth() {
   const [width, setWidth] = useState<number | undefined>(undefined);
@@ -68,7 +55,8 @@ export function CoachSocialPage() {
   const previewWidth = useStoryPreviewWidth();
 
   const todayKey = format(new Date(), "yyyy-MM-dd");
-  const [template, setTemplate] = useState<SocialStoryTemplate>("daily-slots");
+  const [step, setStep] = useState<1 | 2>(1);
+  const [template, setTemplate] = useState<SocialStoryTemplate | null>(null);
   const [date, setDate] = useState(todayKey);
   const [origin, setOrigin] = useState("");
 
@@ -80,8 +68,8 @@ export function CoachSocialPage() {
     ? `${origin || SITE_URL}${buildPublicCoachPath(coach.slug)}`
     : SITE_URL;
 
-  const dailySlots = useMemo(
-    () => getDailyStorySlots(sessions, date, workingHours, blockedSlots),
+  const dailyDay = useMemo(
+    () => getDailyStoryDay(sessions, date, workingHours, blockedSlots),
     [sessions, date, workingHours, blockedSlots]
   );
 
@@ -101,7 +89,7 @@ export function CoachSocialPage() {
 
   const handleDownload = async () => {
     const node = exportRef.current;
-    if (!node || saving) return;
+    if (!node || saving || !template) return;
     setSaving(true);
     try {
       await exportStoryAsPng(node, `koaches-${template}-${date}.png`);
@@ -114,7 +102,7 @@ export function CoachSocialPage() {
   };
 
   const handleShare = async () => {
-    if (!coach) return;
+    if (!coach || !template) return;
     const node = exportRef.current;
     if (!node || saving) return;
     setSaving(true);
@@ -125,7 +113,7 @@ export function CoachSocialPage() {
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: `${coach.name} — PickleKoach story`,
+          title: `${socialStoryCoachName(coach)} — PickleKoach story`,
         });
         return;
       }
@@ -148,6 +136,7 @@ export function CoachSocialPage() {
       <CoachPageShell>
         <CoachPageHeader title="Social" />
         <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading social tools">
+          <div className="h-24 rounded-xl bg-[#E5E7EB]" />
           <div className="h-10 rounded-xl bg-[#E5E7EB]" />
           <div className="h-80 rounded-2xl bg-[#E5E7EB]/80" />
         </div>
@@ -162,194 +151,171 @@ export function CoachSocialPage() {
     <CoachPageShell>
       <CoachPageHeader title="Social" />
 
-      <div className="mt-6">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="font-heading text-base font-bold text-[#111827]">Choose a template</p>
-            <p className="mt-0.5 hidden text-xs text-[#6B7280] md:block">
-              Today&apos;s slots or your full week at a glance
-            </p>
-          </div>
-          <span className="hidden shrink-0 rounded-full bg-[#EFF6FF] px-2.5 py-1 text-[10px] font-semibold text-[#1D4ED8] sm:inline-block">
-            {STORY_EXPORT_LABEL}
-          </span>
-        </div>
-
-        <div
-          className="mt-3 grid grid-cols-2 gap-3"
-          role="tablist"
-          aria-label="Story templates"
-        >
-          {SOCIAL_STORY_TEMPLATES.map((item) => {
-            const Icon = TEMPLATE_ICONS[item.id];
-            const selected = template === item.id;
-            const isDaily = item.id === "daily-slots";
-
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={selected}
-                onClick={() => setTemplate(item.id)}
-                className={cn(
-                  "relative flex flex-col items-center rounded-2xl border-2 px-3 py-5 text-center transition-all duration-200",
-                  selected
-                    ? isDaily
-                      ? "border-[#4F8FF7] bg-[#4F8FF7] text-white shadow-lg shadow-[#4F8FF7]/30"
-                      : "border-[#16A34A] bg-[#16A34A] text-white shadow-lg shadow-[#16A34A]/30"
-                    : isDaily
-                      ? "border-[#4F8FF7]/30 bg-[#EFF6FF] text-[#1D4ED8] hover:border-[#4F8FF7]/60 hover:shadow-sm"
-                      : "border-[#16A34A]/30 bg-[#F0FDF4] text-[#166534] hover:border-[#16A34A]/60 hover:shadow-sm"
-                )}
-              >
-                {selected ? (
-                  <span className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-white/25">
-                    <Check className="h-3 w-3" strokeWidth={3} />
-                  </span>
-                ) : null}
-                <div
-                  className={cn(
-                    "flex h-12 w-12 items-center justify-center rounded-2xl",
-                    selected ? "bg-white/20" : "bg-white shadow-sm"
-                  )}
-                >
-                  <Icon
-                    className={cn(
-                      "h-6 w-6",
-                      selected ? "text-white" : isDaily ? "text-[#4F8FF7]" : "text-[#16A34A]"
-                    )}
-                    strokeWidth={2.25}
-                  />
-                </div>
-                <p className="font-heading mt-3 text-sm font-bold leading-tight">{item.label}</p>
-                <p
-                  className={cn(
-                    "mt-1.5 text-[11px] leading-snug",
-                    selected ? "text-white/85" : "opacity-75"
-                  )}
-                >
-                  {item.description}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="coach-card mt-4 p-3">
-        {template === "daily-slots" ? (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => shiftDay(-1)}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white transition-colors hover:bg-[#F9FAFB]"
-              aria-label="Previous day"
-            >
-              <ChevronLeft className="h-5 w-5 text-[#14532D]" />
-            </button>
-            <div className="min-w-0 flex-1">
-              <CoachDatePicker value={date} onChange={setDate} />
-            </div>
-            <button
-              type="button"
-              onClick={() => shiftDay(1)}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white transition-colors hover:bg-[#F9FAFB]"
-              aria-label="Next day"
-            >
-              <ChevronRight className="h-5 w-5 text-[#14532D]" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => shiftDay(-7)}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white"
-              aria-label="Previous week"
-            >
-              <ChevronLeft className="h-5 w-5 text-[#14532D]" />
-            </button>
-            <div className="min-w-0 flex-1 text-center">
-              <p className="font-heading text-sm font-semibold text-[#14532D]">{weekLabel}</p>
-              <p className="text-[11px] text-[#6B7280]">Monday – Sunday</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => shiftDay(7)}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white"
-              aria-label="Next week"
-            >
-              <ChevronRight className="h-5 w-5 text-[#14532D]" />
-            </button>
-          </div>
-        )}
-
-        {template === "daily-slots" && !isToday(parsedDate) ? (
-          <button
-            type="button"
-            onClick={() => setDate(todayKey)}
-            className="mt-3 w-full rounded-full bg-[#E5EFE8] py-2 text-xs font-semibold text-[#3D5C47] transition-colors hover:bg-[#D5E5D8]"
-          >
-            Jump to today
-          </button>
-        ) : isWeekTemplate && format(weekStart, "yyyy-MM-dd") !== thisWeekStart ? (
-          <button
-            type="button"
-            onClick={() => setDate(todayKey)}
-            className="mt-3 w-full rounded-full bg-[#E5EFE8] py-2 text-xs font-semibold text-[#3D5C47] transition-colors hover:bg-[#D5E5D8]"
-          >
-            Jump to this week
-          </button>
-        ) : null}
-      </div>
-
-      <p className="mt-6 text-center text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
-        Preview
+      <p className="mt-2 text-sm text-[#6B7280]">
+        Create an IG or FB story from your schedule.
       </p>
-      <div className="mt-3">
-        {template === "daily-slots" ? (
-          <SocialStoryDailyCard
-            coach={coach}
-            date={date}
-            slots={dailySlots}
-            profileUrl={profileUrl}
-            exportRef={exportRef}
-            previewWidth={previewWidth}
-          />
-        ) : (
-          <SocialStoryCalendarCard
-            coach={coach}
-            week={calendarWeek}
-            profileUrl={profileUrl}
-            exportRef={exportRef}
-            previewWidth={previewWidth}
-          />
-        )}
+
+      <div className="mt-4">
+        <SocialStoryStepper
+          step={step}
+          onStep={setStep}
+          canAccessStep2={template !== null}
+        />
       </div>
 
-      <div className="mt-6 space-y-2">
-        <CoachButton
-          type="button"
-          className="w-full py-3.5 text-sm"
-          loading={saving}
-          loadingLabel="Saving…"
-          onClick={handleDownload}
-        >
-          <Download className="h-4 w-4" />
-          Save image
-        </CoachButton>
-        <CoachButton
-          type="button"
-          variant="outline"
-          className="w-full text-sm"
-          disabled={saving}
-          onClick={handleShare}
-        >
-          <Share2 className="h-4 w-4" />
-          Share
-        </CoachButton>
-      </div>
+      {step === 1 ? (
+        <div className="mt-4">
+          <p className="font-heading text-sm font-semibold text-[#14532D]">Choose a template</p>
+          <p className="mt-0.5 text-xs text-[#6B7280]">What kind of story do you want to post?</p>
+          <div className="mt-3">
+            <SocialTemplatePicker value={template} onChange={setTemplate} />
+          </div>
+          <CoachButton
+            type="button"
+            className="mt-4 w-full"
+            disabled={!template}
+            onClick={() => setStep(2)}
+          >
+            Next — choose date
+          </CoachButton>
+        </div>
+      ) : (
+        <div className="mt-4 space-y-4">
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-heading text-sm font-semibold text-[#14532D]">Choose a date</p>
+                <p className="mt-0.5 text-xs text-[#6B7280]">
+                  {isWeekTemplate ? "Pick any day in the week to show" : "Which day should this story show?"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="shrink-0 text-xs font-semibold text-[#4F8FF7]"
+              >
+                Change template
+              </button>
+            </div>
+
+            <div className="coach-card mt-3 p-3">
+              {template === "daily-slots" ? (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => shiftDay(-1)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white transition-colors hover:bg-[#F9FAFB]"
+                    aria-label="Previous day"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-[#14532D]" />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <CoachDatePicker value={date} onChange={setDate} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => shiftDay(1)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white transition-colors hover:bg-[#F9FAFB]"
+                    aria-label="Next day"
+                  >
+                    <ChevronRight className="h-5 w-5 text-[#14532D]" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => shiftDay(-7)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white"
+                    aria-label="Previous week"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-[#14532D]" />
+                  </button>
+                  <div className="min-w-0 flex-1 text-center">
+                    <p className="font-heading text-sm font-semibold text-[#14532D]">{weekLabel}</p>
+                    <p className="text-[11px] text-[#6B7280]">Monday – Sunday</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => shiftDay(7)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white"
+                    aria-label="Next week"
+                  >
+                    <ChevronRight className="h-5 w-5 text-[#14532D]" />
+                  </button>
+                </div>
+              )}
+
+              {template === "daily-slots" && !isToday(parsedDate) ? (
+                <button
+                  type="button"
+                  onClick={() => setDate(todayKey)}
+                  className="mt-3 w-full rounded-full bg-[#E5EFE8] py-2 text-xs font-semibold text-[#3D5C47] transition-colors hover:bg-[#D5E5D8]"
+                >
+                  Jump to today
+                </button>
+              ) : isWeekTemplate && format(weekStart, "yyyy-MM-dd") !== thisWeekStart ? (
+                <button
+                  type="button"
+                  onClick={() => setDate(todayKey)}
+                  className="mt-3 w-full rounded-full bg-[#E5EFE8] py-2 text-xs font-semibold text-[#3D5C47] transition-colors hover:bg-[#D5E5D8]"
+                >
+                  Jump to this week
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-center text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+              Preview
+            </p>
+            <div className="mt-3">
+              {template === "daily-slots" ? (
+                <SocialStoryDailyCard
+                  coach={coach}
+                  date={date}
+                  day={dailyDay}
+                  profileUrl={profileUrl}
+                  exportRef={exportRef}
+                  previewWidth={previewWidth}
+                />
+              ) : (
+                <SocialStoryCalendarCard
+                  coach={coach}
+                  week={calendarWeek}
+                  profileUrl={profileUrl}
+                  exportRef={exportRef}
+                  previewWidth={previewWidth}
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2 pb-2">
+            <CoachButton
+              type="button"
+              className="w-full py-3.5 text-sm"
+              loading={saving}
+              loadingLabel="Saving…"
+              onClick={handleDownload}
+            >
+              <Download className="h-4 w-4" />
+              Save image
+            </CoachButton>
+            <CoachButton
+              type="button"
+              variant="outline"
+              className="w-full text-sm"
+              disabled={saving}
+              onClick={handleShare}
+            >
+              <Share2 className="h-4 w-4" />
+              Share
+            </CoachButton>
+          </div>
+        </div>
+      )}
     </CoachPageShell>
   );
 }
