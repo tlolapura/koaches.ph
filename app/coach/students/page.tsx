@@ -27,6 +27,7 @@ import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/Coac
 import { CoachStudentListSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { ProgressCardReadySection } from "@/components/koaches/coach/ProgressCardReadySection";
+import { getStudentSessionRatings } from "@/lib/koaches/session-progress";
 import { GenerateProgressCardSheet } from "@/components/koaches/coach/GenerateProgressCardSheet";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { crudToast } from "@/lib/koaches/crud-toast";
@@ -447,6 +448,7 @@ export default function StudentsPage() {
           onClose={() => setGenerateTarget(null)}
           session={activeCandidate.session}
           participantId={activeCandidate.participantId}
+          ratings={getStudentSessionRatings(activeCandidate.session, activeCandidate.studentId)}
           onGenerated={() => setGenerateTarget(null)}
         />
       )}

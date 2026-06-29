@@ -70,6 +70,8 @@ export async function createProgramAction(coachId: string, draft: ProgramDraft) 
     source: draft.source,
     targetLevel: draft.targetLevel,
     customSkillIds: draft.customSkillIds,
+    customSkills: draft.customSkills,
+    skillLabelOverrides: draft.skillLabelOverrides,
     enrolledStudentIds: [],
     isActive: true,
   };
@@ -114,4 +116,31 @@ export async function enrollStudentInProgramAction(programId: string, studentId:
   revalidatePath(`/coach/programs/${programId}`);
   revalidatePath(`/coach/students/${studentId}`);
   revalidatePath("/coach/students");
+}
+
+export async function updateProgramSkillsAction(
+  programId: string,
+  config: {
+    rubricId: Program["rubricId"];
+    customSkillIds?: string[];
+    customSkills?: Program["customSkills"];
+    skillLabelOverrides?: Record<string, string>;
+  }
+) {
+  await assertCoachOwnsProgram(programId);
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("programs")
+    .update({
+      rubric_id: config.rubricId,
+      skill_template_id: config.rubricId,
+      custom_skill_ids: config.customSkillIds ?? null,
+      custom_skills: config.customSkills ?? [],
+      skill_label_overrides: config.skillLabelOverrides ?? {},
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", programId);
+  if (error) throw error;
+  revalidatePath("/coach/programs");
+  revalidatePath(`/coach/programs/${programId}`);
 }

@@ -1,4 +1,4 @@
-import type { ProgramPreset, ProgramPresetId, SkillRubric, SkillRubricId } from "./types";
+import type { ProgramPreset, ProgramPresetId, SkillDefinition, SkillRubric, SkillRubricId } from "./types";
 import {
   ALL_SKILL_CATEGORIES,
   DEFAULT_SKILLS,
@@ -145,10 +145,13 @@ export type ProgramDraft = {
   sessionCount: number;
   targetLevel: string;
   customSkillIds?: string[];
+  customSkills?: SkillDefinition[];
+  skillLabelOverrides?: Record<string, string>;
 };
 
 export function draftFromPreset(presetId: ProgramPresetId): ProgramDraft {
   const preset = getProgramPreset(presetId)!;
+  const customSkillIds = getSkillsForRubric(preset.rubricId).map((skill) => skill.id);
   return {
     source: "preset",
     presetId,
@@ -158,11 +161,15 @@ export function draftFromPreset(presetId: ProgramPresetId): ProgramDraft {
     price: preset.price,
     sessionCount: preset.sessionCount,
     targetLevel: preset.targetLevel,
+    customSkillIds,
+    customSkills: [],
+    skillLabelOverrides: {},
   };
 }
 
 export function draftFromRubric(rubricId: Exclude<SkillRubricId, "custom">): ProgramDraft {
   const rubric = SKILL_RUBRICS[rubricId];
+  const customSkillIds = getSkillsForRubric(rubricId).map((skill) => skill.id);
   return {
     source: "rubric",
     rubricId,
@@ -171,6 +178,9 @@ export function draftFromRubric(rubricId: Exclude<SkillRubricId, "custom">): Pro
     price: rubricId === "beginner" ? 2500 : rubricId === "intermediate" ? 5000 : 8000,
     sessionCount: rubricId === "beginner" ? 4 : rubricId === "intermediate" ? 8 : 12,
     targetLevel: rubric.duprRange,
+    customSkillIds,
+    customSkills: [],
+    skillLabelOverrides: {},
   };
 }
 
@@ -185,5 +195,7 @@ export function draftCustom(): ProgramDraft {
     sessionCount: 4,
     targetLevel: "2.0 to 3.0",
     customSkillIds: beginnerSkills,
+    customSkills: [],
+    skillLabelOverrides: {},
   };
 }

@@ -21,6 +21,7 @@ import {
 import { CoachDetailSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { ScheduleProgramSessionsTrigger } from "@/components/koaches/coach/ScheduleProgramSessionsTrigger";
 import { AssignStudentSheet } from "@/components/koaches/coach/AssignStudentSheet";
+import { ProgramSkillsEditSheet } from "@/components/koaches/coach/ProgramSkillsEditSheet";
 import { formatProgramBundleSummary } from "@/lib/koaches/program-pricing";
 import { useCoachProgram } from "@/hooks/useCoachPrograms";
 import { useCoachStudents } from "@/hooks/useCoachStudents";
@@ -32,6 +33,7 @@ export default function ProgramDetailPage({
 }) {
   const { id } = use(params);
   const [assignOpen, setAssignOpen] = useState(false);
+  const [skillsOpen, setSkillsOpen] = useState(false);
   const { program, loading, refresh } = useCoachProgram(id);
   const { students: rosterStudents } = useCoachStudents(program?.coachId ?? "", true);
 
@@ -68,9 +70,24 @@ export default function ProgramDetailPage({
       </div>
 
       <section className="mt-6">
-        <CoachSectionTitle size="sm">Skill rubric</CoachSectionTitle>
+        <div className="flex items-center justify-between gap-3">
+          <CoachSectionTitle size="sm">Skill rubric</CoachSectionTitle>
+          <button
+            type="button"
+            onClick={() => setSkillsOpen(true)}
+            className="text-xs font-semibold text-[#4F8FF7]"
+          >
+            Edit skills →
+          </button>
+        </div>
         <CoachSectionHint>Students in this program are rated on these skills each session</CoachSectionHint>
-        <SkillRubricPreview rubricId={rubricId} customSkillIds={program.customSkillIds} className="mt-3" />
+        <SkillRubricPreview
+          rubricId={rubricId}
+          customSkillIds={program.customSkillIds}
+          customSkills={program.customSkills}
+          skillLabelOverrides={program.skillLabelOverrides}
+          className="mt-3"
+        />
       </section>
 
       <ScheduleProgramSessionsTrigger program={program} />
@@ -103,6 +120,13 @@ export default function ProgramDetailPage({
         onClose={() => setAssignOpen(false)}
         program={program}
         onAssigned={refresh}
+      />
+
+      <ProgramSkillsEditSheet
+        open={skillsOpen}
+        onClose={() => setSkillsOpen(false)}
+        program={program}
+        onSaved={refresh}
       />
     </CoachPageShell>
   );

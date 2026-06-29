@@ -7,6 +7,7 @@ import {
   type ParticipantRatings,
   resolveParticipantProgress,
 } from "@/lib/koaches/session-progress";
+import { getSessionParticipants } from "@/lib/koaches/session-participants";
 import { updateSessionProgressAction } from "@/lib/koaches/actions/sessions";
 import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
 
@@ -37,9 +38,15 @@ export function useParticipantProgress(session: Session, participantId: string) 
       const entry = buildParticipantProgressEntry(participantId, next);
       const existing = session.participantProgress ?? [];
       const merged = existing.filter((p) => p.participantId !== participantId);
+      const participants = getSessionParticipants(session);
+      const isSinglePlayer = participants.length === 1 && participants[0].id === participantId;
+
       const updatedSession: Session = {
         ...session,
         participantProgress: [...merged, entry],
+        ...(isSinglePlayer
+          ? { ratingsBefore: next.ratingsBefore, ratingsAfter: next.ratingsAfter }
+          : {}),
       };
       await updateSessionProgressAction(session.id, updatedSession);
       setRatingsState(next);

@@ -4,7 +4,36 @@ import { revalidatePath } from "next/cache";
 import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { ProgressCard } from "@/lib/koaches/types";
-import { mapProgressCard, type DbProgressCard } from "@/lib/koaches/db/mappers";
+import { mapProgressCard, mapSession, type DbProgressCard, type DbSession } from "@/lib/koaches/db/mappers";
+import { applySessionRatingsToProgressCard } from "@/lib/koaches/progress-cards";
+import { progressCardCoachName } from "@/lib/koaches/person-name";
+
+async function resolveCoachNameForCard(
+  supabase: ReturnType<typeof createServiceClient>,
+  card: ProgressCard
+): Promise<ProgressCard> {
+  const stored = progressCardCoachName(card.coachName);
+  if (stored !== "Coach") {
+    return { ...card, coachName: stored };
+  }
+
+  const { data: coachRow } = await supabase
+    .from("coaches")
+    .select("name, first_name, last_name")
+    .eq("id", card.coachId)
+    .maybeSingle();
+
+  if (!coachRow) return card;
+
+  return {
+    ...card,
+    coachName: progressCardCoachName({
+      firstName: coachRow.first_name ?? "",
+      lastName: coachRow.last_name ?? "",
+      name: coachRow.name,
+    }),
+  };
+}
 
 export async function fetchProgressCardsAction(coachId: string): Promise<ProgressCard[]> {
   await assertCoachAccess(coachId);
@@ -23,7 +52,22 @@ export async function fetchProgressCardByIdAction(id: string): Promise<ProgressC
   const supabase = createServiceClient();
   const { data, error } = await supabase.from("progress_cards").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
-  return data ? mapProgressCard(data as DbProgressCard) : null;
+  if (!data) return null;
+
+  let card = mapProgressCard(data as DbProgressCard);
+
+  if (card.sessionId) {
+    const { data: sessionRow } = await supabase
+      .from("sessions")
+      .select("*")
+      .eq("id", card.sessionId)
+      .maybeSingle();
+    if (sessionRow) {
+      card = applySessionRatingsToProgressCard(card, mapSession(sessionRow as DbSession));
+    }
+  }
+
+  return resolveCoachNameForCard(supabase, card);
 }
 
 export type SaveProgressCardResult =

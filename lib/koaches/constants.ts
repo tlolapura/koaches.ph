@@ -121,6 +121,62 @@ export function getSkillsForRubric(rubricId: SkillRubricId | "all-around", custo
   return DEFAULT_SKILLS.filter((s) => cats.includes(s.category));
 }
 
+export type SkillRubricConfig = {
+  rubricId: SkillRubricId;
+  customSkillIds?: string[];
+  customSkills?: SkillDefinition[];
+  skillLabelOverrides?: Record<string, string>;
+};
+
+export function isCoachCustomSkillId(id: string): boolean {
+  return id.startsWith("custom-");
+}
+
+export function newCustomSkillId(): string {
+  return `custom-${crypto.randomUUID().slice(0, 8)}`;
+}
+
+/** Resolve the skill list for ratings — catalog picks, coach-owned skills, and label overrides */
+export function resolveSkills(config: SkillRubricConfig): SkillDefinition[] {
+  const effectiveRubricId =
+    config.rubricId === "custom" || config.customSkillIds?.length ? "custom" : config.rubricId;
+
+  const selectedIds =
+    config.customSkillIds?.length
+      ? config.customSkillIds
+      : getSkillsForRubric(effectiveRubricId).map((skill) => skill.id);
+
+  const customById = new Map((config.customSkills ?? []).map((skill) => [skill.id, skill]));
+  const overrides = config.skillLabelOverrides ?? {};
+
+  return selectedIds
+    .map((id) => {
+      const owned = customById.get(id);
+      if (owned) return owned;
+
+      const catalog = DEFAULT_SKILLS.find((skill) => skill.id === id);
+      if (!catalog) return null;
+
+      const label = overrides[id]?.trim();
+      return label ? { ...catalog, name: label } : catalog;
+    })
+    .filter((skill): skill is SkillDefinition => skill !== null);
+}
+
+export function resolveSkillDefinition(
+  skillId: string,
+  config: Pick<SkillRubricConfig, "customSkills" | "skillLabelOverrides">
+): SkillDefinition | undefined {
+  const owned = config.customSkills?.find((skill) => skill.id === skillId);
+  if (owned) return owned;
+
+  const catalog = DEFAULT_SKILLS.find((skill) => skill.id === skillId);
+  if (!catalog) return undefined;
+
+  const label = config.skillLabelOverrides?.[skillId]?.trim();
+  return label ? { ...catalog, name: label } : catalog;
+}
+
 export function categoryAverages(ratings: { category: SkillCategory; score: number }[]) {
   const sums: Partial<Record<SkillCategory, { total: number; count: number }>> = {};
   for (const r of ratings) {

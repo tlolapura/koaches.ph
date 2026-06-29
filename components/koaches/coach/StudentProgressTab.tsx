@@ -10,6 +10,7 @@ import { useStudentProgressHistory } from "@/hooks/useStudentProgressHistory";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { SKILL_RUBRICS, resolveProgramRubric } from "@/lib/koaches/program-templates";
 import type { ParticipantRatings } from "@/lib/koaches/session-progress";
+import { getStudentSessionRatings } from "@/lib/koaches/session-progress";
 import {
   buildSkillChanges,
   journeyHeadline,
@@ -152,6 +153,7 @@ export function StudentProgressTab({ student, upcomingSessionId }: StudentProgre
             onClose={() => setGenerateTarget(null)}
             session={activeCandidate.session}
             participantId={activeCandidate.participantId}
+            ratings={getStudentSessionRatings(activeCandidate.session, student.id)}
             onGenerated={() => setGenerateTarget(null)}
           />
         )}
@@ -276,6 +278,7 @@ export function StudentProgressTab({ student, upcomingSessionId }: StudentProgre
           onClose={() => setGenerateTarget(null)}
           session={activeCandidate.session}
           participantId={activeCandidate.participantId}
+          ratings={getStudentSessionRatings(activeCandidate.session, student.id)}
           onGenerated={() => setGenerateTarget(null)}
         />
       )}

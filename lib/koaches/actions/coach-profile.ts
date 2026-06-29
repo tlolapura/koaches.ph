@@ -23,7 +23,17 @@ export async function updateCoachProfileAction(
   patch: Partial<
     Pick<
       CoachProfile,
-      "bio" | "specialization" | "skillTemplateId" | "coachingLevels" | "sessionPricing" | "mobile" | "instagram" | "facebook"
+      | "bio"
+      | "specialization"
+      | "skillTemplateId"
+      | "customSkillIds"
+      | "customSkills"
+      | "skillLabelOverrides"
+      | "coachingLevels"
+      | "sessionPricing"
+      | "mobile"
+      | "instagram"
+      | "facebook"
     >
   >
 ) {
@@ -33,6 +43,9 @@ export async function updateCoachProfileAction(
   if (patch.bio !== undefined) row.bio = patch.bio;
   if (patch.specialization !== undefined) row.specialization = patch.specialization;
   if (patch.skillTemplateId !== undefined) row.skill_template_id = patch.skillTemplateId;
+  if (patch.customSkillIds !== undefined) row.custom_skill_ids = patch.customSkillIds;
+  if (patch.customSkills !== undefined) row.custom_skills = patch.customSkills;
+  if (patch.skillLabelOverrides !== undefined) row.skill_label_overrides = patch.skillLabelOverrides;
   if (patch.coachingLevels !== undefined) {
     row.coaching_levels = patch.coachingLevels;
     row.skill_template_id = primarySkillTemplateFromLevels(patch.coachingLevels);
@@ -55,6 +68,7 @@ export async function updateCoachProfileAction(
   const { error } = await supabase.from("coaches").update(row).eq("id", coachId);
   if (error) throw error;
   revalidatePath("/coach/profile");
+  revalidatePath("/coach/programs");
   if (existing?.slug) {
     revalidatePath(buildPublicCoachPath(existing.slug));
   }
@@ -80,6 +94,26 @@ export async function updateCoachSkillTemplateAction(coachId: string, skillTempl
   const levels: CoachingLevelId[] =
     skillTemplateId === "custom" ? ["intermediate"] : [skillTemplateId];
   return updateCoachProfileAction(coachId, { skillTemplateId, coachingLevels: levels });
+}
+
+export async function updateDropInSkillsAction(
+  coachId: string,
+  config: {
+    skillTemplateId: SkillRubricId;
+    customSkillIds: string[];
+    customSkills: import("@/lib/koaches/types").SkillDefinition[];
+    skillLabelOverrides: Record<string, string>;
+  }
+) {
+  if (config.customSkillIds.length === 0) {
+    throw new Error("Pick at least one skill for drop-in sessions.");
+  }
+  return updateCoachProfileAction(coachId, {
+    skillTemplateId: config.customSkillIds.length ? "custom" : config.skillTemplateId,
+    customSkillIds: config.customSkillIds,
+    customSkills: config.customSkills,
+    skillLabelOverrides: config.skillLabelOverrides,
+  });
 }
 
 export async function updateCoachContactAction(

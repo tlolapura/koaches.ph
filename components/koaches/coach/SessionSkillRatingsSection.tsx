@@ -8,10 +8,11 @@ import {
   formatParticipantProgramLabel,
   resolveParticipantProgramContext,
 } from "@/lib/koaches/participant-program";
-import { hasRatingsForCard } from "@/lib/koaches/session-progress";
+import { filterRatedSkills, hasRatingsForCard } from "@/lib/koaches/session-progress";
 import { findProgressCardForSession } from "@/lib/koaches/progress-cards";
 import { useParticipantProgress } from "@/hooks/useParticipantProgress";
 import { useProgressCards } from "@/hooks/useProgressCards";
+import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { SkillRatingPanel } from "@/components/koaches/coach/SkillRatingPanel";
 import { GenerateProgressCardSheet } from "@/components/koaches/coach/GenerateProgressCardSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
@@ -24,15 +25,17 @@ type SessionSkillRatingsSectionProps = {
 function ParticipantProgressPanel({
   session,
   participantId,
+  coachLookup,
 }: {
   session: Session;
   participantId: string;
+  coachLookup?: Parameters<typeof resolveParticipantProgramContext>[2];
 }) {
   const participants = getSessionParticipants(session);
   const participant = participants.find((p) => p.id === participantId)!;
-  const ctx = resolveParticipantProgramContext(participant, session);
+  const ctx = resolveParticipantProgramContext(participant, session, coachLookup);
   const { ratings, saveRatings } = useParticipantProgress(session, participant.id);
-  const { cards } = useProgressCards(session.coachId);
+  const { cards, saveCard } = useProgressCards(session.coachId);
   const { showToast } = useCoachToast();
   const [generateOpen, setGenerateOpen] = useState(false);
 
@@ -70,11 +73,22 @@ function ParticipantProgressPanel({
         initialAfter={ratings.ratingsAfter}
         rubricId={ctx.rubricId}
         customSkillIds={ctx.customSkillIds}
+        customSkills={ctx.customSkills}
+        skillLabelOverrides={ctx.skillLabelOverrides}
         sessionNumber={ctx.sessionNumber}
         totalSessions={ctx.totalSessions}
         onSave={async (before, after) => {
           await saveRatings({ ratingsBefore: before, ratingsAfter: after });
-          showToast(`Ratings saved for ${participant.name}`);
+          if (existingCard) {
+            await saveCard({
+              ...existingCard,
+              ratingsBefore: filterRatedSkills(before),
+              ratingsAfter: filterRatedSkills(after),
+            });
+            showToast(`Ratings and progress card updated for ${participant.name}`);
+          } else {
+            showToast(`Ratings saved for ${participant.name}`);
+          }
         }}
       />
 
@@ -104,6 +118,7 @@ function ParticipantProgressPanel({
         onClose={() => setGenerateOpen(false)}
         session={session}
         participantId={participant.id}
+        ratings={ratings}
       />
     </div>
   );
@@ -112,10 +127,32 @@ function ParticipantProgressPanel({
 export function SessionSkillRatingsSection({ session }: SessionSkillRatingsSectionProps) {
   const participants = getSessionParticipants(session);
   const [activeId, setActiveId] = useState(participants[0]?.id ?? "");
+  const { coach } = useCoachProfile(session.coachId);
+
+  const coachLookup = useMemo(
+    () =>
+      coach
+        ? {
+            coach: {
+              skillTemplateId: coach.skillTemplateId,
+              customSkillIds: coach.customSkillIds,
+              customSkills: coach.customSkills,
+              skillLabelOverrides: coach.skillLabelOverrides,
+            },
+          }
+        : undefined,
+    [coach]
+  );
 
   const contexts = useMemo(
-    () => new Map(participants.map((p) => [p.id, resolveParticipantProgramContext(p, session)])),
-    [participants, session]
+    () =>
+      new Map(
+        participants.map((p) => [
+          p.id,
+          resolveParticipantProgramContext(p, session, coachLookup),
+        ])
+      ),
+    [participants, session, coachLookup]
   );
 
   if (participants.length === 0) return null;
@@ -124,11 +161,11 @@ export function SessionSkillRatingsSection({ session }: SessionSkillRatingsSecti
 
   return (
     <div className="mt-2">
-      <h2 className="font-heading text-lg font-semibold">Skill ratings</h2>
+      <h2 className="font-heading text-lg font-semibold">Rate skills</h2>
       <p className="mt-1 text-sm text-[#6B7280]">
         {participants.length > 1
-          ? "Rate each player during this session."
-          : "Rate Start and Now for this session."}
+          ? "Pick a player, then tap before and after."
+          : "Tap before and after for each skill you covered."}
       </p>
 
       {participants.length > 1 && (
@@ -163,7 +200,11 @@ export function SessionSkillRatingsSection({ session }: SessionSkillRatingsSecti
       )}
 
       <div className="mt-4">
-        <ParticipantProgressPanel session={session} participantId={active.id} />
+        <ParticipantProgressPanel
+          session={session}
+          participantId={active.id}
+          coachLookup={coachLookup}
+        />
       </div>
     </div>
   );

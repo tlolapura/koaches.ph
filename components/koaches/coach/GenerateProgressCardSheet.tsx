@@ -4,13 +4,15 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { PartyPopper } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
-import { resolveParticipantProgress } from "@/lib/koaches/session-progress";
+import { resolveParticipantProgress, hasRatingsForCard, type ParticipantRatings } from "@/lib/koaches/session-progress";
 import {
   buildProgressCardDraft,
   buildProgressCardUrl,
   countSkillImprovements,
+  getProgressCardRatings,
 } from "@/lib/koaches/progress-cards";
 import { useProgressCards } from "@/hooks/useProgressCards";
+import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { getSessionParticipants } from "@/lib/koaches/session-participants";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
@@ -23,6 +25,8 @@ type GenerateProgressCardSheetProps = {
   onClose: () => void;
   session: Session;
   participantId: string;
+  /** Saved ratings — use when session query may be stale after a recent save */
+  ratings?: ParticipantRatings;
   onGenerated?: (cardId: string) => void;
 };
 
@@ -31,20 +35,25 @@ export function GenerateProgressCardSheet({
   onClose,
   session,
   participantId,
+  ratings: ratingsOverride,
   onGenerated,
 }: GenerateProgressCardSheetProps) {
   const { showToast } = useCoachToast();
   const { saveCard } = useProgressCards(session.coachId);
+  const { coach } = useCoachProfile(session.coachId);
   const [step, setStep] = useState(1);
   const [message, setMessage] = useState("");
   const [generatedId, setGeneratedId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
   const participant = getSessionParticipants(session).find((p) => p.id === participantId);
-  const ratings = resolveParticipantProgress(session, participantId);
+  const ratings =
+    ratingsOverride && hasRatingsForCard(ratingsOverride)
+      ? ratingsOverride
+      : resolveParticipantProgress(session, participantId);
 
   const draft = useMemo(() => {
-    if (!participant || !ratings.ratingsBefore?.length || !ratings.ratingsAfter?.length) {
+    if (!participant || !hasRatingsForCard(ratings)) {
       return null;
     }
     return buildProgressCardDraft({
@@ -52,8 +61,18 @@ export function GenerateProgressCardSheet({
       participantId,
       coachMessage: message.trim() || "Great work today — keep it up!",
       ratings,
+      lookup: coach
+        ? {
+            coach: {
+              name: coach.name,
+              firstName: coach.firstName,
+              lastName: coach.lastName,
+              skillTemplateId: coach.skillTemplateId,
+            },
+          }
+        : undefined,
     });
-  }, [session, participantId, participant, ratings, message]);
+  }, [session, participantId, participant, ratings, message, coach]);
 
   useEffect(() => {
     if (!open) return;
@@ -80,7 +99,8 @@ export function GenerateProgressCardSheet({
 
   if (!participant || !draft) return null;
 
-  const improved = countSkillImprovements(draft.ratingsBefore, draft.ratingsAfter);
+  const { before: cardBefore, after: cardAfter } = getProgressCardRatings(draft);
+  const improved = countSkillImprovements(cardBefore, cardAfter);
 
   return (
     <CoachBottomSheet
@@ -148,10 +168,10 @@ export function GenerateProgressCardSheet({
     >
       {step === 1 && (
         <div className="space-y-4">
-          <RadarChart before={draft.ratingsBefore} after={draft.ratingsAfter} height={240} compact />
-          <SkillComparisonTable before={draft.ratingsBefore} after={draft.ratingsAfter} />
+          <RadarChart before={cardBefore} after={cardAfter} height={240} compact />
+          <SkillComparisonTable before={cardBefore} after={cardAfter} />
           <p className="text-center text-sm font-medium text-[#374151]">
-            Improved in {improved} of {draft.ratingsAfter.length} skills
+            Improved in {improved} of {cardAfter.length} skills covered
           </p>
         </div>
       )}
@@ -180,7 +200,7 @@ export function GenerateProgressCardSheet({
             {draft.programOrSession}
           </span>
           <div className="mt-4">
-            <RadarChart before={draft.ratingsBefore} after={draft.ratingsAfter} height={200} compact />
+            <RadarChart before={cardBefore} after={cardAfter} height={200} compact />
           </div>
           <blockquote className="mt-4 border-l-4 border-[#14532D] pl-3 text-left">
             <p className="text-sm italic text-[#14532D]">

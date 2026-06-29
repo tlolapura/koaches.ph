@@ -1,5 +1,6 @@
 import type { Session, SkillRating } from "./types";
 import {
+  filterRatedSkills,
   getStudentSessionRatings,
   hasRatingsForCard,
   type ParticipantRatings,
@@ -30,13 +31,16 @@ export function buildStudentProgressHistory(
 }
 
 export function averageSkillScore(ratings?: SkillRating[]): number {
-  if (!ratings?.length) return 0;
-  return ratings.reduce((sum, r) => sum + r.score, 0) / ratings.length;
+  const rated = filterRatedSkills(ratings ?? []);
+  if (!rated.length) return 0;
+  return rated.reduce((sum, r) => sum + r.score, 0) / rated.length;
 }
 
 export function countImprovedSkills(before: SkillRating[], after: SkillRating[]): number {
   return before.filter((b) => {
+    if (b.skipped) return false;
     const a = after.find((x) => x.skillId === b.skillId);
+    if (a?.skipped) return false;
     return (a?.score ?? 0) > b.score;
   }).length;
 }

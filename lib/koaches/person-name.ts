@@ -34,6 +34,23 @@ export function coachGreetingLabel(
   return `Coach ${first}`;
 }
 
+/** Name shown on progress cards and public shares */
+export function progressCardCoachName(
+  coach: { firstName?: string; lastName?: string; name?: string } | string | null | undefined
+): string {
+  if (!coach) return "Coach";
+  if (typeof coach === "string") {
+    const trimmed = stripCoachTitle(coach).trim();
+    return trimmed || "Coach";
+  }
+  const display = personDisplayName({
+    firstName: coach.firstName ?? "",
+    lastName: coach.lastName,
+    name: coach.name,
+  });
+  return stripCoachTitle(display).trim() || "Coach";
+}
+
 export function coachFirstName(
   coach: { firstName: string; lastName?: string; name?: string }
 ): string {

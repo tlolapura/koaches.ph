@@ -1,16 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, Check, TrendingUp } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
   ALL_SKILL_CATEGORIES,
-  categoryAverages,
   getSkillsForRubric,
+  resolveSkills,
   SKILL_CATEGORY_LABELS,
 } from "@/lib/koaches/constants";
+import { SKILL_SCORE_LABELS, scoreLabel } from "@/lib/koaches/skill-progress-display";
 import type { SkillCategory, SkillRating, SkillRubricId } from "@/lib/koaches/types";
-import { RadarChart } from "@/components/koaches/RadarChart";
 import { cn } from "@/lib/utils";
 
 type SkillRatingPanelProps = {
@@ -20,14 +20,21 @@ type SkillRatingPanelProps = {
   /** @deprecated Use rubricId */
   templateId?: SkillRubricId;
   customSkillIds?: string[];
+  customSkills?: import("@/lib/koaches/types").SkillDefinition[];
+  skillLabelOverrides?: Record<string, string>;
   sessionNumber?: number;
   totalSessions?: number;
   phaseLabel?: string;
   onSave?: (before: SkillRating[], after: SkillRating[]) => void | Promise<void>;
 };
 
-function defaultRatings(rubricId: SkillRubricId, customSkillIds?: string[]): SkillRating[] {
-  return getSkillsForRubric(rubricId, customSkillIds).map((s) => ({
+function defaultRatings(
+  rubricId: SkillRubricId,
+  customSkillIds?: string[],
+  customSkills?: import("@/lib/koaches/types").SkillDefinition[],
+  skillLabelOverrides?: Record<string, string>
+): SkillRating[] {
+  return resolveSkills({ rubricId, customSkillIds, customSkills, skillLabelOverrides }).map((s) => ({
     skillId: s.id,
     skillName: s.name,
     category: s.category,
@@ -35,38 +42,54 @@ function defaultRatings(rubricId: SkillRubricId, customSkillIds?: string[]): Ski
   }));
 }
 
-function ScorePills({
+function ScorePicker({
   value,
   onChange,
   tone,
+  label,
 }: {
   value: number;
   onChange: (score: number) => void;
-  tone: "start" | "now";
+  tone: "start" | "after";
+  label: string;
 }) {
+  const selected =
+    tone === "start"
+      ? "border-[#14532D] bg-[#14532D] text-white"
+      : "border-[#16A34A] bg-[#16A34A] text-white";
+  const idle =
+    tone === "start"
+      ? "border-[#D1D5DB] bg-white text-[#374151] hover:border-[#14532D]/50 hover:bg-[#F0FDF4]"
+      : "border-[#D1D5DB] bg-white text-[#374151] hover:border-[#16A34A]/50 hover:bg-[#F0FDF4]";
+
   return (
-    <div className="flex gap-1" role="group">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          type="button"
-          aria-label={`Score ${n}`}
-          aria-pressed={value === n}
-          onClick={() => onChange(n)}
-          className={cn(
-            "h-9 min-w-[2rem] flex-1 rounded-lg text-sm font-bold transition-colors max-w-[2.75rem]",
-            tone === "start"
-              ? value === n
-                ? "bg-[#14532D] text-white shadow-sm"
-                : "border border-[#14532D]/25 bg-white text-[#14532D]"
-              : value === n
-                ? "bg-[#16A34A] text-white shadow-sm"
-                : "border border-[#E5E7EB] bg-white text-[#9CA3AF]"
-          )}
-        >
-          {n}
-        </button>
-      ))}
+    <div>
+      <p
+        className={cn(
+          "text-xs font-semibold",
+          tone === "start" ? "text-[#6B7280]" : "text-[#166534]"
+        )}
+      >
+        {label}
+      </p>
+      <div className="mt-1.5 flex gap-1" role="group" aria-label={label}>
+        {([1, 2, 3, 4, 5] as const).map((n) => (
+          <button
+            key={n}
+            type="button"
+            aria-label={`${n}, ${SKILL_SCORE_LABELS[n]}`}
+            aria-pressed={value === n}
+            onClick={() => onChange(n)}
+            className={cn(
+              "flex h-11 min-w-0 flex-1 items-center justify-center rounded-lg border-2 text-sm font-semibold transition-all active:scale-[0.98]",
+              value === n ? selected : idle
+            )}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      <p className="mt-1 text-[11px] font-medium text-[#9CA3AF]">{scoreLabel(value)}</p>
     </div>
   );
 }
@@ -75,46 +98,72 @@ function SkillRatingRow({
   skillName,
   beforeScore,
   afterScore,
+  skipped,
   onBefore,
   onAfter,
+  onToggleSkipped,
 }: {
   skillName: string;
   beforeScore: number;
   afterScore: number;
+  skipped: boolean;
   onBefore: (n: number) => void;
   onAfter: (n: number) => void;
+  onToggleSkipped: (skipped: boolean) => void;
 }) {
   const delta = afterScore - beforeScore;
 
+  if (skipped) {
+    return (
+      <div className="rounded-xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-3.5">
+        <p className="text-sm font-medium text-[#9CA3AF]">{skillName}</p>
+        <button
+          type="button"
+          onClick={() => onToggleSkipped(false)}
+          className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-[#BFDBFE] bg-white px-4 text-sm font-semibold text-[#2563EB] active:bg-[#EFF6FF]"
+        >
+          Rate this skill
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="border-b border-[#F3F4F6] py-3 last:border-0">
+    <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] p-3.5">
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-[#111827] leading-snug">{skillName}</p>
+        <p className="text-sm font-medium leading-snug text-[#111827]">{skillName}</p>
         {delta !== 0 && (
           <span
             className={cn(
               "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold tabular-nums",
-              delta > 0 ? "bg-[#E5EFE8] text-[#3D5C47]" : "bg-[#FEE2E2] text-[#B91C1C]"
+              delta > 0 ? "bg-[#DCFCE7] text-[#166534]" : "bg-[#FEE2E2] text-[#B91C1C]"
             )}
           >
             {delta > 0 ? `+${delta}` : delta}
           </span>
         )}
       </div>
-      <div className="mt-2.5 space-y-2">
-        <div className="flex items-center gap-2">
-          <span className="w-9 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-            Start
-          </span>
-          <ScorePills value={beforeScore} onChange={onBefore} tone="start" />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-9 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-[#4F8FF7]">
-            Now
-          </span>
-          <ScorePills value={afterScore} onChange={onAfter} tone="now" />
-        </div>
+      <div className="mt-3 space-y-3">
+        <ScorePicker
+          value={beforeScore}
+          onChange={onBefore}
+          tone="start"
+          label="Before"
+        />
+        <ScorePicker
+          value={afterScore}
+          onChange={onAfter}
+          tone="after"
+          label="After"
+        />
       </div>
+      <button
+        type="button"
+        onClick={() => onToggleSkipped(true)}
+        className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#6B7280] active:bg-[#F3F4F6]"
+      >
+        Didn&apos;t cover this session
+      </button>
     </div>
   );
 }
@@ -125,61 +174,40 @@ export function SkillRatingPanel({
   rubricId,
   templateId,
   customSkillIds,
-  sessionNumber,
-  totalSessions,
-  phaseLabel,
+  customSkills,
+  skillLabelOverrides,
   onSave,
 }: SkillRatingPanelProps) {
   const activeRubric = rubricId ?? templateId ?? "intermediate";
-  const [before, setBefore] = useState<SkillRating[]>(
-    initialBefore ?? defaultRatings(activeRubric, customSkillIds)
+  const skillConfig = useMemo(
+    () => ({ rubricId: activeRubric, customSkillIds, customSkills, skillLabelOverrides }),
+    [activeRubric, customSkillIds, customSkills, skillLabelOverrides]
   );
-  const [after, setAfter] = useState<SkillRating[]>(
-    initialAfter ?? defaultRatings(activeRubric, customSkillIds)
+  const [before, setBefore] = useState<SkillRating[]>(() =>
+    initialBefore?.length
+      ? initialBefore
+      : defaultRatings(activeRubric, customSkillIds, customSkills, skillLabelOverrides)
+  );
+  const [after, setAfter] = useState<SkillRating[]>(() =>
+    initialAfter?.length
+      ? initialAfter
+      : defaultRatings(activeRubric, customSkillIds, customSkills, skillLabelOverrides)
   );
   const [saving, setSaving] = useState(false);
 
   const visibleCategories = useMemo(() => {
-    const cats = getSkillsForRubric(activeRubric, customSkillIds).map((s) => s.category);
-    return [...new Set(cats)];
-  }, [activeRubric, customSkillIds]);
+    const cats = resolveSkills(skillConfig).map((s) => s.category);
+    return ALL_SKILL_CATEGORIES.filter((c) => cats.includes(c));
+  }, [skillConfig]);
 
-  const [activeCategory, setActiveCategory] = useState<SkillCategory>(
-    () => visibleCategories[0] ?? "fundamentals"
+  const skillsByCategory = useMemo(
+    () =>
+      visibleCategories.map((category) => ({
+        category,
+        skills: before.filter((s) => s.category === category),
+      })),
+    [before, visibleCategories]
   );
-
-  const isDay1 = sessionNumber === 1;
-  const isFinal = totalSessions != null && sessionNumber === totalSessions;
-  const sessionHint = isDay1
-    ? "Start = baseline before you coach · Now = after today"
-    : isFinal
-      ? "Start = where they began · Now = final session"
-      : phaseLabel
-        ? `Start & now for ${phaseLabel.toLowerCase()}`
-        : "Start = beginning of session · Now = after you coach";
-
-  const skillsInCategory = useMemo(
-    () => before.filter((s) => s.category === activeCategory),
-    [before, activeCategory]
-  );
-
-  const stats = useMemo(() => {
-    let improved = 0;
-    let totalDelta = 0;
-    for (const b of before) {
-      const a = after.find((x) => x.skillId === b.skillId);
-      const diff = (a?.score ?? b.score) - b.score;
-      if (diff > 0) improved++;
-      totalDelta += diff;
-    }
-    const beforeAvg =
-      categoryAverages(before).reduce((sum, c) => sum + c.score, 0) /
-      Math.max(1, categoryAverages(before).length);
-    const afterAvg =
-      categoryAverages(after).reduce((sum, c) => sum + c.score, 0) /
-      Math.max(1, categoryAverages(after).length);
-    return { improved, avgShift: afterAvg - beforeAvg, totalSkills: before.length };
-  }, [before, after]);
 
   const setBeforeScore = (skillId: string, score: number) => {
     setBefore((prev) => prev.map((s) => (s.skillId === skillId ? { ...s, score } : s)));
@@ -189,92 +217,75 @@ export function SkillRatingPanel({
     setAfter((prev) => prev.map((s) => (s.skillId === skillId ? { ...s, score } : s)));
   };
 
-  const copyStartToNow = () => {
+  const setSkipped = (skillId: string, skipped: boolean) => {
+    setBefore((prev) =>
+      prev.map((s) => (s.skillId === skillId ? { ...s, skipped: skipped || undefined } : s))
+    );
+    setAfter((prev) =>
+      prev.map((s) => (s.skillId === skillId ? { ...s, skipped: skipped || undefined } : s))
+    );
+  };
+
+  const copyStartToAfter = () => {
     setAfter(before.map((b) => ({ ...b })));
   };
 
+  const ratedCount = before.filter((s) => !s.skipped).length;
+  const skippedCount = before.length - ratedCount;
+
   return (
     <div className="space-y-4">
-      <div className="coach-card overflow-hidden p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="font-heading text-sm font-semibold text-[#111827]">Progress snapshot</p>
-            <p className="mt-0.5 text-xs text-[#6B7280]">{sessionHint}</p>
-          </div>
-          {stats.improved > 0 && (
-            <div className="flex items-center gap-1 rounded-full bg-[#E5EFE8] px-2.5 py-1 text-[11px] font-semibold text-[#3D5C47]">
-              <TrendingUp className="h-3.5 w-3.5" />
-              {stats.improved} up
-            </div>
-          )}
-        </div>
-        <div className="mt-3">
-          <RadarChart before={before} after={after} height={200} compact />
-        </div>
-        <div className="mt-2 flex justify-center gap-4 text-[10px] font-medium text-[#6B7280]">
-          <span className="flex items-center gap-1.5">
-            <span className="h-0.5 w-4 border-t-2 border-dashed border-[#14532D]" />
-            Start
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm bg-[#16A34A]/40 ring-1 ring-[#16A34A]" />
-            Now
-          </span>
-        </div>
-      </div>
-
-      <div className="flex gap-2 overflow-x-auto pb-0.5">
-        {ALL_SKILL_CATEGORIES.filter((c) => visibleCategories.includes(c)).map((cat) => {
-          const count = before.filter((s) => s.category === cat).length;
-          return (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={cn(
-                "font-heading shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold min-h-[36px] transition-colors",
-                activeCategory === cat
-                  ? "bg-[#14532D] text-white"
-                  : "bg-white text-[#6B7280] ring-1 ring-[#E5E7EB]"
-              )}
-            >
-              {SKILL_CATEGORY_LABELS[cat]}
-              <span className="ml-1 opacity-70">{count}</span>
-            </button>
-          );
-        })}
-      </div>
-
       <div className="coach-card p-4">
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <p className="font-heading text-sm font-semibold">{SKILL_CATEGORY_LABELS[activeCategory]}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-[#6B7280]">
+            {ratedCount} to rate
+            {skippedCount > 0 && (
+              <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
+            )}
+          </p>
           <button
             type="button"
-            onClick={copyStartToNow}
-            className="flex items-center gap-1 text-[11px] font-semibold text-[#4F8FF7]"
+            onClick={copyStartToAfter}
+            className="inline-flex min-h-[44px] items-center gap-1 rounded-lg px-3 text-sm font-semibold text-[#4F8FF7] active:bg-[#EFF6FF]"
           >
-            Copy Start <ArrowRight className="h-3 w-3" /> Now
+            Copy before
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            after
           </button>
         </div>
 
-        {skillsInCategory.map((skill) => {
-          const afterSkill = after.find((a) => a.skillId === skill.skillId)!;
-          return (
-            <SkillRatingRow
-              key={skill.skillId}
-              skillName={skill.skillName}
-              beforeScore={skill.score}
-              afterScore={afterSkill.score}
-              onBefore={(n) => setBeforeScore(skill.skillId, n)}
-              onAfter={(n) => setAfterScore(skill.skillId, n)}
-            />
-          );
-        })}
+        <div className="mt-5 space-y-8">
+          {skillsByCategory.map(({ category, skills }) => (
+            <section key={category}>
+              <h3 className="font-heading text-base font-semibold text-[#111827]">
+                {SKILL_CATEGORY_LABELS[category]}
+              </h3>
+              <div className="mt-3 space-y-3">
+                {skills.map((skill) => {
+                  const afterSkill = after.find((a) => a.skillId === skill.skillId)!;
+                  return (
+                    <SkillRatingRow
+                      key={skill.skillId}
+                      skillName={skill.skillName}
+                      beforeScore={skill.score}
+                      afterScore={afterSkill.score}
+                      skipped={Boolean(skill.skipped)}
+                      onBefore={(n) => setBeforeScore(skill.skillId, n)}
+                      onAfter={(n) => setAfterScore(skill.skillId, n)}
+                      onToggleSkipped={(skipped) => setSkipped(skill.skillId, skipped)}
+                    />
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
 
-        <div className="mt-4 border-t border-[#E5E7EB] pt-4">
+        <div className="mt-6 border-t border-[#E5E7EB] pt-4">
           <CoachButton
             type="button"
             variant="soft"
+            className="w-full"
             loading={saving}
             loadingLabel="Saving…"
             onClick={async () => {

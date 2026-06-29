@@ -68,6 +68,9 @@ function buildCoachRow(
     coaching_levels: profile.coachingLevels?.length
       ? profile.coachingLevels
       : [profile.skillTemplateId ?? "intermediate"],
+    custom_skill_ids: null,
+    skill_label_overrides: {},
+    custom_skills: [],
     free_trial_enabled: false,
     free_trial_weekly_cap: 0,
     subscription_plan: profile.subscriptionPlan ?? "early-bird",

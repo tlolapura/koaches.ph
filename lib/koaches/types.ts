@@ -32,6 +32,8 @@ export type SkillRating = {
   skillName: string;
   category: SkillCategory;
   score: number;
+  /** Skill was not worked on in this session — excluded from progress cards and summaries */
+  skipped?: boolean;
 };
 
 export type SkillDefinition = {
@@ -104,6 +106,10 @@ export type Program = {
   isActive: boolean;
   /** Custom rubric: coach-selected skill IDs (only when rubricId is custom) */
   customSkillIds?: string[];
+  /** Coach-defined skills outside the default catalog */
+  customSkills?: SkillDefinition[];
+  /** Display names keyed by skill ID — only stored when different from defaults */
+  skillLabelOverrides?: Record<string, string>;
 };
 
 /** Drop-in rate for a group size band (e.g. 1 player, 2 players, 3–4 players) */
@@ -157,6 +163,12 @@ export type CoachProfile = {
   instagram?: string;
   facebook?: string;
   skillTemplateId: SkillRubricId;
+  /** Drop-in / custom rubric: coach-selected skill IDs (when set, overrides template categories) */
+  customSkillIds?: string[];
+  /** Coach-defined skills outside the default catalog */
+  customSkills?: SkillDefinition[];
+  /** Display names keyed by skill ID — only stored when different from defaults */
+  skillLabelOverrides?: Record<string, string>;
   /** Player levels this coach works with */
   coachingLevels: Array<Exclude<SkillRubricId, "custom">>;
   freeTrialEnabled: boolean;

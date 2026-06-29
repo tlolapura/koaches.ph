@@ -6,11 +6,13 @@ import type {
   Program,
   ProgressCard,
   Session,
+  SkillDefinition,
   Student,
   StudentIntakeSubmission,
 } from "../types";
 import { joinPersonName, splitPersonName } from "../person-name";
 import { DEFAULT_SESSION_PRICING, getStartingRate } from "../pricing";
+import { normalizeSkillRatings } from "../session-progress";
 
 export type DbCoach = {
   id: string;
@@ -30,6 +32,9 @@ export type DbCoach = {
   facebook: string | null;
   skill_template_id: string;
   coaching_levels: string[];
+  custom_skill_ids: string[] | null;
+  skill_label_overrides: Record<string, string> | null;
+  custom_skills: SkillDefinition[] | null;
   free_trial_enabled: boolean;
   free_trial_weekly_cap: number;
   subscription_plan: string;
@@ -54,6 +59,8 @@ export type DbProgram = {
   source: string;
   target_level: string;
   custom_skill_ids: string[] | null;
+  skill_label_overrides: Record<string, string> | null;
+  custom_skills: SkillDefinition[] | null;
   is_active: boolean;
 };
 
@@ -205,6 +212,9 @@ export function mapCoach(row: DbCoach): CoachProfile {
     instagram: row.instagram ?? undefined,
     facebook: row.facebook ?? undefined,
     skillTemplateId: row.skill_template_id as CoachProfile["skillTemplateId"],
+    customSkillIds: row.custom_skill_ids ?? undefined,
+    customSkills: row.custom_skills ?? undefined,
+    skillLabelOverrides: row.skill_label_overrides ?? undefined,
     coachingLevels: (row.coaching_levels?.length
       ? row.coaching_levels
       : [row.skill_template_id]
@@ -237,6 +247,8 @@ export function mapProgram(row: DbProgram, enrolledStudentIds: string[]): Progra
     source: row.source as Program["source"],
     targetLevel: row.target_level,
     customSkillIds: row.custom_skill_ids ?? undefined,
+    customSkills: row.custom_skills ?? undefined,
+    skillLabelOverrides: row.skill_label_overrides ?? undefined,
     enrolledStudentIds,
     isActive: row.is_active,
   };
@@ -265,6 +277,12 @@ export function mapStudent(row: DbStudent): Student {
 }
 
 export function mapSession(row: DbSession): Session {
+  const participantProgress = row.participant_progress?.map((entry) => ({
+    participantId: entry.participantId,
+    ratingsBefore: normalizeSkillRatings(entry.ratingsBefore),
+    ratingsAfter: normalizeSkillRatings(entry.ratingsAfter),
+  }));
+
   return {
     id: row.id,
     coachId: row.coach_id,
@@ -282,9 +300,9 @@ export function mapSession(row: DbSession): Session {
     playerCount: row.player_count,
     participants: row.participants ?? [],
     notes: row.notes ?? undefined,
-    ratingsBefore: row.ratings_before ?? undefined,
-    ratingsAfter: row.ratings_after ?? undefined,
-    participantProgress: row.participant_progress ?? undefined,
+    ratingsBefore: normalizeSkillRatings(row.ratings_before ?? undefined),
+    ratingsAfter: normalizeSkillRatings(row.ratings_after ?? undefined),
+    participantProgress: participantProgress?.length ? participantProgress : undefined,
   };
 }
 
@@ -315,8 +333,8 @@ export function mapProgressCard(row: DbProgressCard): ProgressCard {
     programName: row.program_name,
     programOrSession: row.program_or_session,
     dateCompleted: row.date_completed,
-    ratingsBefore: row.ratings_before,
-    ratingsAfter: row.ratings_after,
+    ratingsBefore: normalizeSkillRatings(row.ratings_before),
+    ratingsAfter: normalizeSkillRatings(row.ratings_after),
     coachMessage: row.coach_message,
     sessionId: row.session_id ?? undefined,
   };
@@ -374,6 +392,9 @@ export function coachInsertFromApplication(
     facebook: app.facebook ?? null,
     skill_template_id: app.skillTemplateId,
     coaching_levels: app.coachingLevels,
+    custom_skill_ids: null,
+    skill_label_overrides: {},
+    custom_skills: [],
     free_trial_enabled: false,
     free_trial_weekly_cap: 0,
     subscription_plan: "early-bird",
@@ -422,6 +443,8 @@ export function programToDb(program: Program): DbProgram {
     source: program.source,
     target_level: program.targetLevel,
     custom_skill_ids: program.customSkillIds ?? null,
+    skill_label_overrides: program.skillLabelOverrides ?? {},
+    custom_skills: program.customSkills ?? [],
     is_active: program.isActive,
   };
 }

@@ -4,8 +4,16 @@ import {
 } from "./participant-program";
 import { resolveSessionStatus } from "./session-lifecycle";
 import { getSessionParticipants } from "./session-participants";
-import { hasRatingsForCard, resolveParticipantProgress, type ParticipantRatings } from "./session-progress";
+import {
+  filterRatedSkills,
+  getStudentSessionRatings,
+  hasRatingsForCard,
+  normalizeParticipantRatings,
+  resolveParticipantProgress,
+  type ParticipantRatings,
+} from "./session-progress";
 import type { CoachProfile, Program, ProgressCard, Session, Student } from "./types";
+import { progressCardCoachName } from "./person-name";
 import { formatDisplayDate } from "@/lib/utils";
 
 export const PROGRESS_CARDS_UPDATED_EVENT = "koaches-progress-cards-updated";
@@ -15,7 +23,9 @@ export function countSkillImprovements(
   after: ProgressCard["ratingsAfter"]
 ): number {
   return before.filter((b) => {
+    if (b.skipped) return false;
     const a = after.find((x) => x.skillId === b.skillId);
+    if (a?.skipped) return false;
     return (a?.score ?? 0) > b.score;
   }).length;
 }
@@ -42,8 +52,39 @@ export function newProgressCardId(): string {
 export type ProgressCardLookup = {
   students?: Map<string, Student>;
   programs?: Map<string, Program>;
-  coach?: Pick<CoachProfile, "name" | "skillTemplateId">;
+  coach?: Pick<CoachProfile, "name" | "firstName" | "lastName" | "skillTemplateId">;
 };
+
+/** Prefer live session ratings over a stale card snapshot */
+export function applySessionRatingsToProgressCard(
+  card: ProgressCard,
+  session: Session
+): ProgressCard {
+  const ratings = getStudentSessionRatings(session, card.studentId);
+  if (!hasRatingsForCard(ratings)) return card;
+
+  const normalized = normalizeParticipantRatings(ratings);
+  return {
+    ...card,
+    ratingsBefore: filterRatedSkills(normalized.ratingsBefore ?? []),
+    ratingsAfter: filterRatedSkills(normalized.ratingsAfter ?? []),
+  };
+}
+
+export function getProgressCardRatings(
+  card: Pick<ProgressCard, "ratingsBefore" | "ratingsAfter">
+): { before: ProgressCard["ratingsBefore"]; after: ProgressCard["ratingsAfter"] } {
+  const normalized = normalizeParticipantRatings({
+    ratingsBefore: card.ratingsBefore,
+    ratingsAfter: card.ratingsAfter,
+  });
+  const before = filterRatedSkills(normalized.ratingsBefore ?? []);
+  const beforeIds = new Set(before.map((skill) => skill.skillId));
+  const after = filterRatedSkills(normalized.ratingsAfter ?? []).filter((skill) =>
+    beforeIds.has(skill.skillId)
+  );
+  return { before, after };
+}
 
 export function buildProgressCardDraft(options: {
   session: Session;
@@ -53,18 +94,19 @@ export function buildProgressCardDraft(options: {
   lookup?: ProgressCardLookup;
 }): ProgressCard {
   const { session, participantId, coachMessage, ratings, lookup } = options;
+  const normalized = normalizeParticipantRatings(ratings);
   const participant = getSessionParticipants(session).find((p) => p.id === participantId);
   if (!participant) throw new Error("Participant not found");
 
   const ctx = resolveParticipantProgramContext(participant, session, lookup);
   const programName = formatParticipantProgramLabel(ctx);
-  const coachName = lookup?.coach?.name ?? "Coach";
+  const coachName = progressCardCoachName(lookup?.coach ?? null);
 
   let programOrSession = programName;
   if (ctx.sessionNumber != null && ctx.totalSessions != null) {
-    programOrSession = `${programName} — Session ${ctx.sessionNumber}`;
-  } else {
-    programOrSession = `${programName} · ${formatDisplayDate(session.date!)}`;
+    programOrSession = `Session ${ctx.sessionNumber} of ${ctx.totalSessions}`;
+  } else if (session.date) {
+    programOrSession = formatDisplayDate(session.date);
   }
 
   return {
@@ -76,8 +118,8 @@ export function buildProgressCardDraft(options: {
     programName,
     programOrSession,
     dateCompleted: session.date ?? "",
-    ratingsBefore: ratings.ratingsBefore ?? [],
-    ratingsAfter: ratings.ratingsAfter ?? [],
+    ratingsBefore: filterRatedSkills(normalized.ratingsBefore ?? []),
+    ratingsAfter: filterRatedSkills(normalized.ratingsAfter ?? []),
     coachMessage,
     sessionId: session.id,
   };
@@ -124,4 +166,30 @@ export function listProgressCardCandidates(
   }
 
   return candidates.sort((a, b) => (b.session.date ?? "").localeCompare(a.session.date ?? ""));
+}
+
+/** Session line under the program badge — avoids repeating name + date */
+export function formatProgressCardSessionDetail(card: Pick<ProgressCard, "programName" | "programOrSession" | "dateCompleted">): string | null {
+  const date = card.dateCompleted ? formatDisplayDate(card.dateCompleted) : "";
+  const detail = card.programOrSession?.trim() ?? "";
+
+  if (!detail) return date || null;
+
+  // Legacy cards: "Drop-in · June 27, 2026"
+  const legacyPrefix = `${card.programName} · `;
+  if (detail.startsWith(legacyPrefix)) {
+    return detail.slice(legacyPrefix.length) || date || null;
+  }
+
+  // Legacy cards: "Program Name — Session 3"
+  const legacyDash = `${card.programName} — `;
+  if (detail.startsWith(legacyDash)) {
+    return detail.slice(legacyDash.length) || date || null;
+  }
+
+  if (detail === card.programName) {
+    return date || null;
+  }
+
+  return detail;
 }

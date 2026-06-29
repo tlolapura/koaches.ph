@@ -24,8 +24,10 @@ export type SkillChange = {
 
 export function buildSkillChanges(before: SkillRating[], after: SkillRating[]): SkillChange[] {
   return before
+    .filter((b) => !b.skipped)
     .map((b) => {
       const a = after.find((x) => x.skillId === b.skillId);
+      if (a?.skipped) return null;
       const afterScore = a?.score ?? b.score;
       return {
         skillId: b.skillId,
@@ -36,6 +38,7 @@ export function buildSkillChanges(before: SkillRating[], after: SkillRating[]): 
         delta: afterScore - b.score,
       };
     })
+    .filter((change): change is SkillChange => change !== null)
     .sort((a, b) => b.delta - a.delta || a.skillName.localeCompare(b.skillName));
 }
 

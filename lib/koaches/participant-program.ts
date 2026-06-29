@@ -1,10 +1,12 @@
-import type { Session, SessionParticipant, SkillRubricId, Program, Student, CoachProfile } from "./types";
+import type { Session, SessionParticipant, SkillRubricId, Program, Student, CoachProfile, SkillDefinition } from "./types";
 import { resolveProgramRubric } from "./program-templates";
 
 export type ParticipantProgramContext = {
   programName: string | null;
   rubricId: SkillRubricId;
   customSkillIds?: string[];
+  customSkills?: SkillDefinition[];
+  skillLabelOverrides?: Record<string, string>;
   sessionNumber?: number;
   totalSessions?: number;
 };
@@ -12,7 +14,10 @@ export type ParticipantProgramContext = {
 export type ParticipantProgramLookup = {
   students?: Map<string, Student>;
   programs?: Map<string, Program>;
-  coach?: Pick<CoachProfile, "skillTemplateId">;
+  coach?: Pick<
+    CoachProfile,
+    "skillTemplateId" | "customSkillIds" | "customSkills" | "skillLabelOverrides"
+  >;
 };
 
 /** Program + rubric for a player — uses their enrolled program, not the session's */
@@ -34,6 +39,8 @@ export function resolveParticipantProgramContext(
       programName: program.name,
       rubricId: resolveProgramRubric(program),
       customSkillIds: program.customSkillIds,
+      customSkills: program.customSkills,
+      skillLabelOverrides: program.skillLabelOverrides,
       sessionNumber:
         session.type === "program" && session.sessionNumber != null
           ? session.sessionNumber
@@ -42,9 +49,17 @@ export function resolveParticipantProgramContext(
     };
   }
 
+  const coach = lookup?.coach;
+  const rubricId = coach?.customSkillIds?.length
+    ? "custom"
+    : (coach?.skillTemplateId ?? "intermediate");
+
   return {
     programName: null,
-    rubricId: lookup?.coach?.skillTemplateId ?? "intermediate",
+    rubricId,
+    customSkillIds: coach?.customSkillIds,
+    customSkills: coach?.customSkills,
+    skillLabelOverrides: coach?.skillLabelOverrides,
   };
 }
 

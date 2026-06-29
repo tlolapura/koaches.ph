@@ -227,13 +227,8 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
         <div className="mt-4 space-y-4 pb-8">
           {displayStatus === "pending_progress_review" && (
             <p className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5 text-sm text-[#92400E]">
-              Rate Start + Now for each skill, then save ratings.
-            </p>
-          )}
-
-          {displayStatus === "ready_to_share" && (
-            <p className="rounded-xl border border-[#16A34A]/25 bg-[#F0FDF4] px-3 py-2.5 text-sm text-[#166534]">
-              Ratings saved — generate a progress card to share with your student.
+              Scroll down and tap 1–5 for each skill — before session, then after session. Save
+              when done.
             </p>
           )}
 

@@ -18,15 +18,14 @@ import {
   draftFromPreset,
   draftFromRubric,
 } from "@/lib/koaches/program-templates";
-import type { ProgramPresetId, SkillRubricId } from "@/lib/koaches/types";
-import {
-  ALL_SKILL_CATEGORIES,
-  DEFAULT_SKILLS,
-  SKILL_CATEGORY_LABELS,
-  getSkillsForRubric,
-} from "@/lib/koaches/constants";
+import type { ProgramPresetId } from "@/lib/koaches/types";
+import { getSkillsForRubric } from "@/lib/koaches/constants";
 import { PresetIcon } from "@/components/koaches/coach/CoachIcons";
 import { SkillRubricPreview } from "@/components/koaches/coach/SkillRubricPreview";
+import {
+  SkillRubricPicker,
+  type SkillRubricPickerValue,
+} from "@/components/koaches/coach/SkillRubricPicker";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachSheetField, CoachSheetStickyActions } from "@/components/koaches/coach/CoachSheet";
@@ -46,6 +45,38 @@ type ProgramCreateFlowProps = {
   initialMode?: FlowMode;
 };
 
+function draftToSkillRubric(draft: ProgramDraft): SkillRubricPickerValue {
+  if (draft.customSkillIds?.length) {
+    return {
+      rubricId: draft.rubricId === "custom" ? "custom" : draft.rubricId,
+      customSkillIds: draft.customSkillIds,
+      customSkills: draft.customSkills ?? [],
+      skillLabelOverrides: draft.skillLabelOverrides ?? {},
+    };
+  }
+
+  const base = draft.rubricId === "custom" ? "intermediate" : draft.rubricId;
+  return {
+    rubricId: base,
+    customSkillIds: getSkillsForRubric(base).map((skill) => skill.id),
+    customSkills: draft.customSkills ?? [],
+    skillLabelOverrides: draft.skillLabelOverrides ?? {},
+  };
+}
+
+function applySkillRubricToDraft(
+  draft: ProgramDraft,
+  value: SkillRubricPickerValue
+): ProgramDraft {
+  return {
+    ...draft,
+    rubricId: "custom",
+    customSkillIds: value.customSkillIds,
+    customSkills: value.customSkills,
+    skillLabelOverrides: value.skillLabelOverrides,
+  };
+}
+
 export function ProgramCreateFlow({
   open,
   onClose,
@@ -56,8 +87,6 @@ export function ProgramCreateFlow({
   const [customStep, setCustomStep] = useState<CustomStep>("details");
   const [templateStep, setTemplateStep] = useState<TemplateStep>("pick");
   const [draft, setDraft] = useState<ProgramDraft | null>(null);
-  const [rubricBase, setRubricBase] = useState<Exclude<SkillRubricId, "custom"> | "scratch">("beginner");
-  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set(["fundamentals"]));
   const [saving, setSaving] = useState(false);
 
   const submitDraft = async (next: ProgramDraft) => {
@@ -88,8 +117,6 @@ export function ProgramCreateFlow({
     setCustomStep("details");
     setTemplateStep("pick");
     setDraft(null);
-    setRubricBase("beginner");
-    setOpenCategories(new Set(["fundamentals"]));
   };
 
   const handleClose = () => {
@@ -110,39 +137,11 @@ export function ProgramCreateFlow({
     setTemplateStep("customize");
   };
 
-  const pickRubric = (id: Exclude<SkillRubricId, "custom">) => {
+  const pickRubric = (id: Exclude<import("@/lib/koaches/types").SkillRubricId, "custom">) => {
     const d = draftFromRubric(id);
     setDraft(d);
     setMode("templates");
     setTemplateStep("customize");
-  };
-
-  const applyRubricBase = (base: Exclude<SkillRubricId, "custom"> | "scratch") => {
-    setRubricBase(base);
-    if (!draft) return;
-    if (base === "scratch") {
-      setDraft({ ...draft, rubricId: "custom", customSkillIds: [] });
-    } else {
-      const skillIds = getSkillsForRubric(base).map((s) => s.id);
-      setDraft({ ...draft, rubricId: "custom", customSkillIds: skillIds });
-    }
-  };
-
-  const toggleCategory = (cat: string) => {
-    if (!draft) return;
-    const catSkills = DEFAULT_SKILLS.filter((s) => s.category === cat).map((s) => s.id);
-    const ids = new Set(draft.customSkillIds ?? []);
-    const allOn = catSkills.every((id) => ids.has(id));
-    if (allOn) catSkills.forEach((id) => ids.delete(id));
-    else catSkills.forEach((id) => ids.add(id));
-    setDraft({ ...draft, rubricId: "custom", customSkillIds: [...ids] });
-  };
-
-  const toggleSkill = (skillId: string) => {
-    if (!draft) return;
-    const ids = draft.customSkillIds ?? [];
-    const next = ids.includes(skillId) ? ids.filter((id) => id !== skillId) : [...ids, skillId];
-    setDraft({ ...draft, rubricId: "custom", customSkillIds: next });
   };
 
   const skillCount = draft?.customSkillIds?.length ?? 0;
@@ -405,117 +404,13 @@ export function ProgramCreateFlow({
             </div>
           )}
 
-          {customStep === "rubric" && (
+          {customStep === "rubric" && draft && (
             <div className="space-y-4">
-              <p className="text-sm text-[#6B7280]">
-                This is your Google Form-style questionnaire — pick which skills you&apos;ll rate each session.
-              </p>
-
-              <div>
-                <p className="text-xs font-medium text-[#6B7280]">Quick start from a base rubric</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {(["beginner", "intermediate", "advanced"] as const).map((id) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => applyRubricBase(id)}
-                      className={cn(
-                        "rounded-full px-3 py-2 text-xs font-semibold min-h-[36px]",
-                        rubricBase === id ? "bg-[#16A34A] text-white" : "border border-[#E5E7EB] bg-white"
-                      )}
-                    >
-                      {SKILL_RUBRICS[id].name}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => applyRubricBase("scratch")}
-                    className={cn(
-                      "rounded-full px-3 py-2 text-xs font-semibold min-h-[36px]",
-                      rubricBase === "scratch" ? "bg-[#14532D] text-white" : "border border-[#E5E7EB] bg-white"
-                    )}
-                  >
-                    Pick from scratch
-                  </button>
-                </div>
-              </div>
-
-              <p className="text-xs font-medium text-[#6B7280]">
-                {skillCount} skill{skillCount !== 1 ? "s" : ""} selected
-              </p>
-
-              <div className="space-y-2">
-                {ALL_SKILL_CATEGORIES.map((cat) => {
-                  const catSkills = DEFAULT_SKILLS.filter((s) => s.category === cat);
-                  const selected = catSkills.filter((s) => draft.customSkillIds?.includes(s.id)).length;
-                  const isOpen = openCategories.has(cat);
-                  const allSelected = selected === catSkills.length;
-
-                  return (
-                    <div key={cat} className="overflow-hidden rounded-xl border border-[#E5E7EB]">
-                      <div className="flex w-full min-h-[48px] items-center justify-between px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOpenCategories((prev) => {
-                              const next = new Set(prev);
-                              if (next.has(cat)) next.delete(cat);
-                              else next.add(cat);
-                              return next;
-                            });
-                          }}
-                          className="flex flex-1 items-center text-left"
-                        >
-                          <div>
-                            <p className="font-heading text-sm font-semibold">{SKILL_CATEGORY_LABELS[cat]}</p>
-                            <p className="text-xs text-[#6B7280]">{selected}/{catSkills.length} skills</p>
-                          </div>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleCategory(cat)}
-                          className={cn(
-                            "shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold min-h-[32px]",
-                            allSelected ? "bg-[#16A34A] text-white" : "bg-[#F3F4F6] text-[#6B7280]"
-                          )}
-                        >
-                          {allSelected ? "All on" : "Select all"}
-                        </button>
-                      </div>
-                      {isOpen && (
-                        <div className="space-y-1 border-t border-[#E5E7EB] px-3 py-2">
-                          {catSkills.map((skill) => {
-                            const on = draft.customSkillIds?.includes(skill.id);
-                            return (
-                              <button
-                                key={skill.id}
-                                type="button"
-                                onClick={() => toggleSkill(skill.id)}
-                                className={cn(
-                                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm min-h-[44px]",
-                                  on ? "bg-[#F0FDF4]/60" : "hover:bg-[#F9FAFB]"
-                                )}
-                              >
-                                <span
-                                  className={cn(
-                                    "flex h-5 w-5 shrink-0 items-center justify-center rounded border",
-                                    on ? "border-[#16A34A] bg-[#16A34A] text-white" : "border-[#D1D5DB]"
-                                  )}
-                                >
-                                  {on && <Check className="h-3 w-3" />}
-                                </span>
-                                <span className={on ? "font-medium text-[#111827]" : "text-[#6B7280]"}>
-                                  {skill.name}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+              <SkillRubricPicker
+                value={draftToSkillRubric(draft)}
+                onChange={(value) => setDraft(applySkillRubricToDraft(draft, value))}
+                hint="Pick catalog skills, add your own per category, or rename anything."
+              />
 
               <CoachSheetStickyActions>
                 <button
@@ -553,7 +448,12 @@ export function ProgramCreateFlow({
                 </div>
               </div>
 
-              <SkillRubricPreview rubricId="custom" customSkillIds={draft.customSkillIds} />
+              <SkillRubricPreview
+                rubricId="custom"
+                customSkillIds={draft.customSkillIds}
+                customSkills={draft.customSkills}
+                skillLabelOverrides={draft.skillLabelOverrides}
+              />
 
               <CoachSheetStickyActions>
                 <CoachButton
@@ -587,13 +487,13 @@ function TemplateCustomizeForm({
   onSave: () => void;
   saving?: boolean;
 }) {
+  const skillCount = draft.customSkillIds?.length ?? 0;
+
   return (
     <div className="space-y-4">
       <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm text-[#6B7280]">
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
-
-      <SkillRubricPreview rubricId={draft.rubricId} customSkillIds={draft.customSkillIds} />
 
       <CoachSheetField label="Program name" htmlFor="template-program-name">
         <input
@@ -629,8 +529,27 @@ function TemplateCustomizeForm({
         onChange={(sessionCount) => setDraft({ ...draft, sessionCount })}
       />
 
+      <div className="border-t border-[#E5E7EB] pt-4">
+        <p className="font-heading text-sm font-semibold text-[#111827]">Skills</p>
+        <p className="mt-0.5 text-xs text-[#6B7280]">
+          Starts from the template rubric — adjust, rename, or add your own.
+        </p>
+        <div className="mt-3">
+          <SkillRubricPicker
+            value={draftToSkillRubric(draft)}
+            onChange={(value) => setDraft(applySkillRubricToDraft(draft, value))}
+          />
+        </div>
+      </div>
+
       <CoachSheetStickyActions>
-        <CoachButton type="button" loading={saving} loadingLabel="Saving…" onClick={onSave}>
+        <CoachButton
+          type="button"
+          loading={saving}
+          loadingLabel="Saving…"
+          disabled={!draft.name.trim() || skillCount === 0}
+          onClick={onSave}
+        >
           Save Program
         </CoachButton>
       </CoachSheetStickyActions>

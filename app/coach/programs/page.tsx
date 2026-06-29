@@ -3,23 +3,37 @@
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import Link from "next/link";
 import { useState } from "react";
-import { ClipboardList, PenLine, Plus } from "lucide-react";
+import { ClipboardList, PenLine, Plus, Zap } from "lucide-react";
 import { getProgramPreset, resolveProgramRubric } from "@/lib/koaches/program-templates";
 import type { ProgramDraft } from "@/lib/koaches/program-templates";
+import { resolveSkills } from "@/lib/koaches/constants";
 import { CoachFab, EmptyState } from "@/components/koaches/coach/CoachUi";
 import { ProgramListIcon } from "@/components/koaches/coach/CoachIcons";
 import { ProgramCreateFlow } from "@/components/koaches/coach/ProgramCreateFlow";
+import { DropInSkillsSheet } from "@/components/koaches/coach/DropInSkillsSheet";
 import { formatProgramBundleSummary } from "@/lib/koaches/program-pricing";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachProgramListSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { useCoachPrograms, useCreateProgram } from "@/hooks/useCoachPrograms";
+import { useCoachProfile } from "@/hooks/useCoachProfile";
 
 export default function ProgramsPage() {
   const coachId = usePortalCoachId();
   const [createOpen, setCreateOpen] = useState(false);
+  const [dropInOpen, setDropInOpen] = useState(false);
   const [createMode, setCreateMode] = useState<"home" | "custom">("home");
   const { programs, loading } = useCoachPrograms(coachId);
+  const { coach, refresh: refreshCoach } = useCoachProfile(coachId);
   const createProgram = useCreateProgram(coachId);
+
+  const dropInSkillCount = coach
+    ? resolveSkills({
+        rubricId: coach.customSkillIds?.length ? "custom" : coach.skillTemplateId,
+        customSkillIds: coach.customSkillIds,
+        customSkills: coach.customSkills,
+        skillLabelOverrides: coach.skillLabelOverrides,
+      }).length
+    : 0;
 
   const openCreate = (mode: "home" | "custom" = "home") => {
     setCreateMode(mode);
@@ -36,8 +50,27 @@ export default function ProgramsPage() {
     <CoachPageShell>
       <CoachPageHeader
         title="Programs"
-        subtitle="Structured coaching packages with skill rubrics for tracking progress"
+        subtitle="Skill rubrics for drop-ins and structured coaching packages"
       />
+
+      {coach && (
+        <button
+          type="button"
+          onClick={() => setDropInOpen(true)}
+          className="coach-card mt-5 flex w-full items-center gap-3 p-4 text-left"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB]">
+            <Zap className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-heading text-sm font-semibold">Drop-in skills</p>
+            <p className="text-xs text-[#6B7280]">
+              {dropInSkillCount} skills · customize what you rate on one-off sessions
+            </p>
+          </div>
+          <span className="text-xs font-semibold text-[#4F8FF7]">Edit →</span>
+        </button>
+      )}
 
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <button
@@ -126,6 +159,15 @@ export default function ProgramsPage() {
         initialMode={createMode}
         onSave={handleSave}
       />
+
+      {coach && (
+        <DropInSkillsSheet
+          open={dropInOpen}
+          onClose={() => setDropInOpen(false)}
+          coach={coach}
+          onSaved={() => void refreshCoach()}
+        />
+      )}
     </CoachPageShell>
   );
 }

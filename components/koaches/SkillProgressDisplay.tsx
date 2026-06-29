@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, Minus, Star, TrendingDown, TrendingUp } from "lucide-react";
 import type { SkillRating } from "@/lib/koaches/types";
 import {
   buildSkillChanges,
@@ -10,6 +10,84 @@ import {
   type SkillChange,
 } from "@/lib/koaches/skill-progress-display";
 import { cn } from "@/lib/utils";
+
+function starRow(
+  filled: number,
+  variant: "before" | "after",
+  highlightFrom?: number
+) {
+  const dim = "h-5 w-5";
+  return [1, 2, 3, 4, 5].map((n) => {
+    const isFilled = n <= filled;
+    const isNew = variant === "after" && highlightFrom != null && n > highlightFrom && n <= filled;
+
+    return (
+      <Star
+        key={n}
+        className={cn(
+          dim,
+          isFilled
+            ? variant === "after"
+              ? "fill-[#16A34A] text-[#16A34A]"
+              : "fill-[#BFDBFE] text-[#93C5FD]"
+            : "fill-none text-[#E5E7EB]",
+          isNew && "scale-110 drop-shadow-sm"
+        )}
+        strokeWidth={1.5}
+      />
+    );
+  });
+}
+
+/** Side-by-side before → after stars so gains like 2→3 don’t look identical to 3→3 */
+export function SkillLevelCompareStars({
+  before,
+  after,
+  className,
+}: {
+  before: number;
+  after: number;
+  className?: string;
+}) {
+  const b = Math.min(5, Math.max(0, Math.round(before)));
+  const a = Math.min(5, Math.max(0, Math.round(after)));
+
+  return (
+    <div
+      className={cn("flex items-center justify-center gap-2.5", className)}
+      role="img"
+      aria-label={`Before ${b} out of 5, after ${a} out of 5`}
+    >
+      <div className="flex items-center gap-0.5">{starRow(b, "before")}</div>
+      <ArrowRight className="h-4 w-4 shrink-0 text-[#D1D5DB]" aria-hidden />
+      <div className="flex items-center gap-0.5">{starRow(a, "after", b)}</div>
+    </div>
+  );
+}
+
+/** @deprecated Use SkillLevelCompareStars — overlap hid the before level */
+export const SkillLevelOverlapStars = SkillLevelCompareStars;
+
+export function SkillLevelLegend({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px] text-[#9CA3AF]",
+        className
+      )}
+    >
+      <span className="inline-flex items-center gap-1.5">
+        <Star className="h-3.5 w-3.5 fill-[#BFDBFE] text-[#93C5FD]" strokeWidth={1.5} aria-hidden />
+        Start
+      </span>
+      <ArrowRight className="h-3 w-3 text-[#D1D5DB]" aria-hidden />
+      <span className="inline-flex items-center gap-1.5">
+        <Star className="h-3.5 w-3.5 fill-[#16A34A] text-[#16A34A]" strokeWidth={1.5} aria-hidden />
+        End
+      </span>
+    </div>
+  );
+}
 
 export function SkillLevelDots({
   score,

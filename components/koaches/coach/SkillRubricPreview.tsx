@@ -3,16 +3,15 @@
 import { ChevronDown, ChevronUp, ClipboardList } from "lucide-react";
 import { useState } from "react";
 import type { SkillRubricId } from "@/lib/koaches/types";
-import {
-  getRubric,
-  getRubricCategoryBreakdown,
-  getRubricSkillCount,
-} from "@/lib/koaches/program-templates";
+import { resolveSkills, SKILL_CATEGORY_LABELS } from "@/lib/koaches/constants";
+import { getRubric } from "@/lib/koaches/program-templates";
 import { cn } from "@/lib/utils";
 
 type SkillRubricPreviewProps = {
   rubricId: SkillRubricId;
   customSkillIds?: string[];
+  customSkills?: import("@/lib/koaches/types").SkillDefinition[];
+  skillLabelOverrides?: Record<string, string>;
   compact?: boolean;
   className?: string;
 };
@@ -20,13 +19,23 @@ type SkillRubricPreviewProps = {
 export function SkillRubricPreview({
   rubricId,
   customSkillIds,
+  customSkills,
+  skillLabelOverrides,
   compact = false,
   className,
 }: SkillRubricPreviewProps) {
   const [expanded, setExpanded] = useState(!compact);
   const rubric = rubricId !== "custom" ? getRubric(rubricId) : null;
-  const breakdown = getRubricCategoryBreakdown(rubricId, customSkillIds);
-  const skillCount = getRubricSkillCount(rubricId, customSkillIds);
+  const resolvedSkills = resolveSkills({ rubricId, customSkillIds, customSkills, skillLabelOverrides });
+  const breakdown = Object.entries(
+    resolvedSkills.reduce<Record<string, string[]>>((acc, skill) => {
+      const label = SKILL_CATEGORY_LABELS[skill.category];
+      acc[label] = acc[label] ?? [];
+      acc[label].push(skill.name);
+      return acc;
+    }, {})
+  ).map(([category, items]) => ({ category, items }));
+  const skillCount = resolvedSkills.length;
 
   return (
     <div className={cn("rounded-xl border border-[#E5E7EB] bg-[#F9FAFB]", className)}>
