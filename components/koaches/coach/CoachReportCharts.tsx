@@ -12,7 +12,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { DuprLevel } from "@/lib/koaches/types";
+import type { CoachingLevelId } from "@/lib/koaches/application-form";
+import { COACHING_LEVEL_OPTIONS } from "@/lib/koaches/application-form";
 import type { EarningsTrendPoint } from "@/lib/koaches/coach-reports";
 import { formatCurrency } from "@/lib/utils";
 
@@ -150,11 +151,18 @@ export function CoachRevenueMixChart({ programRevenue, dropInRevenue }: RevenueM
 }
 
 type StudentsByLevelChartProps = {
-  levels: { level: DuprLevel; count: number }[];
+  levels: { level: CoachingLevelId; count: number }[];
 };
 
 export function CoachStudentsByLevelChart({ levels }: StudentsByLevelChartProps) {
-  const data = levels.map((l) => ({ label: l.level, count: l.count }));
+  const data = levels.map((l) => {
+    const option = COACHING_LEVEL_OPTIONS.find((o) => o.id === l.level);
+    return {
+      label: option?.label ?? l.level,
+      helper: option?.dupr ?? "",
+      count: l.count,
+    };
+  });
 
   return (
     <div className="h-40 w-full">
@@ -181,7 +189,8 @@ export function CoachStudentsByLevelChart({ levels }: StudentsByLevelChartProps)
               const row = payload[0].payload as (typeof data)[number];
               return (
                 <div className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-sm shadow-md">
-                  <p className="font-heading font-semibold">DUPR {row.label}</p>
+                  <p className="font-heading font-semibold text-[#111827]">{row.label}</p>
+                  <p className="text-xs text-[#9CA3AF]">{row.helper} DUPR</p>
                   <p className="text-[#6B7280]">
                     {row.count} student{row.count === 1 ? "" : "s"}
                   </p>

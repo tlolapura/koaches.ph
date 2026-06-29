@@ -60,7 +60,7 @@ function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
         <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
           <PickleballBallBackdrop variant="portal" />
           <CoachMobileHeader />
-          <main className="relative z-[1] flex-1 pb-20 md:pb-6">{children}</main>
+          <main className="relative z-[1] flex-1 pb-[var(--portal-bottom-nav-offset)] md:pb-6">{children}</main>
           <CoachBottomNav />
         </div>
       </div>

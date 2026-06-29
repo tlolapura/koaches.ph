@@ -10,6 +10,11 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
+import {
+  COACHING_LEVEL_OPTIONS,
+  coachingLevelFromDupr,
+  type CoachingLevelId,
+} from "@/lib/koaches/application-form";
 import type { DuprLevel, Session, Student } from "@/lib/koaches/types";
 import { isCanceledStatus, isDoneStatus } from "@/lib/koaches/session-status";
 import { isCollectedSession } from "@/lib/koaches/session-payment";
@@ -50,7 +55,7 @@ export type CoachReportSummary = {
   newEnrollments: number;
   studentsOnProgram: number;
   dropInStudents: number;
-  studentsByLevel: { level: DuprLevel; count: number }[];
+  studentsByLevel: { level: CoachingLevelId; count: number }[];
   earningsTrend: EarningsTrendPoint[];
 };
 
@@ -265,14 +270,17 @@ export function buildCoachReport(
   const studentsOnProgram = activeStudents.filter((s) => s.programId).length;
   const dropInStudents = activeStudents.length - studentsOnProgram;
 
-  const levelCounts = new Map<DuprLevel, number>();
+  const levelCounts = new Map<CoachingLevelId, number>();
   for (const s of activeStudents) {
-    levelCounts.set(s.skillLevel, (levelCounts.get(s.skillLevel) ?? 0) + 1);
+    const bucket = coachingLevelFromDupr(s.skillLevel);
+    levelCounts.set(bucket, (levelCounts.get(bucket) ?? 0) + 1);
   }
-  const studentsByLevel = DUPR_ORDER.filter((l) => (levelCounts.get(l) ?? 0) > 0).map((level) => ({
-    level,
-    count: levelCounts.get(level) ?? 0,
-  }));
+  const studentsByLevel = COACHING_LEVEL_OPTIONS.filter((o) => (levelCounts.get(o.id) ?? 0) > 0).map(
+    (o) => ({
+      level: o.id,
+      count: levelCounts.get(o.id) ?? 0,
+    })
+  );
 
   return {
     period,
@@ -308,7 +316,13 @@ export const REPORT_PERIOD_LABELS: Record<ReportPeriod, string> = {
   all: "All time",
 };
 
-/** DUPR levels present on roster, sorted for filter chips */
+/** Coaching levels present on roster, in beginner → advanced order. */
+export function coachingLevelsOnRoster(students: Student[]): CoachingLevelId[] {
+  const present = new Set(students.map((s) => coachingLevelFromDupr(s.skillLevel)));
+  return COACHING_LEVEL_OPTIONS.filter((o) => present.has(o.id)).map((o) => o.id);
+}
+
+/** @deprecated Use coachingLevelsOnRoster */
 export function duprLevelsOnRoster(students: Student[]): DuprLevel[] {
   const present = new Set(students.map((s) => s.skillLevel));
   return DUPR_ORDER.filter((l) => present.has(l));

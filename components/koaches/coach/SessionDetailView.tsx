@@ -99,9 +99,7 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
   const [notes, setNotes] = useState(session.notes ?? "");
   const [savingNotes, setSavingNotes] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
-  const [step, setStep] = useState<1 | 2>(() =>
-    session.status === "upcoming" || session.status === "canceled" ? 1 : 2
-  );
+  const [step, setStep] = useState<1 | 2>(1);
   const { showToast } = useCoachToast();
   const { status, displayStatus, markDone, markCanceled } = useSessionStatus(session);
   const ratingsUnlocked = status !== "upcoming" && status !== "canceled";
@@ -136,7 +134,7 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
       )}
 
       {step === 1 && (
-        <div className="mt-4 space-y-4 pb-32 lg:pb-4">
+        <div className="mt-4 space-y-4 coach-portal-fixed-cta-pad lg:pb-4">
           <SessionInfoCard
             session={session}
             primaryName={primaryName}
@@ -225,13 +223,6 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
 
       {step === 2 && ratingsUnlocked && (
         <div className="mt-4 space-y-4 pb-8">
-          {displayStatus === "pending_progress_review" && (
-            <p className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5 text-sm text-[#92400E]">
-              Scroll down and tap 1–5 for each skill — before session, then after session. Save
-              when done.
-            </p>
-          )}
-
           <SessionSkillRatingsSection session={session} />
         </div>
       )}

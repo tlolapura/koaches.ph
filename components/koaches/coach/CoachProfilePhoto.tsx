@@ -15,12 +15,14 @@ const sizeClasses = {
   lg: "h-20 w-20",
   xl: "h-24 w-24",
   hero: "h-[7.5rem] w-[7.5rem] sm:h-36 sm:w-36",
+  public: "h-32 w-32 sm:h-36 sm:w-36 md:h-40 md:w-40",
 } as const;
 
 const initialsSize = {
   lg: "lg" as const,
   xl: "xl" as const,
   hero: "hero" as const,
+  public: "public" as const,
 };
 
 type CoachProfilePhotoProps = {
@@ -91,7 +93,7 @@ export function CoachProfilePhoto({
 
   const dim = sizeClasses[size];
   const avatarSize = initialsSize[size];
-  const isHero = size === "hero";
+  const isHero = size === "hero" || size === "public";
   const initialsShape = isHero ? "rounded-2xl" : "rounded-full";
 
   return (

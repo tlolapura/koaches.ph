@@ -53,7 +53,7 @@ export function SkillRubricPreview({
           </p>
           <p className="text-xs text-[#6B7280]">
             {skillCount} skills · {breakdown.length} categories
-            {rubric && ` · ${rubric.duprRange} DUPR`}
+            {rubric && ` · ${rubric.duprRange}`}
           </p>
           {!compact && rubric && (
             <p className="mt-1 text-xs leading-relaxed text-[#6B7280]">{rubric.description}</p>

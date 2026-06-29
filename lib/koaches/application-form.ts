@@ -1,4 +1,4 @@
-import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
+import type { CoachProfile, CoachSessionPricing, DuprLevel, SkillRubricId } from "@/lib/koaches/types";
 import type { SubmitApplicationInput } from "@/lib/koaches/actions/applications";
 import { joinPersonName } from "@/lib/koaches/person-name";
 import { DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
@@ -16,6 +16,57 @@ export const COACHING_LEVEL_OPTIONS: {
   { id: "intermediate", label: "Intermediate", dupr: SKILL_RUBRICS.intermediate.duprRange },
   { id: "advanced", label: "Advanced", dupr: SKILL_RUBRICS.advanced.duprRange },
 ];
+
+const DUPR_TO_COACHING_LEVEL: Record<DuprLevel, CoachingLevelId> = {
+  "2.0": "beginner",
+  "2.5": "beginner",
+  "3.0": "intermediate",
+  "3.5": "intermediate",
+  "4.0": "advanced",
+  "4.5+": "advanced",
+};
+
+const COACHING_LEVEL_DEFAULT_DUPR: Record<CoachingLevelId, DuprLevel> = {
+  beginner: "2.5",
+  intermediate: "3.0",
+  advanced: "4.0",
+};
+
+/** Map stored DUPR to beginner / intermediate / advanced bucket. */
+export function coachingLevelFromDupr(level: DuprLevel): CoachingLevelId {
+  return DUPR_TO_COACHING_LEVEL[level] ?? "intermediate";
+}
+
+/** Human label for a student's level (Beginner, Intermediate, Advanced). */
+export function formatStudentCoachingLevelLabel(level: DuprLevel): string {
+  const id = coachingLevelFromDupr(level);
+  return COACHING_LEVEL_OPTIONS.find((o) => o.id === id)?.label ?? id;
+}
+
+/** Primary level label + DUPR rating as secondary helper text. */
+export function formatStudentLevelDisplay(level: DuprLevel): { label: string; helper: string } {
+  return {
+    label: formatStudentCoachingLevelLabel(level),
+    helper: `${level} DUPR`,
+  };
+}
+
+/** Inline text: "Intermediate · 3.0 DUPR" */
+export function formatStudentLevelWithDuprHelper(level: DuprLevel): string {
+  const { label, helper } = formatStudentLevelDisplay(level);
+  return `${label} · ${helper}`;
+}
+
+/** Form select options — level first, DUPR range as helper. */
+export const STUDENT_COACHING_LEVEL_SELECT_OPTIONS = COACHING_LEVEL_OPTIONS.map((o) => ({
+  value: o.id,
+  label: `${o.label} · ${o.dupr} DUPR`,
+}));
+
+/** Default DUPR stored when coach picks a coaching level bucket. */
+export function defaultDuprForCoachingLevel(id: CoachingLevelId): DuprLevel {
+  return COACHING_LEVEL_DEFAULT_DUPR[id];
+}
 
 export type ApplicationDraft = {
   firstName: string;
@@ -69,6 +120,37 @@ export function formatCoachingLevelsLabel(levels: CoachingLevelId[]): string {
   return levels
     .map((id) => COACHING_LEVEL_OPTIONS.find((o) => o.id === id)?.label ?? id)
     .join(", ");
+}
+
+const COACHING_LEVEL_ORDER: CoachingLevelId[] = ["beginner", "intermediate", "advanced"];
+
+const COACHING_LEVEL_DUPR_BOUNDS: Record<CoachingLevelId, { start: string; end: string }> = {
+  beginner: { start: "2.0", end: "2.5" },
+  intermediate: { start: "3.0", end: "3.5" },
+  advanced: { start: "3.5+", end: "3.5+" },
+};
+
+/** Compact label + DUPR span for public coach profiles. */
+export function formatPublicCoachingFocus(
+  coach: Pick<CoachProfile, "coachingLevels" | "skillTemplateId">
+): { levelsLabel: string; duprRange: string } {
+  const selected = resolveCoachCoachingLevels(coach);
+  const levels = COACHING_LEVEL_ORDER.filter((id) => selected.includes(id));
+  const first = levels[0] ?? "intermediate";
+  const last = levels[levels.length - 1] ?? first;
+
+  const levelsLabel =
+    levels.length === COACHING_LEVEL_OPTIONS.length
+      ? "Beginner – Advanced"
+      : levels.length === 1
+        ? (COACHING_LEVEL_OPTIONS.find((o) => o.id === first)?.label ?? first)
+        : `${COACHING_LEVEL_OPTIONS.find((o) => o.id === first)?.label} – ${COACHING_LEVEL_OPTIONS.find((o) => o.id === last)?.label}`;
+
+  const start = COACHING_LEVEL_DUPR_BOUNDS[first].start;
+  const end = COACHING_LEVEL_DUPR_BOUNDS[last].end;
+  const duprRange = start === end ? start : `${start} – ${end}`;
+
+  return { levelsLabel, duprRange };
 }
 
 export function draftToSubmitInput(draft: ApplicationDraft): SubmitApplicationInput {

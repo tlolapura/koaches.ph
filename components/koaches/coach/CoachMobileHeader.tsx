@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { getCoachPageMeta } from "@/lib/koaches/coach-page-titles";
-import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
 import { CoachAvatar } from "@/components/koaches/coach/CoachAvatar";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
@@ -46,7 +45,6 @@ export function CoachMobileHeader() {
         </Link>
       </div>
       </div>
-      <CourtStripe />
     </header>
   );
 }

@@ -11,6 +11,8 @@ import {
   getSessionDisplayStatusLabel,
   type SessionDisplayStatus,
 } from "@/lib/koaches/session-lifecycle";
+import type { DuprLevel } from "@/lib/koaches/types";
+import { formatStudentLevelDisplay } from "@/lib/koaches/application-form";
 import { cn } from "@/lib/utils";
 
 type Toast = { id: number; message: string; type: "success" | "error" };
@@ -67,7 +69,7 @@ export function InitialsAvatar({
   className,
 }: {
   name: string;
-  size?: "sm" | "md" | "lg" | "xl" | "hero";
+  size?: "sm" | "md" | "lg" | "xl" | "hero" | "public";
   variant?: "coral" | "lime" | "navy" | "alt";
   className?: string;
 }) {
@@ -85,6 +87,7 @@ export function InitialsAvatar({
     lg: "h-16 w-16 text-lg",
     xl: "h-20 w-20 text-xl",
     hero: "h-[7.5rem] w-[7.5rem] text-3xl sm:h-36 sm:w-36",
+    public: "h-32 w-32 text-2xl sm:h-36 sm:w-36 sm:text-3xl md:h-40 md:w-40",
   };
   const variants = {
     coral: "bg-[#16A34A] text-white",
@@ -177,20 +180,19 @@ export function SessionDisplayStatusBadge({ status }: { status: SessionDisplaySt
   );
 }
 
-export function DuprChip({ level }: { level: string }) {
-  const labels: Record<string, string> = {
-    "2.0": "Beginner",
-    "2.5": "Advanced Beginner",
-    "3.0": "Intermediate",
-    "3.5": "Solid Intermediate",
-    "4.0": "Advanced Intermediate",
-    "4.5+": "Advanced / Expert",
-  };
+export function StudentLevelChip({ level }: { level: DuprLevel | string }) {
+  const { label, helper } = formatStudentLevelDisplay(level as DuprLevel);
   return (
-    <span className="inline-flex items-center rounded-full bg-[#E5EFE8] px-2.5 py-1 text-xs font-medium text-[#3D5C47]">
-      {level} — {labels[level] ?? level}
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#E5EFE8] px-2.5 py-1 text-xs font-medium text-[#3D5C47]">
+      <span className="font-semibold">{label}</span>
+      <span className="text-[#9CA3AF]">· {helper}</span>
     </span>
   );
+}
+
+/** @deprecated Use StudentLevelChip */
+export function DuprChip({ level }: { level: string }) {
+  return <StudentLevelChip level={level} />;
 }
 
 export function ProgressBar({ value, max, className }: { value: number; max: number; className?: string }) {
@@ -236,7 +238,7 @@ export function MilestoneBadges({ current, total }: { current: number; total: nu
 }
 
 const fabClassName =
-  "coach-portal-fab fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#16A34A] text-white shadow-lg transition-colors hover:bg-[#15803D] md:bottom-8";
+  "coach-portal-fab fixed right-4 bottom-[var(--portal-bottom-nav-offset)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#16A34A] text-white shadow-lg transition-colors hover:bg-[#15803D] md:bottom-8";
 
 export function CoachFab({
   onClick,

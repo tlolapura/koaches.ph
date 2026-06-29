@@ -6,13 +6,19 @@ import { Clock, UserCheck, Users, X } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachPrograms } from "@/hooks/useCoachPrograms";
 import { useCoachSessions } from "@/hooks/useCoachSessions";
-import { DUPR_LEVELS } from "@/lib/koaches/constants";
 import { approveIntakeAction, fetchIntakeSubmissionsAction, rejectIntakeAction } from "@/lib/koaches/actions/intake";
+import {
+  coachingLevelFromDupr,
+  defaultDuprForCoachingLevel,
+  formatStudentCoachingLevelLabel,
+  formatStudentLevelWithDuprHelper,
+  STUDENT_COACHING_LEVEL_SELECT_OPTIONS,
+  type CoachingLevelId,
+} from "@/lib/koaches/application-form";
 import { createStudentAction } from "@/lib/koaches/actions/students";
 import { notifyRosterUpdated, useCoachStudents } from "@/hooks/useCoachStudents";
 import {
   CoachFab,
-  DuprChip,
   EmptyState,
   InitialsAvatar,
   ProgressBar,
@@ -31,7 +37,6 @@ import { getStudentSessionRatings } from "@/lib/koaches/session-progress";
 import { GenerateProgressCardSheet } from "@/components/koaches/coach/GenerateProgressCardSheet";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { crudToast } from "@/lib/koaches/crud-toast";
-import type { DuprLevel } from "@/lib/koaches/types";
 import { cn, formatDisplayDate } from "@/lib/utils";
 
 const ADD_STUDENT_FORM_ID = "add-student-form";
@@ -59,10 +64,6 @@ function FilterChip({
       {label}
     </button>
   );
-}
-
-function duprShortLabel(level: DuprLevel): string {
-  return DUPR_LEVELS.find((d) => d.level === level)?.label ?? level;
 }
 
 export default function StudentsPage() {
@@ -241,7 +242,7 @@ export default function StudentsPage() {
                       {s.mobile} · {s.email}
                     </p>
                     <p className="mt-1 text-xs text-[#9CA3AF]">
-                      DUPR {s.skillLevel} · {duprShortLabel(s.skillLevel)} · waiver{" "}
+                      {formatStudentLevelWithDuprHelper(s.skillLevel)} · waiver{" "}
                       {formatDisplayDate(s.submittedAt)}
                     </p>
                     <div className="mt-3 flex gap-2">
@@ -294,7 +295,7 @@ export default function StudentsPage() {
           action={emptyRosterState.action}
         />
       ) : (
-        <div className="mt-3 space-y-3">
+        <div className="mt-3 space-y-2">
           {students.map((s, i) => {
             const prog = programs.find((p) => p.id === s.programId);
             const lastSession = allSessions
@@ -304,38 +305,61 @@ export default function StudentsPage() {
                   (x.studentId === s.id || x.participants.some((p) => p.studentId === s.id))
               )
               .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))[0];
+            const lastLabel = lastSession?.date
+              ? formatDisplayDate(lastSession.date)
+              : null;
+
             return (
-              <Link key={s.id} href={`/coach/students/${s.id}`} className="coach-card block p-4">
-                <div className="flex items-start gap-3">
-                  <InitialsAvatar name={s.name} variant={i % 2 === 0 ? "lime" : "navy"} />
+              <Link
+                key={s.id}
+                href={`/coach/students/${s.id}`}
+                className="coach-card block px-3 py-2.5 active:bg-[#FAFAF8]"
+              >
+                <div className="flex items-center gap-2.5">
+                  <InitialsAvatar name={s.name} size="sm" variant={i % 2 === 0 ? "lime" : "navy"} />
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-heading font-semibold">{s.name}</p>
-                      {s.isArchived && (
-                        <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-semibold text-[#6B7280]">
-                          Archived
-                        </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <p className="font-heading truncate text-sm font-semibold text-[#111827]">
+                          {s.name}
+                        </p>
+                        {s.isArchived && (
+                          <span className="shrink-0 rounded bg-[#F3F4F6] px-1.5 py-0.5 text-[9px] font-semibold text-[#6B7280]">
+                            Archived
+                          </span>
+                        )}
+                      </div>
+                      <span className="shrink-0 rounded-full bg-[#E5EFE8] px-2 py-0.5 text-[10px] font-semibold text-[#3D5C47]">
+                        {formatStudentCoachingLevelLabel(s.skillLevel)}
+                      </span>
+                    </div>
+
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs text-[#6B7280]">
+                      {prog ? (
+                        <>
+                          <span className="truncate font-medium text-[#374151]">{prog.name}</span>
+                          <span className="text-[#D1D5DB]">·</span>
+                          <span className="shrink-0 tabular-nums">
+                            {s.sessionsCompleted}/{prog.sessionCount}
+                          </span>
+                        </>
+                      ) : (
+                        <SessionTypeBadge type="drop-in" />
+                      )}
+                      {lastLabel && (
+                        <>
+                          <span className="text-[#D1D5DB]">·</span>
+                          <span className="shrink-0">{lastLabel}</span>
+                        </>
                       )}
                     </div>
-                    <div className="mt-1">
-                      {prog ? <SessionTypeBadge type="program" /> : <SessionTypeBadge type="drop-in" />}
-                      <span className="ml-2 text-xs text-[#6B7280]">{prog?.name ?? "Drop-in"}</span>
-                    </div>
-                    <div className="mt-2">
-                      <DuprChip level={s.skillLevel} />
-                    </div>
+
                     {prog && (
-                      <div className="mt-3">
-                        <p className="text-xs font-semibold text-[#111827]">
-                          Session {s.sessionsCompleted} of {prog.sessionCount}
-                        </p>
-                        <ProgressBar value={s.sessionsCompleted} max={prog.sessionCount} className="mt-1" />
-                      </div>
-                    )}
-                    {lastSession && (
-                      <p className="mt-2 text-xs text-[#6B7280]">
-                        Last session: {formatDisplayDate(lastSession.date!)}
-                      </p>
+                      <ProgressBar
+                        value={s.sessionsCompleted}
+                        max={prog.sessionCount}
+                        className="mt-1.5 h-1"
+                      />
                     )}
                   </div>
                 </div>
@@ -368,12 +392,13 @@ export default function StudentsPage() {
             setSavingStudent(true);
             try {
               const fd = new FormData(e.currentTarget);
+              const coachingLevel = String(fd.get("coachingLevel") ?? "intermediate") as CoachingLevelId;
               await createStudentAction(coachId, {
                 firstName: String(fd.get("firstName") ?? ""),
                 lastName: String(fd.get("lastName") ?? ""),
                 mobile: String(fd.get("mobile") ?? ""),
                 email: String(fd.get("email") ?? ""),
-                skillLevel: String(fd.get("skillLevel") ?? "3.0") as DuprLevel,
+                skillLevel: defaultDuprForCoachingLevel(coachingLevel),
                 programId: String(fd.get("programId") ?? "") || undefined,
               });
               notifyRosterUpdated(coachId);
@@ -410,14 +435,11 @@ export default function StudentsPage() {
               ]}
             />
           </CoachSheetField>
-          <CoachSheetField label="Starting DUPR level">
+          <CoachSheetField label="Player level">
             <CoachSelect
-              name="skillLevel"
-              defaultValue="3.0"
-              options={DUPR_LEVELS.map((d) => ({
-                value: d.level,
-                label: `${d.level} — ${d.label}`,
-              }))}
+              name="coachingLevel"
+              defaultValue={coachingLevelFromDupr("3.0")}
+              options={STUDENT_COACHING_LEVEL_SELECT_OPTIONS}
             />
           </CoachSheetField>
         </form>

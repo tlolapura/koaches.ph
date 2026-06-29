@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
-import { useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
   ChevronRight,
-  CircleCheck,
   CircleDot,
   ClipboardList,
   Sun,
@@ -24,8 +23,6 @@ import {
   splitDisplayTime,
 } from "@/lib/koaches/session-time";
 import { useSessionPayment } from "@/hooks/useSessionPayment";
-import { useSessionStatus } from "@/hooks/useSessionStatus";
-import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import {
   getSessionDisplayStatus,
   type SessionDisplayStatus,
@@ -178,28 +175,14 @@ function ProgressActionLink({
 }
 
 function DashboardMarkDoneButton({ session }: { session: Session }) {
-  const { markDone } = useSessionStatus(session);
-  const { showToast } = useCoachToast();
-  const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
   return (
     <CoachButton
       type="button"
       variant="outline"
       className="min-h-[40px] w-full border-[#FDE68A] bg-[#FFFBEB] px-4 text-xs font-semibold text-[#92400E] hover:bg-[#FEF3C7] active:bg-[#FEF3C7]"
-      loading={busy}
-      loadingLabel="Saving…"
-      onClick={async () => {
-        setBusy(true);
-        try {
-          await markDone();
-          showToast("Session marked done");
-        } catch (e) {
-          showToast(e instanceof Error ? e.message : "Could not update session", "error");
-        } finally {
-          setBusy(false);
-        }
-      }}
+      onClick={() => router.push(`/coach/sessions/${session.id}`)}
     >
       Mark session done
     </CoachButton>

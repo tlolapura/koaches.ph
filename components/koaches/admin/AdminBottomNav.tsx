@@ -25,7 +25,7 @@ export function AdminBottomNav() {
       className="admin-bottom-nav fixed right-0 bottom-0 left-0 z-40 border-t border-[#E5E7EB] bg-white md:hidden"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
-      <div className="flex justify-around py-2">
+      <div className="flex h-[var(--portal-bottom-nav-height)] justify-around py-2">
         {tabs.map((tab) => {
           const active =
             tab.exact

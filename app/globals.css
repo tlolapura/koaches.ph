@@ -46,7 +46,7 @@
   --shadow-float: 0 12px 40px rgba(20, 83, 45, 0.15);
   --shadow-premium: 0 24px 64px rgba(15, 23, 42, 0.08);
 
-  --mobile-nav-height: 4rem;
+  --mobile-nav-height: 3.75rem;
 }
 
 @theme inline {
@@ -945,8 +945,11 @@ select,
   --coach-coral-light: var(--coach-green-light);
   --coach-coral-text: var(--coach-green-text);
   --coach-navy: var(--coach-forest);
-  --portal-bottom-nav-height: 4.5rem;
+  --portal-bottom-nav-height: 3.75rem;
   --portal-bottom-nav-offset: calc(var(--portal-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  /* Fixed bar above nav (~48px button + vertical padding) */
+  --portal-fixed-cta-bar-height: 4.5rem;
+  --portal-fixed-cta-stack-offset: calc(var(--portal-bottom-nav-offset) + var(--portal-fixed-cta-bar-height));
 
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   color: #111827;
@@ -1028,7 +1031,9 @@ select,
 /* Hide bottom chrome while a sheet/modal is open */
 body[data-coach-sheet-open] .coach-bottom-nav,
 body[data-coach-sheet-open] .admin-bottom-nav,
-body[data-coach-sheet-open] .coach-portal-fab {
+body[data-coach-sheet-open] .coach-portal-fab,
+body[data-coach-sheet-open] .coach-portal-fixed-cta,
+body[data-coach-sheet-open] .coach-session-step-footer {
   visibility: hidden;
   pointer-events: none;
 }
@@ -1185,13 +1190,15 @@ body[data-coach-sheet-open] .coach-portal-fab {
   flex-direction: column;
   gap: 0.625rem;
   margin-top: 2rem;
-  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: var(--portal-fixed-cta-stack-offset);
 }
 
+/* Fixed CTA bar flush above mobile bottom nav (session wrap-up, etc.) */
+.coach-portal .coach-portal-fixed-cta,
 .coach-portal .coach-session-step-footer {
   position: fixed;
   right: 0;
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: var(--portal-bottom-nav-offset);
   left: 0;
   z-index: 20;
   display: flex;
@@ -1199,11 +1206,17 @@ body[data-coach-sheet-open] .coach-portal-fab {
   gap: 0.625rem;
   border-top: 1px solid #E5E7EB;
   background: rgba(250, 250, 248, 0.95);
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  padding: 0.75rem 1rem;
   backdrop-filter: blur(8px);
 }
 
+/* Scroll clearance when a fixed CTA bar is shown above the nav */
+.coach-portal .coach-portal-fixed-cta-pad {
+  padding-bottom: var(--portal-fixed-cta-stack-offset);
+}
+
 @media (min-width: 768px) {
+  .coach-portal .coach-portal-fixed-cta,
   .coach-portal .coach-session-step-footer {
     position: sticky;
     bottom: 0;
@@ -1212,6 +1225,10 @@ body[data-coach-sheet-open] .coach-portal-fab {
     background: transparent;
     padding: 0;
     backdrop-filter: none;
+  }
+
+  .coach-portal .coach-portal-fixed-cta-pad {
+    padding-bottom: 0;
   }
 }
 

@@ -152,20 +152,6 @@ export function CoachSchedulePage() {
 
       {viewMode === "calendar" ? (
         <div className="mt-6">
-          {allSessions.length === 0 && (
-            <div className="mb-4">
-            <EmptyState
-              icon={CalendarDays}
-              title="No sessions scheduled"
-              description="Book your first session to fill your calendar."
-              action={
-                <button type="button" onClick={() => openAddSession()} className="coach-btn-primary max-w-xs">
-                  Book a session
-                </button>
-              }
-            />
-            </div>
-          )}
           <CoachScheduleGrid
             date={selectedDate}
             sessions={allSessions}

@@ -259,3 +259,26 @@ export function ScoreLegend() {
     </p>
   );
 }
+
+/** Compact skill row with stars — for coach progress summaries */
+export function SkillWinRow({
+  change,
+  className,
+}: {
+  change: SkillChange;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-center gap-3", className)}>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-[#111827]">{change.skillName}</p>
+      </div>
+      <SkillLevelCompareStars before={change.before} after={change.after} />
+      {change.delta > 0 && (
+        <span className="shrink-0 rounded-full bg-[#DCFCE7] px-1.5 py-0.5 text-[10px] font-bold text-[#166534]">
+          +{change.delta}
+        </span>
+      )}
+    </div>
+  );
+}

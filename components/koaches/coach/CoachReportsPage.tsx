@@ -225,7 +225,7 @@ export function CoachReportsPage() {
             {report.studentsByLevel.length > 0 && (
               <div className="coach-card mt-4 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                  By DUPR level
+                  By player level
                 </p>
                 <div className="mt-3">
                   <CoachStudentsByLevelChart levels={report.studentsByLevel} />

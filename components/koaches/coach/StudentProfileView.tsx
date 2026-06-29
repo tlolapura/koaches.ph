@@ -12,7 +12,7 @@ import { formatSessionDateLabel } from "@/lib/koaches/session-schedule";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { StudentProgressTab } from "@/components/koaches/coach/StudentProgressTab";
 import {
-  DuprChip,
+  StudentLevelChip,
   InitialsAvatar,
   MilestoneBadges,
   ProgressBar,
@@ -86,7 +86,7 @@ export function StudentProfileView({ student }: { student: Student }) {
           <InitialsAvatar name={student.name} size="lg" />
           <div>
             <CoachEntityTitle>{student.name}</CoachEntityTitle>
-            <div className="mt-2"><DuprChip level={student.skillLevel} /></div>
+            <div className="mt-2"><StudentLevelChip level={student.skillLevel} /></div>
             <p className="mt-2 text-sm text-[#6B7280]">{student.email}</p>
             <p className="text-sm text-[#6B7280]">{student.mobile}</p>
             <p className="mt-1 text-xs text-[#6B7280]">Enrolled {formatDate(student.enrolledDate)}</p>
