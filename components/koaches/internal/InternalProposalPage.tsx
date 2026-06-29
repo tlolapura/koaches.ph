@@ -1,6 +1,8 @@
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { BRAND_NAME, SITE_DOMAIN } from "@/lib/koaches/constants";
 
+const PROPOSAL_LIVE_URL = "picklekoach.vercel.app";
+
 const BUILT_FEATURES = [
   {
     label: "First",
@@ -244,6 +246,12 @@ export function InternalProposalPage() {
               to <strong className="text-[#111827]">{BRAND_NAME}</strong> ({SITE_DOMAIN}).
             </p>
             <p>
+              I've secured <strong className="text-[#111827]">@picklekoach</strong> on Facebook and
+              Instagram for when we're ready to show up publicly. The live demo for now is at{" "}
+              <strong className="text-[#111827]">{PROPOSAL_LIVE_URL}</strong>. Once we have a go
+              signal to push this out, I'll buy the {SITE_DOMAIN} domain.
+            </p>
+            <p>
               If a different name sparks something better for you, I'm very open to that. The mission
               stays the same either way: get the coach core right first. Public listing and booking
               can come later, if there's demand.
@@ -259,38 +267,42 @@ export function InternalProposalPage() {
             <ul className="mt-2 space-y-3 text-base">
               <li>
                 <a
-                  href={`https://${SITE_DOMAIN}`}
+                  href={`https://${PROPOSAL_LIVE_URL}`}
                   className="font-medium text-[#16A34A] underline underline-offset-2 hover:text-[#15803D]"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {SITE_DOMAIN}
+                  {PROPOSAL_LIVE_URL}
                 </a>{" "}
                 to see the site
               </li>
               <li>
                 <a
-                  href={`https://${SITE_DOMAIN}/apply`}
+                  href={`https://${PROPOSAL_LIVE_URL}/apply`}
                   className="font-medium text-[#16A34A] underline underline-offset-2 hover:text-[#15803D]"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {SITE_DOMAIN}/apply
+                  {PROPOSAL_LIVE_URL}/apply
                 </a>{" "}
                 to walk through the coach application flow
               </li>
               <li>
                 Or sign in to the coach portal at{" "}
                 <a
-                  href={`https://${SITE_DOMAIN}/coach/login`}
+                  href={`https://${PROPOSAL_LIVE_URL}/coach/login`}
                   className="font-medium text-[#16A34A] underline underline-offset-2 hover:text-[#15803D]"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {SITE_DOMAIN}/coach/login
+                  {PROPOSAL_LIVE_URL}/coach/login
                 </a>
               </li>
             </ul>
+            <p className="mt-4 text-base text-[#6B7280]">
+              The demo is live at {PROPOSAL_LIVE_URL} for now. Once we're ready to launch, I'll move
+              it to {SITE_DOMAIN}.
+            </p>
             <div className="rounded-xl border border-[#E5E7EB] bg-white px-4 py-4 text-base sm:px-5">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
                 Demo login
@@ -329,7 +341,7 @@ export function InternalProposalPage() {
             <p className="mt-1 text-sm text-[#6B7280]">
               Tech · {BRAND_NAME}
               <br />
-              {SITE_DOMAIN}
+              {PROPOSAL_LIVE_URL}
             </p>
 
             <div className="mt-8 rounded-2xl border border-[#E5E7EB] bg-white px-5 py-4">
