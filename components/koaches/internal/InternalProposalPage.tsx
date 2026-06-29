@@ -331,6 +331,51 @@ export function InternalProposalPage() {
               <br />
               {SITE_DOMAIN}
             </p>
+
+            <div className="mt-8 rounded-2xl border border-[#E5E7EB] bg-white px-5 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9CA3AF]">
+                Reach me
+              </p>
+              <ul className="mt-3 space-y-2.5 text-sm">
+                <li>
+                  <span className="text-[#6B7280]">Instagram · </span>
+                  <a
+                    href="https://instagram.com/leighlaang"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-[#4F8FF7] hover:underline"
+                  >
+                    @leighlaang
+                  </a>
+                </li>
+                <li>
+                  <span className="text-[#6B7280]">Facebook · </span>
+                  <a
+                    href="https://www.facebook.com/leighlaang"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-[#4F8FF7] hover:underline"
+                  >
+                    facebook.com/leighlaang
+                  </a>
+                </li>
+                <li>
+                  <span className="text-[#6B7280]">Email · </span>
+                  <a
+                    href="mailto:tlolapura@gmail.com"
+                    className="font-medium text-[#4F8FF7] hover:underline"
+                  >
+                    tlolapura@gmail.com
+                  </a>
+                </li>
+                <li>
+                  <span className="text-[#6B7280]">Mobile · </span>
+                  <a href="tel:+639688546190" className="font-medium text-[#4F8FF7] hover:underline">
+                    0968 854 6190
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
         </article>
 

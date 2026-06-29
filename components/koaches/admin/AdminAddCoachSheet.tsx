@@ -11,7 +11,8 @@ import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/Co
 import type { CoachProfile } from "@/lib/koaches/types";
 
 const EMPTY_FORM = {
-  fullName: "",
+  firstName: "",
+  lastName: "",
   mobile: "",
   email: "",
   password: "",
@@ -47,7 +48,8 @@ export function AdminAddCoachSheet({ open, onClose, onCreated }: AdminAddCoachSh
     setSubmitting(true);
     setError(null);
     const result = await createCoachManuallyAction({
-      fullName: form.fullName,
+      firstName: form.firstName,
+      lastName: form.lastName,
       mobile: form.mobile,
       email: form.email,
       password: form.password,
@@ -94,17 +96,30 @@ export function AdminAddCoachSheet({ open, onClose, onCreated }: AdminAddCoachSh
       }
     >
       <form id="admin-add-coach-form" onSubmit={(e) => void handleSubmit(e)} className="coach-form">
-        <CoachSheetField label="Full name" htmlFor="add-coach-name">
-          <input
-            id="add-coach-name"
-            className="coach-input"
-            value={form.fullName}
-            onChange={(e) => patch({ fullName: e.target.value })}
-            placeholder="Coach Juan dela Cruz"
-            autoComplete="name"
-            required
-          />
-        </CoachSheetField>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <CoachSheetField label="First name" htmlFor="add-coach-first-name">
+            <input
+              id="add-coach-first-name"
+              className="coach-input"
+              value={form.firstName}
+              onChange={(e) => patch({ firstName: e.target.value })}
+              placeholder="Juan"
+              autoComplete="given-name"
+              required
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Last name" htmlFor="add-coach-last-name">
+            <input
+              id="add-coach-last-name"
+              className="coach-input"
+              value={form.lastName}
+              onChange={(e) => patch({ lastName: e.target.value })}
+              placeholder="dela Cruz"
+              autoComplete="family-name"
+              required
+            />
+          </CoachSheetField>
+        </div>
 
         <CoachSheetField label="Mobile" htmlFor="add-coach-mobile">
           <input

@@ -8,7 +8,10 @@ import { DEFAULT_SESSION_PRICING, getStartingRate } from "@/lib/koaches/pricing"
 import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 
 export type ProvisionCoachProfile = {
-  fullName: string;
+  /** @deprecated Prefer firstName + lastName */
+  fullName?: string;
+  firstName?: string;
+  lastName?: string;
   mobile: string;
   preferredSlug?: string;
   specialization?: string;
@@ -41,13 +44,34 @@ export function validateCoachLoginPassword(password: string): string | null {
   return null;
 }
 
+function resolveProvisionNames(profile: ProvisionCoachProfile): {
+  firstName: string;
+  lastName: string;
+  displayName: string;
+} | null {
+  if (profile.firstName?.trim()) {
+    const firstName = profile.firstName.trim();
+    const lastName = profile.lastName?.trim() ?? "";
+    const displayName = joinPersonName(firstName, lastName);
+    if (!displayName) return null;
+    return { firstName, lastName, displayName };
+  }
+  if (profile.fullName?.trim()) {
+    const { firstName, lastName } = splitPersonName(profile.fullName);
+    const displayName = joinPersonName(firstName, lastName);
+    if (!displayName) return null;
+    return { firstName, lastName, displayName };
+  }
+  return null;
+}
+
 function buildCoachRow(
   profile: ProvisionCoachProfile,
   opts: { coachId: string; slug: string; userId: string; subscriptionExpiry: string }
 ): Omit<DbCoach, "created_at" | "updated_at"> {
   const sessionPricing = profile.sessionPricing ?? DEFAULT_SESSION_PRICING;
-  const { firstName, lastName } = splitPersonName(profile.fullName);
-  const displayName = joinPersonName(firstName, lastName);
+  const names = resolveProvisionNames(profile)!;
+  const { firstName, lastName, displayName } = names;
   return {
     id: opts.coachId,
     user_id: opts.userId,
@@ -107,9 +131,12 @@ export async function provisionCoachAccount(
   const passwordError = validateCoachLoginPassword(credentials.password);
   if (passwordError) return { ok: false, error: passwordError };
 
-  if (!profile.fullName.trim()) return { ok: false, error: "Full name is required." };
+  if (!resolveProvisionNames(profile)) {
+    return { ok: false, error: "First name is required." };
+  }
   if (!profile.mobile.trim()) return { ok: false, error: "Mobile number is required." };
 
+  const names = resolveProvisionNames(profile)!;
   const plan = profile.subscriptionPlan ?? "early-bird";
   if (plan === "early-bird") {
     const capacityError = await getEarlyBirdCapacityError(supabase);
@@ -127,7 +154,7 @@ export async function provisionCoachAccount(
   const loginEmail = credentials.loginEmail.trim().toLowerCase();
   const coachId = `coach-${crypto.randomUUID().slice(0, 8)}`;
   const slug = await resolveCoachSlug(supabase, {
-    fullName: profile.fullName,
+    fullName: names.displayName,
     preferredSlug,
   });
   const subscriptionExpiry = format(addMonths(new Date(), 1), "yyyy-MM-dd");
@@ -136,7 +163,7 @@ export async function provisionCoachAccount(
     email: loginEmail,
     password: credentials.password,
     email_confirm: true,
-    user_metadata: { full_name: profile.fullName.trim() },
+    user_metadata: { full_name: names.displayName },
   });
   if (authError || !authData.user) {
     return { ok: false, error: authError?.message ?? "Could not create login account." };
@@ -154,7 +181,7 @@ export async function provisionCoachAccount(
   const { error: profileError } = await supabase.from("profiles").insert({
     id: userId,
     email: loginEmail,
-    full_name: profile.fullName.trim(),
+    full_name: names.displayName,
     role: "coach",
     coach_id: coachId,
   });

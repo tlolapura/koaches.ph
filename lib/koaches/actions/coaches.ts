@@ -158,7 +158,8 @@ export async function updateCoachCourtIdsAction(
 }
 
 export type CreateCoachManuallyInput = {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   mobile: string;
   email: string;
   password: string;
@@ -182,7 +183,8 @@ export async function createCoachManuallyAction(
   const result = await provisionCoachAccount(
     supabase,
     {
-      fullName: input.fullName,
+      firstName: input.firstName,
+      lastName: input.lastName,
       mobile: input.mobile,
       preferredSlug: input.preferredSlug,
       specialization: input.specialization,
