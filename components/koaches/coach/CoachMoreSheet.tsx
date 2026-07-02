@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, FileText, Settings, Share2, User } from "lucide-react";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -75,6 +76,13 @@ export function CoachMoreSheet({ open, onClose }: CoachMoreSheetProps) {
             </Link>
           );
         })}
+      </div>
+
+      <div className="mt-4 border-t border-[#E5E7EB] pt-3">
+        <CoachSignOutButton
+          className="coach-btn-ghost-danger w-full"
+          aria-label="Sign out of coach account"
+        />
       </div>
     </CoachBottomSheet>
   );
