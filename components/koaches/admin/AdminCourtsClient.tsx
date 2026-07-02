@@ -11,12 +11,15 @@ import {
 } from "@/lib/koaches/actions/courts";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
+import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { cn } from "@/lib/utils";
 
 type AdminCourtsClientProps = {
   initialCourts: Court[];
 };
+
+const ADD_COURT_FORM_ID = "admin-add-court-form";
 
 export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
   const router = useRouter();
@@ -120,7 +123,10 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
           <button
             type="button"
             className="coach-btn-primary w-full gap-2 px-5 md:w-auto"
-            onClick={() => setAddOpen((o) => !o)}
+            onClick={() => {
+              setError(null);
+              setAddOpen(true);
+            }}
           >
             <Plus className="h-4 w-4" />
             Add court
@@ -134,80 +140,92 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
         </p>
       )}
 
-      {addOpen && (
-        <form className="coach-card coach-form mt-6 p-5 sm:p-6" onSubmit={(e) => void handleAdd(e)}>
-          <p className="font-heading font-semibold">New court</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <CoachSheetField label="Court name" htmlFor="court-name" className="sm:col-span-2">
-              <input
-                id="court-name"
-                className="coach-input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Ayala Malls Pickleball Courts"
-                required
-              />
-            </CoachSheetField>
-            <CoachSheetField label="Address" htmlFor="court-address" className="sm:col-span-2">
-              <input
-                id="court-address"
-                className="coach-input"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Street, building, or court complex"
-                required
-              />
-            </CoachSheetField>
-            <CoachSheetField label="City" htmlFor="court-city">
-              <input
-                id="court-city"
-                className="coach-input"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Makati"
-              />
-            </CoachSheetField>
-            <CoachSheetField label="Region" htmlFor="court-region">
-              <input
-                id="court-region"
-                className="coach-input"
-                value={region}
-                onChange={(e) => setRegion(e.target.value)}
-                placeholder="NCR"
-              />
-            </CoachSheetField>
-            <CoachSheetField
-              label="Google Maps link (optional)"
-              htmlFor="court-maps"
-              className="sm:col-span-2"
-            >
-              <input
-                id="court-maps"
-                className="coach-input"
-                type="url"
-                value={mapsUrl}
-                onChange={(e) => setMapsUrl(e.target.value)}
-                placeholder="https://maps.google.com/..."
-              />
-            </CoachSheetField>
-          </div>
+      <CoachBottomSheet
+        open={addOpen}
+        onClose={() => {
+          if (saving) return;
+          setAddOpen(false);
+          resetForm();
+        }}
+        title="Add court"
+        subtitle="Create a new court for coach assignments"
+        footer={
           <div className="flex gap-2">
-            <CoachButton type="submit" className="w-auto px-5" loading={saving} loadingLabel="Saving…">
-              Save court
-            </CoachButton>
-            <button
+            <CoachButton
               type="button"
-              className="coach-btn-outline w-auto px-5"
+              variant="outline"
+              className="flex-1"
+              disabled={saving}
               onClick={() => {
                 setAddOpen(false);
                 resetForm();
               }}
             >
               Cancel
-            </button>
+            </CoachButton>
+            <CoachButton
+              type="submit"
+              form={ADD_COURT_FORM_ID}
+              className="flex-1"
+              loading={saving}
+              loadingLabel="Saving…"
+            >
+              Save court
+            </CoachButton>
           </div>
+        }
+      >
+        <form id={ADD_COURT_FORM_ID} className="coach-form" onSubmit={(e) => void handleAdd(e)}>
+          <CoachSheetField label="Court name" htmlFor="court-name">
+            <input
+              id="court-name"
+              className="coach-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Ayala Malls Pickleball Courts"
+              required
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Address" htmlFor="court-address">
+            <input
+              id="court-address"
+              className="coach-input"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Street, building, or court complex"
+              required
+            />
+          </CoachSheetField>
+          <CoachSheetField label="City" htmlFor="court-city">
+            <input
+              id="court-city"
+              className="coach-input"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Makati"
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Region" htmlFor="court-region">
+            <input
+              id="court-region"
+              className="coach-input"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              placeholder="NCR"
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Google Maps link (optional)" htmlFor="court-maps">
+            <input
+              id="court-maps"
+              className="coach-input"
+              type="url"
+              value={mapsUrl}
+              onChange={(e) => setMapsUrl(e.target.value)}
+              placeholder="https://maps.google.com/..."
+            />
+          </CoachSheetField>
         </form>
-      )}
+      </CoachBottomSheet>
 
       <div className="mt-6 grid gap-3 lg:grid-cols-2">
         {courtList.length === 0 ? (
