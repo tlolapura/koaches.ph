@@ -26,6 +26,23 @@ export function resolveParticipantProgramContext(
   session: Session,
   lookup?: ParticipantProgramLookup
 ): ParticipantProgramContext {
+  // Drop-in sessions should always use the coach's configured drop-in skills,
+  // regardless of any student's enrolled program.
+  if (session.type === "drop-in") {
+    const coach = lookup?.coach;
+    const rubricId = coach?.customSkillIds?.length
+      ? "custom"
+      : (coach?.skillTemplateId ?? "intermediate");
+
+    return {
+      programName: null,
+      rubricId,
+      customSkillIds: coach?.customSkillIds,
+      customSkills: coach?.customSkills,
+      skillLabelOverrides: coach?.skillLabelOverrides,
+    };
+  }
+
   const student = participant.studentId ? lookup?.students?.get(participant.studentId) : undefined;
 
   const program = student?.programId

@@ -9,7 +9,11 @@ import {
   resolveSkills,
   SKILL_CATEGORY_LABELS,
 } from "@/lib/koaches/constants";
-import { SKILL_SCORE_LABELS, scoreLabel } from "@/lib/koaches/skill-progress-display";
+import {
+  type SkillScore,
+  scoreLabel,
+  scoreLabelsForSkill,
+} from "@/lib/koaches/skill-progress-display";
 import type { SkillCategory, SkillRating, SkillRubricId } from "@/lib/koaches/types";
 import { cn } from "@/lib/utils";
 
@@ -47,11 +51,13 @@ function ScorePicker({
   onChange,
   tone,
   label,
+  labels,
 }: {
   value: number;
   onChange: (score: number) => void;
   tone: "start" | "after";
   label: string;
+  labels: Record<SkillScore, string>;
 }) {
   const selected =
     tone === "start"
@@ -73,11 +79,11 @@ function ScorePicker({
         {label}
       </p>
       <div className="mt-1.5 flex gap-1" role="group" aria-label={label}>
-        {([1, 2, 3, 4, 5] as const).map((n) => (
+        {([0, 1, 2, 3, 4, 5] as const).map((n) => (
           <button
             key={n}
             type="button"
-            aria-label={`${n}, ${SKILL_SCORE_LABELS[n]}`}
+            aria-label={`${n}, ${labels[n]}`}
             aria-pressed={value === n}
             onClick={() => onChange(n)}
             className={cn(
@@ -89,7 +95,9 @@ function ScorePicker({
           </button>
         ))}
       </div>
-      <p className="mt-1 text-[11px] font-medium text-[#9CA3AF]">{scoreLabel(value)}</p>
+      <p className="mt-1.5 rounded-md bg-white/70 px-2 py-1 text-[11px] font-medium text-[#374151]">
+        {value} - {scoreLabel(value, labels)}
+      </p>
     </div>
   );
 }
@@ -99,6 +107,7 @@ function SkillRatingRow({
   beforeScore,
   afterScore,
   skipped,
+  scoreLabels,
   onBefore,
   onAfter,
   onToggleSkipped,
@@ -107,6 +116,7 @@ function SkillRatingRow({
   beforeScore: number;
   afterScore: number;
   skipped: boolean;
+  scoreLabels: Record<SkillScore, string>;
   onBefore: (n: number) => void;
   onAfter: (n: number) => void;
   onToggleSkipped: (skipped: boolean) => void;
@@ -149,12 +159,14 @@ function SkillRatingRow({
           onChange={onBefore}
           tone="start"
           label="Before"
+          labels={scoreLabels}
         />
         <ScorePicker
           value={afterScore}
           onChange={onAfter}
           tone="after"
           label="After"
+          labels={scoreLabels}
         />
       </div>
       <button
@@ -194,6 +206,7 @@ export function SkillRatingPanel({
       : defaultRatings(activeRubric, customSkillIds, customSkills, skillLabelOverrides)
   );
   const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState<"coverage" | "ratings">("coverage");
 
   const visibleCategories = useMemo(() => {
     const cats = resolveSkills(skillConfig).map((s) => s.category);
@@ -207,6 +220,17 @@ export function SkillRatingPanel({
         skills: before.filter((s) => s.category === category),
       })),
     [before, visibleCategories]
+  );
+
+  const ratedSkillsByCategory = useMemo(
+    () =>
+      skillsByCategory
+        .map(({ category, skills }) => ({
+          category,
+          skills: skills.filter((s) => !s.skipped),
+        }))
+        .filter(({ skills }) => skills.length > 0),
+    [skillsByCategory]
   );
 
   const setBeforeScore = (skillId: string, score: number) => {
@@ -233,59 +257,141 @@ export function SkillRatingPanel({
     <div className="space-y-4">
       <div className="coach-card p-4">
         <p className="text-sm text-[#6B7280]">
-          {ratedCount} to rate
+          {ratedCount} covered
           {skippedCount > 0 && (
             <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
           )}
         </p>
 
-        <div className="mt-5 space-y-8">
-          {skillsByCategory.map(({ category, skills }) => (
-            <section key={category}>
-              <h3 className="font-heading text-base font-semibold text-[#111827]">
-                {SKILL_CATEGORY_LABELS[category]}
-              </h3>
-              <div className="mt-3 space-y-3">
-                {skills.map((skill) => {
-                  const afterSkill = after.find((a) => a.skillId === skill.skillId)!;
-                  return (
-                    <SkillRatingRow
-                      key={skill.skillId}
-                      skillName={skill.skillName}
-                      beforeScore={skill.score}
-                      afterScore={afterSkill.score}
-                      skipped={Boolean(skill.skipped)}
-                      onBefore={(n) => setBeforeScore(skill.skillId, n)}
-                      onAfter={(n) => setAfterScore(skill.skillId, n)}
-                      onToggleSkipped={(skipped) => setSkipped(skill.skillId, skipped)}
-                    />
-                  );
-                })}
+        {step === "coverage" ? (
+          <div className="mt-5 space-y-6">
+            {skillsByCategory.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-4 text-sm text-[#6B7280]">
+                No skills configured yet for this session.
               </div>
-            </section>
-          ))}
-        </div>
+            ) : (
+              skillsByCategory.map(({ category, skills }) => (
+              <section key={category}>
+                <h3 className="font-heading text-base font-semibold text-[#111827]">
+                  {SKILL_CATEGORY_LABELS[category]}
+                </h3>
+                <div className="mt-2 space-y-2">
+                  {skills.map((skill) => {
+                    const covered = !skill.skipped;
+                    return (
+                      <div
+                        key={skill.skillId}
+                        className={cn(
+                          "rounded-lg border px-3 py-2",
+                          covered ? "border-[#BBF7D0] bg-[#F0FDF4]" : "border-[#E5E7EB] bg-white"
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setSkipped(skill.skillId, covered)}
+                          className="flex min-h-[44px] w-full items-center gap-3 text-left"
+                          aria-pressed={covered}
+                        >
+                          <span
+                            className={cn(
+                              "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors",
+                              covered
+                                ? "border-[#16A34A] bg-[#16A34A] text-white"
+                                : "border-[#D1D5DB] bg-white text-transparent"
+                            )}
+                            aria-hidden
+                          >
+                            <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                          </span>
+                          <p className="text-sm font-medium text-[#111827]">{skill.skillName}</p>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))
+            )}
+          </div>
+        ) : ratedSkillsByCategory.length === 0 ? (
+          <div className="mt-5 rounded-xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-4 text-sm text-[#6B7280]">
+            No covered skills to rate yet. Go back and mark at least one skill as covered.
+          </div>
+        ) : (
+          <div className="mt-5 space-y-8">
+            {ratedSkillsByCategory.map(({ category, skills }) => (
+              <section key={category}>
+                <h3 className="font-heading text-base font-semibold text-[#111827]">
+                  {SKILL_CATEGORY_LABELS[category]}
+                </h3>
+                <div className="mt-3 space-y-3">
+                  {skills.map((skill) => {
+                    const afterSkill = after.find((a) => a.skillId === skill.skillId)!;
+                    return (
+                      <SkillRatingRow
+                        key={skill.skillId}
+                        skillName={skill.skillName}
+                        beforeScore={skill.score}
+                        afterScore={afterSkill.score}
+                        skipped={Boolean(skill.skipped)}
+                        scoreLabels={scoreLabelsForSkill(
+                          skill.skillId,
+                          skill.category,
+                          skillLabelOverrides
+                        )}
+                        onBefore={(n) => setBeforeScore(skill.skillId, n)}
+                        onAfter={(n) => setAfterScore(skill.skillId, n)}
+                        onToggleSkipped={(skipped) => setSkipped(skill.skillId, skipped)}
+                      />
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
 
         <div className="mt-6 border-t border-[#E5E7EB] pt-4">
-          <CoachButton
-            type="button"
-            variant="soft"
-            className="w-full"
-            loading={saving}
-            loadingLabel="Saving…"
-            onClick={async () => {
-              if (!onSave || saving) return;
-              setSaving(true);
-              try {
-                await onSave(before, after);
-              } finally {
-                setSaving(false);
-              }
-            }}
-          >
-            <Check className="h-4 w-4" strokeWidth={2.5} />
-            Save ratings
-          </CoachButton>
+          {step === "coverage" ? (
+            <CoachButton
+              type="button"
+              variant="soft"
+              className="w-full"
+              onClick={() => setStep("ratings")}
+            >
+              Continue to ratings
+            </CoachButton>
+          ) : (
+            <div className="space-y-2">
+              <CoachButton
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setStep("coverage")}
+              >
+                Back to coverage
+              </CoachButton>
+              <CoachButton
+                type="button"
+                variant="soft"
+                className="w-full"
+                loading={saving}
+                loadingLabel="Saving…"
+                onClick={async () => {
+                  if (!onSave || saving) return;
+                  setSaving(true);
+                  try {
+                    await onSave(before, after);
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+              >
+                <Check className="h-4 w-4" strokeWidth={2.5} />
+                Save ratings
+              </CoachButton>
+            </div>
+          )}
         </div>
       </div>
     </div>

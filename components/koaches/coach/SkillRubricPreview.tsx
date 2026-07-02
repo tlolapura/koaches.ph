@@ -78,7 +78,7 @@ export function SkillRubricPreview({
                 {section.items.map((item) => (
                   <li key={item} className="flex items-center gap-2 text-xs text-[#6B7280]">
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-[#E5E7EB] text-[9px] font-medium text-[#9CA3AF]">
-                      1–5
+                      0–5
                     </span>
                     {item}
                   </li>

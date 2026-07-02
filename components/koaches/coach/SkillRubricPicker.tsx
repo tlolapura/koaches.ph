@@ -13,6 +13,13 @@ import {
 } from "@/lib/koaches/constants";
 import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
 import type { SkillCategory, SkillDefinition, SkillRubricId } from "@/lib/koaches/types";
+import {
+  SKILL_SCORE_LABELS,
+  type SkillScore,
+  scoreLabel,
+  scoreLabelsForSkill,
+  scoreOverrideKey,
+} from "@/lib/koaches/skill-progress-display";
 import { cn } from "@/lib/utils";
 
 export type SkillRubricPickerValue = {
@@ -32,12 +39,25 @@ function cleanOverrides(
   customSkillIds: string[],
   overrides: Record<string, string>
 ): Record<string, string> {
+  const selected = new Set(customSkillIds);
   const next: Record<string, string> = {};
-  for (const id of customSkillIds) {
-    const skill = DEFAULT_SKILLS.find((s) => s.id === id);
-    const label = overrides[id]?.trim();
-    if (skill && label && label !== skill.name) {
-      next[id] = label;
+  for (const [key, rawValue] of Object.entries(overrides)) {
+    const value = rawValue.trim();
+    if (!value) continue;
+
+    if (key.startsWith("__score__:")) {
+      const encoded = key.slice("__score__:".length);
+      const [skillId] = encoded.split(":");
+      if (skillId && selected.has(skillId)) {
+        next[key] = value;
+      }
+      continue;
+    }
+
+    if (!selected.has(key)) continue;
+    const skill = DEFAULT_SKILLS.find((s) => s.id === key);
+    if (skill && value !== skill.name) {
+      next[key] = value;
     }
   }
   return next;
@@ -52,6 +72,10 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
   const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set(["third-shot"]));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftLabel, setDraftLabel] = useState("");
+  const [editingScoreDescriptionsFor, setEditingScoreDescriptionsFor] = useState<string | null>(null);
+  const [scoreDescriptionDraft, setScoreDescriptionDraft] = useState<Record<SkillScore, string>>(
+    SKILL_SCORE_LABELS
+  );
   const [addingToCategory, setAddingToCategory] = useState<SkillCategory | null>(null);
   const [newSkillName, setNewSkillName] = useState("");
 
@@ -107,6 +131,36 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
       customSkills: value.customSkills.filter((skill) => skill.id !== skillId),
       skillLabelOverrides: cleanOverrides(customSkillIds, value.skillLabelOverrides),
     });
+  };
+
+  const startEditScoreDescriptions = (skillId: string) => {
+    setEditingScoreDescriptionsFor(skillId);
+    const skill = resolveSkillDefinition(skillId, value);
+    setScoreDescriptionDraft(scoreLabelsForSkill(skillId, skill?.category, value.skillLabelOverrides));
+  };
+
+  const cancelEditScoreDescriptions = () => {
+    setEditingScoreDescriptionsFor(null);
+    setScoreDescriptionDraft(SKILL_SCORE_LABELS);
+  };
+
+  const commitScoreDescriptions = (skillId: string) => {
+    const overrides = { ...value.skillLabelOverrides };
+    for (const score of [0, 1, 2, 3, 4, 5] as const) {
+      const key = scoreOverrideKey(skillId, score);
+      const custom = scoreDescriptionDraft[score]?.trim();
+      const base = SKILL_SCORE_LABELS[score];
+      if (!custom || custom === base) {
+        delete overrides[key];
+      } else {
+        overrides[key] = custom;
+      }
+    }
+    onChange({
+      ...value,
+      skillLabelOverrides: cleanOverrides(value.customSkillIds, overrides),
+    });
+    cancelEditScoreDescriptions();
   };
 
   const addCustomSkill = (category: SkillCategory) => {
@@ -319,6 +373,61 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
                             {on && displayName !== skill.name && (
                               <p className="mt-0.5 text-[11px] text-[#9CA3AF]">Default: {skill.name}</p>
                             )}
+                            {on && (
+                              <div className="mt-2">
+                                {editingScoreDescriptionsFor === skill.id ? (
+                                  <div className="space-y-1 rounded-lg border border-[#E5E7EB] bg-white p-2">
+                                    <p className="text-[11px] font-semibold text-[#6B7280]">
+                                      0-5 descriptions
+                                    </p>
+                                    {[0, 1, 2, 3, 4, 5].map((score) => (
+                                      <label
+                                        key={`${skill.id}-${score}`}
+                                        className="flex items-center gap-2 text-[11px] text-[#6B7280]"
+                                      >
+                                        <span className="w-4 shrink-0 text-center font-semibold text-[#111827]">
+                                          {score}
+                                        </span>
+                                        <input
+                                          value={scoreDescriptionDraft[score as SkillScore]}
+                                          onChange={(e) =>
+                                            setScoreDescriptionDraft((prev) => ({
+                                              ...prev,
+                                              [score]: e.target.value,
+                                            }))
+                                          }
+                                          className="coach-input h-8 flex-1 px-2 py-1 text-xs"
+                                        />
+                                      </label>
+                                    ))}
+                                    <div className="flex gap-2 pt-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => commitScoreDescriptions(skill.id)}
+                                        className="min-h-[32px] flex-1 rounded-md bg-[#111827] text-xs font-semibold text-white"
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={cancelEditScoreDescriptions}
+                                        className="min-h-[32px] rounded-md border border-[#E5E7EB] px-3 text-xs font-semibold text-[#6B7280]"
+                                      >
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => startEditScoreDescriptions(skill.id)}
+                                    className="text-xs font-semibold text-[#4F8FF7]"
+                                  >
+                                    Edit 0-5 descriptions
+                                  </button>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -378,6 +487,57 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
                               </div>
                             </div>
                           )}
+                          <div className="mt-2">
+                            {editingScoreDescriptionsFor === skill.id ? (
+                              <div className="space-y-1 rounded-lg border border-[#BFDBFE] bg-white p-2">
+                                <p className="text-[11px] font-semibold text-[#6B7280]">0-5 descriptions</p>
+                                {[0, 1, 2, 3, 4, 5].map((score) => (
+                                  <label
+                                    key={`${skill.id}-${score}`}
+                                    className="flex items-center gap-2 text-[11px] text-[#6B7280]"
+                                  >
+                                    <span className="w-4 shrink-0 text-center font-semibold text-[#111827]">
+                                      {score}
+                                    </span>
+                                    <input
+                                      value={scoreDescriptionDraft[score as SkillScore]}
+                                      onChange={(e) =>
+                                        setScoreDescriptionDraft((prev) => ({
+                                          ...prev,
+                                          [score]: e.target.value,
+                                        }))
+                                      }
+                                      className="coach-input h-8 flex-1 px-2 py-1 text-xs"
+                                    />
+                                  </label>
+                                ))}
+                                <div className="flex gap-2 pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => commitScoreDescriptions(skill.id)}
+                                    className="min-h-[32px] flex-1 rounded-md bg-[#111827] text-xs font-semibold text-white"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={cancelEditScoreDescriptions}
+                                    className="min-h-[32px] rounded-md border border-[#E5E7EB] px-3 text-xs font-semibold text-[#6B7280]"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => startEditScoreDescriptions(skill.id)}
+                                className="text-xs font-semibold text-[#4F8FF7]"
+                              >
+                                Edit 0-5 descriptions
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>

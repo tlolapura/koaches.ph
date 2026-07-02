@@ -156,8 +156,8 @@ export function SessionSkillRatingsSection({ session }: SessionSkillRatingsSecti
       <h2 className="font-heading text-lg font-semibold">Rate skills</h2>
       <p className="mt-1 text-sm text-[#6B7280]">
         {participants.length > 1
-          ? "Pick a player, then tap before and after."
-          : "Tap before and after for each skill you covered."}
+          ? "Pick a player, mark covered skills, then rate before and after."
+          : "Mark covered skills first, then rate before and after."}
       </p>
 
       {participants.length > 1 && (

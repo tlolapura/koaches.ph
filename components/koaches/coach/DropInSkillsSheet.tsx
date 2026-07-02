@@ -58,7 +58,7 @@ export function DropInSkillsSheet({ open, onClose, coach, onSaved }: DropInSkill
       <SkillRubricPicker
         value={value}
         onChange={setValue}
-        hint="Pick catalog skills, add your own per category, or rename anything to match how you coach."
+        hint="Pick catalog skills, add your own per category, rename skills, and customize 0-5 rating descriptions."
       />
 
       <CoachSheetFooter>

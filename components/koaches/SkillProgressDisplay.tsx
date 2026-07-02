@@ -5,6 +5,7 @@ import type { SkillRating } from "@/lib/koaches/types";
 import {
   buildSkillChanges,
   scoreLabel,
+  scoreLabelsForSkill,
   sessionProgressHeadline,
   summarizeSkillChanges,
   type SkillChange,
@@ -120,6 +121,7 @@ export function SkillLevelDots({
 
 export function SkillChangeRow({ change, compact }: { change: SkillChange; compact?: boolean }) {
   const { delta, skillName, before, after } = change;
+  const scoreLabels = scoreLabelsForSkill(change.skillId, change.category);
 
   return (
     <div className={cn("flex items-center gap-3", compact ? "py-2" : "py-2.5")}>
@@ -127,7 +129,7 @@ export function SkillChangeRow({ change, compact }: { change: SkillChange; compa
         <p className="text-sm font-medium text-[#111827]">{skillName}</p>
         {!compact && (
           <p className="mt-0.5 text-xs text-[#6B7280]">
-            {scoreLabel(before)} → {scoreLabel(after)}
+            {scoreLabel(before, scoreLabels)} → {scoreLabel(after, scoreLabels)}
           </p>
         )}
       </div>
@@ -244,7 +246,15 @@ export function TopWinsList({
         >
           <span className="text-sm font-medium text-[#111827]">{win.skillName}</span>
           <span className="shrink-0 text-xs font-semibold text-[#3D5C47]">
-            {scoreLabel(win.before)} → {scoreLabel(win.after)}
+            {scoreLabel(
+              win.before,
+              scoreLabelsForSkill(win.skillId, win.category)
+            )}{" "}
+            →{" "}
+            {scoreLabel(
+              win.after,
+              scoreLabelsForSkill(win.skillId, win.category)
+            )}
           </span>
         </li>
       ))}
@@ -255,7 +265,7 @@ export function TopWinsList({
 export function ScoreLegend() {
   return (
     <p className="text-[10px] text-[#9CA3AF]">
-      Each dot is a level · 1 Starting out → 5 Excellent
+      Each dot is a level · 0 Not introduced yet → 5 Competition-ready
     </p>
   );
 }
