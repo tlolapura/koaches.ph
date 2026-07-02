@@ -612,13 +612,6 @@ export function AddSessionSheet({
 
         {showScheduleFields && (
           <>
-            {date && (
-              <p className="rounded-xl border border-[#D1FAE5] bg-[#F0FDF4] px-3 py-2 text-xs text-[#166534]">
-                Tip: start times marked as Booked or Blocked are unavailable. Pick an open time, then choose
-                duration.
-              </p>
-            )}
-
             {hasConflict && (
               <p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs font-medium text-[#B91C1C]">
                 That time conflicts with another session or blocked slot. Pick an open time.
