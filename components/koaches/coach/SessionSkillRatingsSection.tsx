@@ -8,13 +8,12 @@ import {
   formatParticipantProgramLabel,
   resolveParticipantProgramContext,
 } from "@/lib/koaches/participant-program";
-import { filterRatedSkills, hasRatingsForCard } from "@/lib/koaches/session-progress";
-import { findProgressCardForSession } from "@/lib/koaches/progress-cards";
+import { filterRatedSkills } from "@/lib/koaches/session-progress";
+import { buildProgressCardDraft, findProgressCardForSession } from "@/lib/koaches/progress-cards";
 import { useParticipantProgress } from "@/hooks/useParticipantProgress";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { SkillRatingPanel } from "@/components/koaches/coach/SkillRatingPanel";
-import { GenerateProgressCardSheet } from "@/components/koaches/coach/GenerateProgressCardSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +24,7 @@ type SessionSkillRatingsSectionProps = {
 function ParticipantProgressPanel({
   session,
   participantId,
-  coachLookup,
+  coachLookup: coachLookupProp,
 }: {
   session: Session;
   participantId: string;
@@ -33,17 +32,29 @@ function ParticipantProgressPanel({
 }) {
   const participants = getSessionParticipants(session);
   const participant = participants.find((p) => p.id === participantId)!;
-  const ctx = resolveParticipantProgramContext(participant, session, coachLookup);
+  const ctx = resolveParticipantProgramContext(participant, session, coachLookupProp);
   const { ratings, saveRatings } = useParticipantProgress(session, participant.id);
   const { cards, saveCard } = useProgressCards(session.coachId);
+  const { coach } = useCoachProfile(session.coachId);
   const { showToast } = useCoachToast();
-  const [generateOpen, setGenerateOpen] = useState(false);
+  const [progressCardId, setProgressCardId] = useState<string | null>(null);
 
-  const existingCard =
-    participant.studentId &&
-    findProgressCardForSession(cards, session.id, participant.studentId);
+  const existingCard = participant.studentId
+    ? findProgressCardForSession(cards, session.id, participant.studentId)
+    : undefined;
 
-  const readyForCard = hasRatingsForCard(ratings);
+  const cardLinkId = existingCard?.id ?? progressCardId;
+
+  const progressCardLookup = coach
+    ? {
+        coach: {
+          name: coach.name,
+          firstName: coach.firstName,
+          lastName: coach.lastName,
+          skillTemplateId: coach.skillTemplateId,
+        },
+      }
+    : undefined;
 
   return (
     <div>
@@ -69,49 +80,52 @@ function ParticipantProgressPanel({
         skillLabelOverrides={ctx.skillLabelOverrides}
         sessionNumber={ctx.sessionNumber}
         totalSessions={ctx.totalSessions}
-        onSave={async (before, after) => {
+        initialFeedback={{
+          strengths: existingCard?.coachStrengths ?? "",
+          toImprove: existingCard?.coachToImprove ?? "",
+          generalNote: existingCard?.coachMessage ?? "",
+        }}
+        onSave={async (before, after, feedback) => {
           await saveRatings({ ratingsBefore: before, ratingsAfter: after });
-          if (existingCard) {
-            await saveCard({
-              ...existingCard,
-              ratingsBefore: filterRatedSkills(before),
-              ratingsAfter: filterRatedSkills(after),
-            });
-            showToast(`Ratings and progress card updated for ${participant.name}`);
-          } else {
+
+          if (!participant.studentId) {
             showToast(`Ratings saved for ${participant.name}`);
+            return;
           }
+
+          const card = existingCard
+            ? {
+                ...existingCard,
+                ratingsBefore: filterRatedSkills(before),
+                ratingsAfter: filterRatedSkills(after),
+                coachStrengths: feedback.strengths.trim() || undefined,
+                coachToImprove: feedback.toImprove.trim() || undefined,
+                coachMessage: feedback.generalNote.trim(),
+              }
+            : buildProgressCardDraft({
+                session,
+                participantId: participant.id,
+                feedback,
+                ratings: { ratingsBefore: before, ratingsAfter: after },
+                lookup: progressCardLookup,
+              });
+
+          const savedId = await saveCard(card);
+          setProgressCardId(savedId);
+          showToast(`Session saved for ${participant.name}`);
         }}
       />
 
-      {readyForCard && (
+      {cardLinkId && (
         <div className="mt-4">
-          {existingCard ? (
-            <Link
-              href={`/progress/${existingCard.id}`}
-              className="coach-btn-outline w-full text-center text-sm"
-            >
-              View progress card
-            </Link>
-          ) : (
-            <button
-              type="button"
-              className="coach-btn-primary w-full"
-              onClick={() => setGenerateOpen(true)}
-            >
-              Generate progress card
-            </button>
-          )}
+          <Link
+            href={`/progress/${cardLinkId}`}
+            className="coach-btn-outline w-full text-center text-sm"
+          >
+            View progress card
+          </Link>
         </div>
       )}
-
-      <GenerateProgressCardSheet
-        open={generateOpen}
-        onClose={() => setGenerateOpen(false)}
-        session={session}
-        participantId={participant.id}
-        ratings={ratings}
-      />
     </div>
   );
 }
@@ -156,8 +170,8 @@ export function SessionSkillRatingsSection({ session }: SessionSkillRatingsSecti
       <h2 className="font-heading text-lg font-semibold">Rate skills</h2>
       <p className="mt-1 text-sm text-[#6B7280]">
         {participants.length > 1
-          ? "Pick a player, mark covered skills, then rate before and after."
-          : "Mark covered skills first, then rate before and after."}
+          ? "Pick a player, mark covered skills, rate them, then add feedback."
+          : "Mark covered skills, rate them, then add feedback."}
       </p>
 
       {participants.length > 1 && (

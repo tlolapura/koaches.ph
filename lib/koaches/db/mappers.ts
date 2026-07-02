@@ -131,6 +131,8 @@ export type DbProgressCard = {
   date_completed: string;
   ratings_before: ProgressCard["ratingsBefore"];
   ratings_after: ProgressCard["ratingsAfter"];
+  coach_strengths: string | null;
+  coach_to_improve: string | null;
   coach_message: string;
   session_id: string | null;
 };
@@ -337,6 +339,8 @@ export function mapProgressCard(row: DbProgressCard): ProgressCard {
     dateCompleted: row.date_completed,
     ratingsBefore: normalizeSkillRatings(row.ratings_before),
     ratingsAfter: normalizeSkillRatings(row.ratings_after),
+    coachStrengths: row.coach_strengths ?? undefined,
+    coachToImprove: row.coach_to_improve ?? undefined,
     coachMessage: row.coach_message,
     sessionId: row.session_id ?? undefined,
   };

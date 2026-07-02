@@ -112,18 +112,6 @@ export async function updateSessionTipAction(sessionId: string, tip: number) {
   revalidatePath(`/coach/sessions/${sessionId}`);
   revalidatePath("/coach/reports");
 }
-
-export async function updateSessionNotesAction(sessionId: string, notes: string) {
-  await assertCoachOwnsSession(sessionId);
-  const supabase = createServiceClient();
-  const { error } = await supabase
-    .from("sessions")
-    .update({ notes, updated_at: new Date().toISOString() })
-    .eq("id", sessionId);
-  if (error) throw error;
-  revalidatePath(`/coach/sessions/${sessionId}`);
-}
-
 export async function updateSessionProgressAction(sessionId: string, session: Session) {
   const coachId = await assertCoachOwnsSession(sessionId);
   if (session.coachId !== coachId) throw new Error("Not authorized.");

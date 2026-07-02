@@ -102,6 +102,8 @@ export async function saveProgressCardAction(card: ProgressCard): Promise<SavePr
     date_completed: card.dateCompleted,
     ratings_before: card.ratingsBefore,
     ratings_after: card.ratingsAfter,
+    coach_strengths: card.coachStrengths?.trim() || null,
+    coach_to_improve: card.coachToImprove?.trim() || null,
     coach_message: card.coachMessage,
     session_id: card.sessionId ?? null,
   });

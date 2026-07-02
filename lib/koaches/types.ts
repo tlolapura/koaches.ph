@@ -363,6 +363,9 @@ export type ProgressCard = {
   dateCompleted: string;
   ratingsBefore: SkillRating[];
   ratingsAfter: SkillRating[];
+  coachStrengths?: string;
+  coachToImprove?: string;
+  /** General coach note for the player */
   coachMessage: string;
   /** Source session when generated from the coach portal */
   sessionId?: string;

@@ -4,13 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { PartyPopper } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
-import { resolveParticipantProgress, hasRatingsForCard, type ParticipantRatings } from "@/lib/koaches/session-progress";
+import { resolveParticipantProgress, hasRatingsForCard, filterRatedSkills, normalizeParticipantRatings, type ParticipantRatings } from "@/lib/koaches/session-progress";
 import {
   buildProgressCardDraft,
   buildProgressCardUrl,
   countSkillImprovements,
   getProgressCardRatings,
+  suggestSessionFeedback,
+  type SessionFeedback,
 } from "@/lib/koaches/progress-cards";
+import { buildSkillChanges } from "@/lib/koaches/skill-progress-display";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { getSessionParticipants } from "@/lib/koaches/session-participants";
@@ -42,7 +45,11 @@ export function GenerateProgressCardSheet({
   const { saveCard } = useProgressCards(session.coachId);
   const { coach } = useCoachProfile(session.coachId);
   const [step, setStep] = useState(1);
-  const [message, setMessage] = useState("");
+  const [feedback, setFeedback] = useState<SessionFeedback>({
+    strengths: "",
+    toImprove: "",
+    generalNote: "",
+  });
   const [generatedId, setGeneratedId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -52,6 +59,17 @@ export function GenerateProgressCardSheet({
       ? ratingsOverride
       : resolveParticipantProgress(session, participantId);
 
+  const cardRatings = useMemo(() => {
+    if (!hasRatingsForCard(ratings)) return null;
+    const normalized = normalizeParticipantRatings(ratings);
+    const before = filterRatedSkills(normalized.ratingsBefore ?? []);
+    const beforeIds = new Set(before.map((skill) => skill.skillId));
+    const after = filterRatedSkills(normalized.ratingsAfter ?? []).filter((skill) =>
+      beforeIds.has(skill.skillId)
+    );
+    return { before, after };
+  }, [ratings]);
+
   const draft = useMemo(() => {
     if (!participant || !hasRatingsForCard(ratings)) {
       return null;
@@ -59,7 +77,7 @@ export function GenerateProgressCardSheet({
     return buildProgressCardDraft({
       session,
       participantId,
-      coachMessage: message.trim() || "Great work today — keep it up!",
+      feedback,
       ratings,
       lookup: coach
         ? {
@@ -72,14 +90,21 @@ export function GenerateProgressCardSheet({
           }
         : undefined,
     });
-  }, [session, participantId, participant, ratings, message, coach]);
+  }, [session, participantId, participant, ratings, feedback, coach]);
 
   useEffect(() => {
     if (!open) return;
     setStep(1);
-    setMessage("");
+    setFeedback({ strengths: "", toImprove: "", generalNote: "" });
     setGeneratedId(null);
   }, [open, session.id, participantId]);
+
+  const goToFeedbackStep = () => {
+    if (cardRatings) {
+      setFeedback(suggestSessionFeedback(buildSkillChanges(cardRatings.before, cardRatings.after)));
+    }
+    setStep(2);
+  };
 
   const handleGenerate = async () => {
     if (!draft || generating) return;
@@ -110,7 +135,7 @@ export function GenerateProgressCardSheet({
         step === 1
           ? "Review progress"
           : step === 2
-            ? "Coach message"
+            ? "Session feedback"
             : step === 3
               ? "Preview card"
               : "Card ready"
@@ -119,7 +144,7 @@ export function GenerateProgressCardSheet({
         step === 1
           ? `${participant.name} · ${draft.programOrSession}`
           : step === 2
-            ? `A short note for ${participant.name}`
+            ? `Session feedback for ${participant.name}`
             : step === 3
               ? "Looks good? Generate the shareable card"
               : undefined
@@ -139,6 +164,7 @@ export function GenerateProgressCardSheet({
               disabled={generating}
               onClick={() => {
                 if (step === 3) void handleGenerate();
+                else if (step === 1) goToFeedbackStep();
                 else setStep((s) => s + 1);
               }}
             >
@@ -178,17 +204,33 @@ export function GenerateProgressCardSheet({
 
       {step === 2 && (
         <div className="space-y-4">
-          <CoachSheetField label="Personal message" htmlFor="progress-card-message">
+          <CoachSheetField label="Strengths" htmlFor="progress-card-strengths">
             <textarea
-              id="progress-card-message"
-              className="coach-input min-h-[140px] resize-none"
-              placeholder={`e.g. ${participant.name}, your improvement today was awesome…`}
-              maxLength={280}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              id="progress-card-strengths"
+              className="coach-input min-h-[100px] resize-none"
+              placeholder="What stood out today?"
+              value={feedback.strengths}
+              onChange={(e) => setFeedback((f) => ({ ...f, strengths: e.target.value }))}
             />
           </CoachSheetField>
-          <p className="text-right text-xs text-[#6B7280]">{message.length}/280</p>
+          <CoachSheetField label="To improve" htmlFor="progress-card-improve">
+            <textarea
+              id="progress-card-improve"
+              className="coach-input min-h-[100px] resize-none"
+              placeholder="What to work on next session?"
+              value={feedback.toImprove}
+              onChange={(e) => setFeedback((f) => ({ ...f, toImprove: e.target.value }))}
+            />
+          </CoachSheetField>
+          <CoachSheetField label="General note" htmlFor="progress-card-note">
+            <textarea
+              id="progress-card-note"
+              className="coach-input min-h-[100px] resize-none"
+              placeholder={`Encouragement or anything else for ${participant.name}`}
+              value={feedback.generalNote}
+              onChange={(e) => setFeedback((f) => ({ ...f, generalNote: e.target.value }))}
+            />
+          </CoachSheetField>
         </div>
       )}
 
@@ -202,11 +244,25 @@ export function GenerateProgressCardSheet({
           <div className="mt-4">
             <RadarChart before={cardBefore} after={cardAfter} height={200} compact />
           </div>
-          <blockquote className="mt-4 border-l-4 border-[#14532D] pl-3 text-left">
-            <p className="text-sm italic text-[#14532D]">
-              &ldquo;{message.trim() || "Great work today — keep it up!"}&rdquo;
-            </p>
-          </blockquote>
+          <div className="mt-4 space-y-3 text-left">
+            {feedback.strengths.trim() && (
+              <div className="rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#166534]">Strengths</p>
+                <p className="mt-1 text-sm text-[#374151]">{feedback.strengths.trim()}</p>
+              </div>
+            )}
+            {feedback.toImprove.trim() && (
+              <div className="rounded-xl border border-[#FECACA] bg-[#FFFBFB] px-3 py-2.5">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#B91C1C]">To improve</p>
+                <p className="mt-1 text-sm text-[#374151]">{feedback.toImprove.trim()}</p>
+              </div>
+            )}
+            {feedback.generalNote.trim() && (
+              <blockquote className="border-l-4 border-[#14532D] pl-3">
+                <p className="text-sm italic text-[#14532D]">&ldquo;{feedback.generalNote.trim()}&rdquo;</p>
+              </blockquote>
+            )}
+          </div>
         </div>
       )}
 

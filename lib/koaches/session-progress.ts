@@ -43,7 +43,7 @@ export function normalizeSkillRating(raw: unknown): SkillRating | null {
     skillName,
     category: category as SkillCategory,
     score,
-    ...(row.skipped ? { skipped: true } : {}),
+    skipped: row.skipped === false ? false : true,
   };
 }
 
@@ -60,8 +60,12 @@ export function normalizeParticipantRatings(raw: ParticipantRatings | undefined)
   };
 }
 
+export function isSkillCovered(rating: SkillRating): boolean {
+  return rating.skipped === false;
+}
+
 export function isSkillRated(rating: SkillRating): boolean {
-  return !rating.skipped;
+  return isSkillCovered(rating);
 }
 
 export function filterRatedSkills(ratings: SkillRating[]): SkillRating[] {

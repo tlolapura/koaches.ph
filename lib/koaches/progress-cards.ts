@@ -12,6 +12,7 @@ import {
   resolveParticipantProgress,
   type ParticipantRatings,
 } from "./session-progress";
+import { buildSkillChanges, type SkillChange } from "./skill-progress-display";
 import type { CoachProfile, Program, ProgressCard, Session, Student } from "./types";
 import { progressCardCoachName } from "./person-name";
 import { formatDisplayDate } from "@/lib/utils";
@@ -86,14 +87,34 @@ export function getProgressCardRatings(
   return { before, after };
 }
 
+export type SessionFeedback = {
+  strengths: string;
+  toImprove: string;
+  generalNote: string;
+};
+
+export function suggestSessionFeedback(changes: SkillChange[]): SessionFeedback {
+  const improved = changes.filter((c) => c.delta > 0);
+  const slipped = changes.filter((c) => c.delta < 0);
+
+  return {
+    strengths: improved.slice(0, 4).map((c) => c.skillName).join(", "),
+    toImprove: slipped.slice(0, 4).map((c) => c.skillName).join(", "),
+    generalNote: "",
+  };
+}
+
 export function buildProgressCardDraft(options: {
   session: Session;
   participantId: string;
-  coachMessage: string;
+  feedback?: SessionFeedback;
+  /** @deprecated Use feedback.generalNote */
+  coachMessage?: string;
   ratings: ParticipantRatings;
   lookup?: ProgressCardLookup;
 }): ProgressCard {
-  const { session, participantId, coachMessage, ratings, lookup } = options;
+  const { session, participantId, feedback, coachMessage, ratings, lookup } = options;
+  const generalNote = feedback?.generalNote?.trim() || coachMessage?.trim() || "";
   const normalized = normalizeParticipantRatings(ratings);
   const participant = getSessionParticipants(session).find((p) => p.id === participantId);
   if (!participant) throw new Error("Participant not found");
@@ -120,7 +141,9 @@ export function buildProgressCardDraft(options: {
     dateCompleted: session.date ?? "",
     ratingsBefore: filterRatedSkills(normalized.ratingsBefore ?? []),
     ratingsAfter: filterRatedSkills(normalized.ratingsAfter ?? []),
-    coachMessage,
+    coachStrengths: feedback?.strengths?.trim() || undefined,
+    coachToImprove: feedback?.toImprove?.trim() || undefined,
+    coachMessage: generalNote,
     sessionId: session.id,
   };
 }

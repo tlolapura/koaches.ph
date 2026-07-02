@@ -133,10 +133,10 @@ export type SkillChange = {
 
 export function buildSkillChanges(before: SkillRating[], after: SkillRating[]): SkillChange[] {
   return before
-    .filter((b) => !b.skipped)
+    .filter((b) => b.skipped === false)
     .map((b) => {
       const a = after.find((x) => x.skillId === b.skillId);
-      if (a?.skipped) return null;
+      if (a?.skipped !== false) return null;
       const afterScore = a?.score ?? b.score;
       return {
         skillId: b.skillId,

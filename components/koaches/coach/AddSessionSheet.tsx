@@ -713,13 +713,6 @@ export function AddSessionSheet({
           />
         </CoachSheetField>
 
-        <CoachSheetField label="Notes (optional)" htmlFor="session-notes">
-          <textarea
-            id="session-notes"
-            className="coach-input min-h-[80px] resize-none"
-            placeholder="Focus areas, equipment, or reminders for this session"
-          />
-        </CoachSheetField>
       </form>
       )}
     </CoachBottomSheet>

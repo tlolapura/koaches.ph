@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
@@ -10,10 +10,15 @@ import {
   SKILL_CATEGORY_LABELS,
 } from "@/lib/koaches/constants";
 import {
+  buildSkillChanges,
   type SkillScore,
   scoreLabel,
   scoreLabelsForSkill,
 } from "@/lib/koaches/skill-progress-display";
+import {
+  suggestSessionFeedback,
+  type SessionFeedback,
+} from "@/lib/koaches/progress-cards";
 import type { SkillCategory, SkillRating, SkillRubricId } from "@/lib/koaches/types";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +34,12 @@ type SkillRatingPanelProps = {
   sessionNumber?: number;
   totalSessions?: number;
   phaseLabel?: string;
-  onSave?: (before: SkillRating[], after: SkillRating[]) => void | Promise<void>;
+  initialFeedback?: SessionFeedback;
+  onSave?: (
+    before: SkillRating[],
+    after: SkillRating[],
+    feedback: SessionFeedback
+  ) => void | Promise<void>;
 };
 
 function defaultRatings(
@@ -43,6 +53,7 @@ function defaultRatings(
     skillName: s.name,
     category: s.category,
     score: 3,
+    skipped: true,
   }));
 }
 
@@ -188,6 +199,7 @@ export function SkillRatingPanel({
   customSkillIds,
   customSkills,
   skillLabelOverrides,
+  initialFeedback,
   onSave,
 }: SkillRatingPanelProps) {
   const activeRubric = rubricId ?? templateId ?? "intermediate";
@@ -197,16 +209,30 @@ export function SkillRatingPanel({
   );
   const [before, setBefore] = useState<SkillRating[]>(() =>
     initialBefore?.length
-      ? initialBefore
+      ? initialBefore.map((s) => ({ ...s, skipped: s.skipped === false ? false : true }))
       : defaultRatings(activeRubric, customSkillIds, customSkills, skillLabelOverrides)
   );
   const [after, setAfter] = useState<SkillRating[]>(() =>
     initialAfter?.length
-      ? initialAfter
+      ? initialAfter.map((s) => ({ ...s, skipped: s.skipped === false ? false : true }))
       : defaultRatings(activeRubric, customSkillIds, customSkills, skillLabelOverrides)
   );
   const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState<"coverage" | "ratings">("coverage");
+  const [step, setStep] = useState<"coverage" | "ratings" | "feedback">("coverage");
+  const [feedback, setFeedback] = useState<SessionFeedback>(() => ({
+    strengths: initialFeedback?.strengths ?? "",
+    toImprove: initialFeedback?.toImprove ?? "",
+    generalNote: initialFeedback?.generalNote ?? "",
+  }));
+  const feedbackPrefilled = useRef(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (step !== "ratings" && step !== "feedback") return;
+    panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
+
+  const skillChanges = useMemo(() => buildSkillChanges(before, after), [before, after]);
 
   const visibleCategories = useMemo(() => {
     const cats = resolveSkills(skillConfig).map((s) => s.category);
@@ -227,7 +253,7 @@ export function SkillRatingPanel({
       skillsByCategory
         .map(({ category, skills }) => ({
           category,
-          skills: skills.filter((s) => !s.skipped),
+          skills: skills.filter((s) => s.skipped === false),
         }))
         .filter(({ skills }) => skills.length > 0),
     [skillsByCategory]
@@ -243,24 +269,42 @@ export function SkillRatingPanel({
 
   const setSkipped = (skillId: string, skipped: boolean) => {
     setBefore((prev) =>
-      prev.map((s) => (s.skillId === skillId ? { ...s, skipped: skipped || undefined } : s))
+      prev.map((s) => (s.skillId === skillId ? { ...s, skipped } : s))
     );
     setAfter((prev) =>
-      prev.map((s) => (s.skillId === skillId ? { ...s, skipped: skipped || undefined } : s))
+      prev.map((s) => (s.skillId === skillId ? { ...s, skipped } : s))
     );
   };
 
-  const ratedCount = before.filter((s) => !s.skipped).length;
+  const ratedCount = before.filter((s) => s.skipped === false).length;
   const skippedCount = before.length - ratedCount;
 
+  const goToFeedback = () => {
+    if (!feedback.strengths && !feedback.toImprove && !feedback.generalNote && !feedbackPrefilled.current) {
+      feedbackPrefilled.current = true;
+      setFeedback(suggestSessionFeedback(skillChanges));
+    }
+    setStep("feedback");
+  };
+
+  const updateFeedback = (key: keyof SessionFeedback, value: string) => {
+    setFeedback((prev) => ({ ...prev, [key]: value }));
+  };
+
   return (
-    <div className="space-y-4">
+    <div ref={panelRef} className="space-y-4">
       <div className="coach-card p-4">
         <p className="text-sm text-[#6B7280]">
-          {ratedCount} covered
-          {skippedCount > 0 && (
-            <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
+          {step === "coverage" && (
+            <>
+              {ratedCount} covered
+              {skippedCount > 0 && (
+                <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
+              )}
+            </>
           )}
+          {step === "ratings" && `Rate ${ratedCount} covered skill${ratedCount !== 1 ? "s" : ""}`}
+          {step === "feedback" && "Add session feedback for the player"}
         </p>
 
         {step === "coverage" ? (
@@ -277,7 +321,7 @@ export function SkillRatingPanel({
                 </h3>
                 <div className="mt-2 space-y-2">
                   {skills.map((skill) => {
-                    const covered = !skill.skipped;
+                    const covered = skill.skipped === false;
                     return (
                       <div
                         key={skill.skillId}
@@ -313,6 +357,45 @@ export function SkillRatingPanel({
             ))
             )}
           </div>
+        ) : step === "feedback" ? (
+          <div className="mt-5 space-y-4">
+            <div>
+              <label className="coach-label" htmlFor="session-feedback-strengths">
+                Strengths
+              </label>
+              <textarea
+                id="session-feedback-strengths"
+                className="coach-input mt-1 min-h-[88px] resize-none"
+                placeholder="What stood out today?"
+                value={feedback.strengths}
+                onChange={(e) => updateFeedback("strengths", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="coach-label" htmlFor="session-feedback-improve">
+                To improve
+              </label>
+              <textarea
+                id="session-feedback-improve"
+                className="coach-input mt-1 min-h-[88px] resize-none"
+                placeholder="What to work on next session?"
+                value={feedback.toImprove}
+                onChange={(e) => updateFeedback("toImprove", e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="coach-label" htmlFor="session-feedback-note">
+                General note
+              </label>
+              <textarea
+                id="session-feedback-note"
+                className="coach-input mt-1 min-h-[88px] resize-none"
+                placeholder="Encouragement or anything else to share"
+                value={feedback.generalNote}
+                onChange={(e) => updateFeedback("generalNote", e.target.value)}
+              />
+            </div>
+          </div>
         ) : ratedSkillsByCategory.length === 0 ? (
           <div className="mt-5 rounded-xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-4 text-sm text-[#6B7280]">
             No covered skills to rate yet. Go back and mark at least one skill as covered.
@@ -333,7 +416,7 @@ export function SkillRatingPanel({
                         skillName={skill.skillName}
                         beforeScore={skill.score}
                         afterScore={afterSkill.score}
-                        skipped={Boolean(skill.skipped)}
+                        skipped={skill.skipped !== false}
                         scoreLabels={scoreLabelsForSkill(
                           skill.skillId,
                           skill.category,
@@ -361,7 +444,7 @@ export function SkillRatingPanel({
             >
               Continue to ratings
             </CoachButton>
-          ) : (
+          ) : step === "ratings" ? (
             <div className="space-y-2">
               <CoachButton
                 type="button"
@@ -375,20 +458,40 @@ export function SkillRatingPanel({
                 type="button"
                 variant="soft"
                 className="w-full"
+                disabled={ratedSkillsByCategory.length === 0}
+                onClick={goToFeedback}
+              >
+                Continue to feedback
+              </CoachButton>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <CoachButton
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setStep("ratings")}
+              >
+                Back to ratings
+              </CoachButton>
+              <CoachButton
+                type="button"
+                variant="soft"
+                className="w-full"
                 loading={saving}
                 loadingLabel="Saving…"
                 onClick={async () => {
                   if (!onSave || saving) return;
                   setSaving(true);
                   try {
-                    await onSave(before, after);
+                    await onSave(before, after, feedback);
                   } finally {
                     setSaving(false);
                   }
                 }}
               >
                 <Check className="h-4 w-4" strokeWidth={2.5} />
-                Save ratings
+                Save session
               </CoachButton>
             </div>
           )}

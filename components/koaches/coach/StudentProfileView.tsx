@@ -163,7 +163,6 @@ export function StudentProfileView({ student }: { student: Student }) {
                         {formatSessionTimeRange(s.time, s.endTime)} · {formatCurrency(s.price)}
                       </p>
                       <p className="text-xs text-[#9CA3AF]">{courtNameFromLookup(courtLookup, s.courtId)}</p>
-                      {s.notes && <p className="mt-2 text-sm text-[#6B7280]">{s.notes}</p>}
                     </div>
                     <StudentSessionStatusBadge session={s} />
                   </div>
@@ -207,14 +206,6 @@ export function StudentProfileView({ student }: { student: Student }) {
                 Save Note
               </CoachButton>
             </div>
-            {completed
-              .filter((s) => s.notes)
-              .map((s) => (
-                <div key={s.id} className="coach-card p-4">
-                  <p className="text-xs font-medium text-[#6B7280]">{formatSessionDateLabel(s)}</p>
-                  <p className="mt-1 text-sm">{s.notes}</p>
-                </div>
-              ))}
           </div>
         )}
       </div>

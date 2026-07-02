@@ -13,7 +13,7 @@ import { SessionPaymentCard } from "@/components/koaches/coach/SessionPaymentCar
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { ScheduleTbdSessionSheet } from "@/components/koaches/coach/ScheduleTbdSessionSheet";
 import { useSessionStatus } from "@/hooks/useSessionStatus";
-import { deleteSessionAction, updateSessionNotesAction } from "@/lib/koaches/actions/sessions";
+import { deleteSessionAction } from "@/lib/koaches/actions/sessions";
 import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { formatSessionTimeRange } from "@/lib/koaches/session-time";
@@ -99,8 +99,6 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [notes, setNotes] = useState(session.notes ?? "");
-  const [savingNotes, setSavingNotes] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const { showToast } = useCoachToast();
@@ -162,46 +160,13 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
 
           <SessionPaymentCard session={session} />
 
-          <div className="coach-card p-4">
-            <label className="coach-label" htmlFor="session-notes">
-              Session notes
-            </label>
-            <textarea
-              id="session-notes"
-              className="coach-input mt-1 min-h-[100px] resize-none"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="How did the session go?"
-            />
-            <CoachButton
-              type="button"
-              variant="outline"
-              className="mt-3 text-sm"
-              loading={savingNotes}
-              loadingLabel="Saving…"
-              onClick={async () => {
-                setSavingNotes(true);
-                try {
-                  await updateSessionNotesAction(session.id, notes);
-                  invalidateCoachSessions(session.coachId);
-                  showToast("Notes saved");
-                } catch (e) {
-                  showToast(e instanceof Error ? e.message : "Could not save notes", "error");
-                } finally {
-                  setSavingNotes(false);
-                }
-              }}
-            >
-              Save notes
-            </CoachButton>
-            <button
-              type="button"
-              className="coach-btn-ghost-danger mt-3"
-              onClick={() => setDeleteOpen(true)}
-            >
-              Delete session
-            </button>
-          </div>
+          <button
+            type="button"
+            className="coach-btn-ghost-danger w-full"
+            onClick={() => setDeleteOpen(true)}
+          >
+            Delete session
+          </button>
 
           {status !== "canceled" && (
             <div className="coach-session-step-footer">

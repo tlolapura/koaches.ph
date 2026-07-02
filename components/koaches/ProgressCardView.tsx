@@ -209,13 +209,30 @@ export function ProgressCardView({ card }: ProgressCardViewProps) {
             </p>
           </div>
 
-          {card.coachMessage && (
-            <blockquote className="mt-5 rounded-2xl border border-[#E5E7EB] bg-[#FCFCFD] px-4 py-3.5">
-              <p className="text-sm leading-relaxed text-[#374151]">
-                &ldquo;{card.coachMessage}&rdquo;
-              </p>
-              <footer className="mt-2 text-xs font-semibold text-[#9CA3AF]">— {card.coachName}</footer>
-            </blockquote>
+          {(card.coachStrengths || card.coachToImprove || card.coachMessage) && (
+            <div className="mt-5 space-y-3">
+              {card.coachStrengths && (
+                <div className="rounded-2xl border border-[#BBF7D0] bg-[#F0FDF4] px-4 py-3.5">
+                  <p className="text-xs font-bold uppercase tracking-wide text-[#166534]">Strengths</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#374151]">{card.coachStrengths}</p>
+                </div>
+              )}
+              {card.coachToImprove && (
+                <div className="rounded-2xl border border-[#FECACA] bg-[#FFFBFB] px-4 py-3.5">
+                  <p className="text-xs font-bold uppercase tracking-wide text-[#B91C1C]">To improve</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#374151]">{card.coachToImprove}</p>
+                </div>
+              )}
+              {card.coachMessage && (
+                <blockquote className="rounded-2xl border border-[#E5E7EB] bg-[#FCFCFD] px-4 py-3.5">
+                  <p className="text-xs font-bold uppercase tracking-wide text-[#6B7280]">Coach note</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-[#374151]">
+                    &ldquo;{card.coachMessage}&rdquo;
+                  </p>
+                  <footer className="mt-2 text-xs font-semibold text-[#9CA3AF]">— {card.coachName}</footer>
+                </blockquote>
+              )}
+            </div>
           )}
 
           {skillCount > 0 && (
@@ -316,6 +333,31 @@ export function ProgressCardView({ card }: ProgressCardViewProps) {
               <p className="text-[20px] font-bold uppercase tracking-wide text-[#6B7280]">Highlights</p>
               <div className="mt-4 space-y-4">{renderStoryContent()}</div>
             </div>
+
+            {(card.coachStrengths || card.coachToImprove || card.coachMessage) && (
+              <div className="mt-6 space-y-4">
+                {card.coachStrengths ? (
+                  <div className="rounded-2xl border border-[#BBF7D0] bg-[#F0FDF4] px-6 py-5">
+                    <p className="text-[18px] font-bold uppercase tracking-wide text-[#166534]">Strengths</p>
+                    <p className="mt-2 text-[24px] leading-snug text-[#374151]">{card.coachStrengths}</p>
+                  </div>
+                ) : null}
+                {card.coachToImprove ? (
+                  <div className="rounded-2xl border border-[#FECACA] bg-[#FFFBFB] px-6 py-5">
+                    <p className="text-[18px] font-bold uppercase tracking-wide text-[#B91C1C]">To improve</p>
+                    <p className="mt-2 text-[24px] leading-snug text-[#374151]">{card.coachToImprove}</p>
+                  </div>
+                ) : null}
+                {card.coachMessage ? (
+                  <div className="rounded-2xl border border-[#E5E7EB] bg-[#FCFCFD] px-6 py-5">
+                    <p className="text-[18px] font-bold uppercase tracking-wide text-[#6B7280]">Coach note</p>
+                    <p className="mt-2 text-[24px] italic leading-snug text-[#374151]">
+                      &ldquo;{card.coachMessage}&rdquo;
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            )}
 
             <p className="mt-auto text-center text-[24px] font-semibold text-[#9CA3AF]">Powered by PickleKoach</p>
           </div>
