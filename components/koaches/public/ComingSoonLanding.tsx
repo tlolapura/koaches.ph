@@ -11,18 +11,21 @@ export function ComingSoonLanding() {
       <div className="relative z-[1] max-w-sm">
         <KoachesWordmark size="lg" className="mx-auto" />
 
-        <p className="mt-8 text-base leading-relaxed text-[#6B7280]">
-          Pickleball coaching for the Philippines.
-        </p>
+        <p className="mt-8 text-base leading-relaxed text-[#6B7280]">Public marketplace is coming soon.</p>
 
         <p className="mt-4 text-sm text-[#9CA3AF]">
-          Public coach directory coming soon.
+          We&apos;re getting things ready for players. Coaches can already explore and apply.
         </p>
 
-        <Link href="/coach/login" className="coach-btn-primary mx-auto mt-8 max-w-xs gap-2">
-          Coach login
-          <ArrowRight className="h-4 w-4" />
-        </Link>
+        <div className="mx-auto mt-8 flex w-full max-w-xs flex-col gap-2.5">
+          <Link href="/for-coaches" className="coach-btn-primary gap-2">
+            New coach? See how it works
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link href="/coach/login" className="coach-btn-outline">
+            Coach login
+          </Link>
+        </div>
 
         <p className="sr-only">{BRAND_NAME}</p>
       </div>

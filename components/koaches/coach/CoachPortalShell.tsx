@@ -6,6 +6,7 @@ import { coachSlugFromPublicPath, isPublicCoachJoinPath } from "@/lib/koaches/co
 import { CoachBottomNav } from "@/components/koaches/coach/CoachBottomNav";
 import { CoachMobileHeader } from "@/components/koaches/coach/CoachMobileHeader";
 import { CoachSidebar, CoachSidebarCompact } from "@/components/koaches/coach/CoachSidebar";
+import { CoachAnnouncementStrip } from "@/components/koaches/coach/CoachAnnouncementStrip";
 import { CoachAuthProvider } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachToastProvider } from "@/components/koaches/coach/CoachUi";
 import { QueryProvider } from "@/components/providers/QueryProvider";
@@ -59,6 +60,7 @@ function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
         <CoachSidebarCompact />
         <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
           <PickleballBallBackdrop variant="portal" />
+          <CoachAnnouncementStrip />
           <CoachMobileHeader />
           <main className="relative z-[1] flex-1 pb-[var(--portal-bottom-nav-offset)] md:pb-6">{children}</main>
           <CoachBottomNav />

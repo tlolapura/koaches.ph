@@ -31,7 +31,6 @@ import {
   DashboardMySessionsToday,
   DashboardUpNextAway,
 } from "@/components/koaches/coach/CoachDashboardToday";
-import { CoachBillingAlertBanner } from "@/components/koaches/coach/CoachBillingAlertBanner";
 import { CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachDashboardSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { coachGreetingLabel } from "@/lib/koaches/person-name";
@@ -264,8 +263,6 @@ export function CoachDashboard() {
           ))}
         </div>
       </div>
-
-      {coach ? <CoachBillingAlertBanner coach={coach} className="mt-4" /> : null}
 
       <section className="mt-4 px-4">
         <Link
