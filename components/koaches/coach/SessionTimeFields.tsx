@@ -1,12 +1,14 @@
 "use client";
 
 import { useId, useState } from "react";
+import { HOURLY_SESSION_MINUTES } from "@/lib/koaches/session-slots";
 import {
   addMinutesToTimeValue,
+  formatDurationMinutes,
   formatTimeDisplay,
 } from "@/lib/koaches/session-time";
-import { HOURLY_SESSION_MINUTES } from "@/lib/koaches/session-slots";
 import { CoachTimePicker } from "@/components/koaches/coach/CoachTimePicker";
+import type { CoachSelectOption } from "@/components/koaches/coach/CoachSelect";
 
 type SessionTimeFieldsProps = {
   startTime?: string;
@@ -16,6 +18,9 @@ type SessionTimeFieldsProps = {
   defaultDurationMinutes?: number;
   /** When set, end time is start + this many minutes (read-only). Used for hourly court slots. */
   fixedDurationMinutes?: number;
+  /** Hide end time picker (e.g. when duration is chosen separately). Default: true */
+  showEndTime?: boolean;
+  startTimeOptions?: CoachSelectOption[];
   onStartTimeChange?: (value: string) => void;
   onEndTimeChange?: (value: string) => void;
 };
@@ -27,6 +32,8 @@ export function SessionTimeFields({
   defaultEnd,
   defaultDurationMinutes = HOURLY_SESSION_MINUTES,
   fixedDurationMinutes,
+  showEndTime = true,
+  startTimeOptions,
   onStartTimeChange,
   onEndTimeChange,
 }: SessionTimeFieldsProps) {
@@ -63,7 +70,7 @@ export function SessionTimeFields({
   };
 
   return (
-    <div className={fixedDurationMinutes ? "space-y-3" : "grid grid-cols-2 gap-3"}>
+    <div className={fixedDurationMinutes || !showEndTime ? "space-y-3" : "grid grid-cols-2 gap-3"}>
       <div>
         <label className="coach-label" htmlFor={startId}>
           Start time
@@ -74,6 +81,7 @@ export function SessionTimeFields({
           name="startTime"
           required
           value={startTime}
+          options={startTimeOptions}
           onChange={setStart}
           placeholder="8:00 AM"
         />
@@ -81,9 +89,9 @@ export function SessionTimeFields({
       {fixedDurationMinutes ? (
         <p className="text-sm text-[#374151]">
           <span className="coach-label">Duration · </span>
-          1 hr · ends {formatTimeDisplay(endTime)}
+          {formatDurationMinutes(fixedDurationMinutes)} · ends {formatTimeDisplay(endTime)}
         </p>
-      ) : (
+      ) : showEndTime ? (
         <div>
           <label className="coach-label" htmlFor={endId}>
             End time
@@ -98,7 +106,7 @@ export function SessionTimeFields({
             placeholder="9:00 AM"
           />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

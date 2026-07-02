@@ -15,18 +15,27 @@ import { DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
 import { suggestSessionPrice } from "@/lib/koaches/session-pricing";
 import {
   findNearestAvailableSlot,
+  getAllowedSessionDurations,
   getAvailableSlots,
+  getHourlySlotRows,
+  getMaxDurationMinutesForStart,
   hasScheduleConflict,
   HOURLY_SESSION_MINUTES,
 } from "@/lib/koaches/session-slots";
-import { addMinutesToTimeValue, formatTimeDisplay } from "@/lib/koaches/session-time";
+import {
+  addMinutesToTimeValue,
+  formatDurationMinutes,
+  formatSessionDuration,
+  formatTimeDisplay,
+  minutesBetweenTimeValues,
+} from "@/lib/koaches/session-time";
 import { blockedSlotsToBusyIntervals, workingHoursToIntervals } from "@/lib/koaches/coach-availability";
 import { participantFromStudent, resizeParticipants } from "@/lib/koaches/session-participants";
 import { getNextProgramSessionNumber } from "@/lib/koaches/schedule-program-sessions";
 import { isFirstProgramSessionNumber } from "@/lib/koaches/session-schedule";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
-import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
+import { CoachSelect, type CoachSelectOption } from "@/components/koaches/coach/CoachSelect";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { SessionParticipantsFields } from "@/components/koaches/coach/SessionParticipantsFields";
 import { SessionPaymentFields } from "@/components/koaches/coach/SessionPaymentFields";
@@ -34,10 +43,16 @@ import { SessionPriceFields } from "@/components/koaches/coach/SessionPriceField
 import { SessionTimeFields } from "@/components/koaches/coach/SessionTimeFields";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
-import { formatDisplayDate } from "@/lib/utils";
+import { formatDisplayDate, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 const ADD_SESSION_FORM_ID = "add-session-form";
+
+type AddSessionStep = "form" | "confirm";
+
+function paymentStatusLabel(status: SessionPaymentStatus) {
+  return status === "paid" ? "Paid" : "Unpaid";
+}
 
 type AddSessionSheetProps = {
   open: boolean;
@@ -76,17 +91,20 @@ export function AddSessionSheet({
     [blockedSlots]
   );
 
-  const defaultDuration = HOURLY_SESSION_MINUTES;
+  const defaultDuration = coach?.sessionPricing?.defaultDurationMinutes ?? HOURLY_SESSION_MINUTES;
 
+  const [step, setStep] = useState<AddSessionStep>("form");
   const [sessionType, setSessionType] = useState<"drop-in" | "program">("drop-in");
   const [selectedProgramId, setSelectedProgramId] = useState<string | undefined>(
     () => programs[0]?.id
   );
   const [playerCount, setPlayerCount] = useState(1);
   const [price, setPrice] = useState(800);
+  const [tip, setTip] = useState(0);
   const [paymentStatus, setPaymentStatus] = useState<SessionPaymentStatus>("unpaid");
   const [date, setDate] = useState(initialDate ?? format(new Date(), "yyyy-MM-dd"));
   const [startTime, setStartTime] = useState("08:00");
+  const [durationMinutes, setDurationMinutes] = useState(defaultDuration);
   const [endTime, setEndTime] = useState(() => addMinutesToTimeValue("08:00", defaultDuration));
   const [courtId, setCourtId] = useState("");
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
@@ -110,6 +128,40 @@ export function AddSessionSheet({
   const showScheduleFields =
     sessionType === "drop-in" || (sessionType === "program" && Boolean(nextSessionNumber));
 
+  const slotOptionsForDate = useMemo(
+    () => ({
+      ...slotAvailabilityOptions,
+      blockedIntervals: date ? blockedForDate(date) : [],
+    }),
+    [slotAvailabilityOptions, blockedForDate, date]
+  );
+
+  const maxDurationMinutes = useMemo(() => {
+    if (!date) return 0;
+    return getMaxDurationMinutesForStart(allSessions, date, startTime, slotOptionsForDate);
+  }, [allSessions, date, startTime, slotOptionsForDate]);
+
+  const allowedDurations = useMemo(
+    () => getAllowedSessionDurations(maxDurationMinutes, defaultDuration),
+    [maxDurationMinutes, defaultDuration]
+  );
+  const startTimeOptions = useMemo<CoachSelectOption[]>(() => {
+    if (!date) return [];
+    return getHourlySlotRows(allSessions, date, durationMinutes, slotOptionsForDate).map((row) => ({
+      value: row.startValue,
+      label:
+        row.status === "booked"
+          ? `${row.timeLabel} (Booked)`
+          : row.status === "blocked"
+            ? `${row.timeLabel} (Blocked)`
+            : row.timeLabel,
+      disabled: row.status !== "open",
+    }));
+  }, [allSessions, date, durationMinutes, slotOptionsForDate]);
+
+  const canAdjustDuration = allowedDurations.length > 1;
+  const selectedCourt = courts.find((court) => court.id === courtId);
+
   const hasConflict = useMemo(() => {
     if (!date) return false;
     return hasScheduleConflict(
@@ -123,22 +175,42 @@ export function AddSessionSheet({
     );
   }, [allSessions, date, startTime, endTime, blockedForDate, slotAvailabilityOptions]);
 
+  const scheduleTimeLabel =
+    date && startTime && endTime
+      ? `${formatTimeDisplay(startTime)} – ${formatTimeDisplay(endTime)}`
+      : null;
+  const scheduleDurationLabel =
+    scheduleTimeLabel != null
+      ? formatSessionDuration(formatTimeDisplay(startTime), formatTimeDisplay(endTime)) ??
+        formatDurationMinutes(durationMinutes)
+      : null;
+
   const canSave = useMemo(() => {
     if (sessionType === "program") {
       if (!nextSessionNumber || !primaryStudent) return false;
       if (isFirstProgramSession && !date) return false;
-      if (date && hasConflict) return false;
+      if (date && (hasConflict || allowedDurations.length === 0)) return false;
       return true;
     }
-    return Boolean(date) && !hasConflict;
-  }, [sessionType, nextSessionNumber, primaryStudent, isFirstProgramSession, date, hasConflict]);
+    return Boolean(date) && !hasConflict && allowedDurations.length > 0;
+  }, [
+    sessionType,
+    nextSessionNumber,
+    primaryStudent,
+    isFirstProgramSession,
+    date,
+    hasConflict,
+    allowedDurations.length,
+  ]);
 
   const resetForm = () => {
     const day = initialDate ?? format(new Date(), "yyyy-MM-dd");
     const preferredStart = initialStartTime ?? "08:00";
+    setStep("form");
     setSessionType("drop-in");
     setSelectedProgramId(programs[0]?.id);
     setPlayerCount(1);
+    setTip(0);
     setPaymentStatus("unpaid");
     setDate(day);
     setCourtId(courts[0]?.id ?? "");
@@ -148,7 +220,9 @@ export function AddSessionSheet({
     }
 
     if (initialStartTime && initialEndTime) {
+      const initialDuration = minutesBetweenTimeValues(initialStartTime, initialEndTime);
       setStartTime(initialStartTime);
+      setDurationMinutes(initialDuration);
       setEndTime(initialEndTime);
       return;
     }
@@ -159,13 +233,31 @@ export function AddSessionSheet({
     });
     const slot = findNearestAvailableSlot(slots, preferredStart);
     if (slot) {
+      const slotDuration = minutesBetweenTimeValues(slot.startValue, slot.endValue);
       setStartTime(slot.startValue);
+      setDurationMinutes(slotDuration);
       setEndTime(slot.endValue);
     } else {
       setStartTime(preferredStart);
+      setDurationMinutes(defaultDuration);
       setEndTime(addMinutesToTimeValue(preferredStart, defaultDuration));
     }
   };
+
+  useEffect(() => {
+    if (!date || step !== "form") return;
+    if (allowedDurations.length === 0) return;
+
+    setDurationMinutes((current) => {
+      const next = allowedDurations.includes(current)
+        ? current
+        : allowedDurations.includes(defaultDuration)
+          ? defaultDuration
+          : allowedDurations[allowedDurations.length - 1];
+      setEndTime(addMinutesToTimeValue(startTime, next));
+      return next;
+    });
+  }, [allowedDurations, date, defaultDuration, startTime, step]);
 
   useEffect(() => {
     if (open) {
@@ -189,15 +281,27 @@ export function AddSessionSheet({
   const handleDateChange = (nextDate: string) => {
     setDate(nextDate);
     if (!nextDate) return;
-    const slots = getAvailableSlots(allSessions, nextDate, defaultDuration, {
+    const slots = getAvailableSlots(allSessions, nextDate, durationMinutes, {
       ...slotAvailabilityOptions,
       blockedIntervals: blockedForDate(nextDate),
     });
     const slot = findNearestAvailableSlot(slots, startTime);
     if (slot) {
+      const slotDuration = minutesBetweenTimeValues(slot.startValue, slot.endValue);
       setStartTime(slot.startValue);
+      setDurationMinutes(slotDuration);
       setEndTime(slot.endValue);
     }
+  };
+
+  const handleStartTimeChange = (nextStart: string) => {
+    setStartTime(nextStart);
+    setEndTime(addMinutesToTimeValue(nextStart, durationMinutes));
+  };
+
+  const handleDurationChange = (nextDuration: number) => {
+    setDurationMinutes(nextDuration);
+    setEndTime(addMinutesToTimeValue(startTime, nextDuration));
   };
 
   const handlePlayerCountChange = (count: number) => {
@@ -231,79 +335,166 @@ export function AddSessionSheet({
     );
   };
 
-  const scheduleSummary =
-    sessionType === "program" && nextSessionNumber
-      ? date
-        ? `Session ${nextSessionNumber} · ${formatDisplayDate(date)} · ${formatTimeDisplay(startTime)} – ${formatTimeDisplay(endTime)}`
-        : `Session ${nextSessionNumber} · Date TBD`
-      : date
-        ? `${formatDisplayDate(date)} · ${formatTimeDisplay(startTime)} – ${formatTimeDisplay(endTime)} · 1 hr`
-        : null;
+  const participantLabel =
+    participants.map((participant) => participant.name).filter(Boolean).join(", ") || "No students selected";
+
+  const handleConfirmSave = async () => {
+    if (!canSave || saving) return;
+
+    setSaving(true);
+    try {
+      const program = selectedProgram;
+      const sessionNumber = nextSessionNumber;
+      const scheduled = Boolean(date);
+
+      const session: Session = {
+        id: `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        coachId: coachId,
+        studentId: primaryStudentId,
+        type: sessionType,
+        programId: program?.id,
+        sessionNumber,
+        date: scheduled ? date : undefined,
+        time: scheduled ? formatTimeDisplay(startTime) : "TBD",
+        endTime: scheduled ? formatTimeDisplay(endTime) : "TBD",
+        courtId,
+        status: "upcoming",
+        paymentStatus,
+        price,
+        tip,
+        playerCount,
+        participants,
+      };
+
+      await createSessionsAction([session]);
+      notifySessionsUpdated(coachId);
+      showToast(
+        scheduled
+          ? "Session scheduled!"
+          : `Session ${sessionNumber} saved — add a date when ready`
+      );
+      onClose();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Could not save session", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <CoachBottomSheet
       open={open}
       onClose={onClose}
-      title="Add Session"
-      subtitle="Choose type first, then set details"
+      title={step === "confirm" ? "Review session" : "Add Session"}
+      subtitle={
+        step === "confirm"
+          ? "Confirm the details before saving"
+          : "Choose type first, then set details"
+      }
       footer={
-        <CoachSheetFooter>
-          <CoachButton
-            type="submit"
-            form={ADD_SESSION_FORM_ID}
-            loading={saving}
-            loadingLabel="Saving…"
-            disabled={!canSave}
-          >
-            Save Session
-          </CoachButton>
-        </CoachSheetFooter>
+        step === "confirm" ? (
+          <CoachSheetFooter>
+            <CoachButton type="button" variant="outline" disabled={saving} onClick={() => setStep("form")}>
+              Back
+            </CoachButton>
+            <CoachButton
+              type="button"
+              loading={saving}
+              loadingLabel="Saving…"
+              disabled={!canSave}
+              onClick={() => void handleConfirmSave()}
+            >
+              Save Session
+            </CoachButton>
+          </CoachSheetFooter>
+        ) : (
+          <CoachSheetFooter>
+            <CoachButton type="button" disabled={!canSave} onClick={() => setStep("confirm")}>
+              Review session
+            </CoachButton>
+          </CoachSheetFooter>
+        )
       }
     >
+      {step === "confirm" ? (
+        <div className="coach-card space-y-4 p-4">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Session summary</p>
+          <dl className="space-y-3 text-sm">
+            <div className="flex items-start justify-between gap-4">
+              <dt className="text-[#6B7280]">Type</dt>
+              <dd className="text-right font-medium text-[#111827]">
+                {sessionType === "drop-in" ? "Drop-in" : "Program"}
+              </dd>
+            </div>
+            {sessionType === "program" && selectedProgram ? (
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-[#6B7280]">Program</dt>
+                <dd className="text-right font-medium text-[#111827]">{selectedProgram.name}</dd>
+              </div>
+            ) : null}
+            {sessionType === "program" && nextSessionNumber ? (
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-[#6B7280]">Session</dt>
+                <dd className="text-right font-medium text-[#111827]">
+                  Session {nextSessionNumber}
+                  {selectedProgram ? ` of ${selectedProgram.sessionCount}` : ""}
+                </dd>
+              </div>
+            ) : null}
+            <div className="flex items-start justify-between gap-4">
+              <dt className="text-[#6B7280]">Students</dt>
+              <dd className="text-right font-medium text-[#111827]">{participantLabel}</dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="text-[#6B7280]">Price</dt>
+              <dd className="text-right font-medium text-[#111827]">{formatCurrency(price)}</dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="text-[#6B7280]">Tips given</dt>
+              <dd className="text-right font-medium text-[#111827]">
+                {tip > 0 ? formatCurrency(tip) : "None"}
+              </dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="text-[#6B7280]">Payment</dt>
+              <dd className="text-right font-medium text-[#111827]">{paymentStatusLabel(paymentStatus)}</dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="text-[#6B7280]">Schedule</dt>
+              <dd className="text-right font-medium text-[#111827]">
+                {date ? (
+                  <>
+                    {formatDisplayDate(date)}
+                    {scheduleTimeLabel ? (
+                      <>
+                        <br />
+                        {scheduleTimeLabel}
+                        {scheduleDurationLabel ? ` · ${scheduleDurationLabel}` : null}
+                      </>
+                    ) : null}
+                  </>
+                ) : sessionType === "program" && nextSessionNumber ? (
+                  `Session ${nextSessionNumber} · Date TBD`
+                ) : (
+                  "Date TBD"
+                )}
+              </dd>
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <dt className="text-[#6B7280]">Court</dt>
+              <dd className="text-right font-medium text-[#111827]">
+                {selectedCourt?.name ?? "Not selected"}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      ) : (
       <form
         id={ADD_SESSION_FORM_ID}
         className="space-y-4"
-        onSubmit={async (e) => {
+        onSubmit={(e) => {
           e.preventDefault();
-          if (!canSave || saving) return;
-
-          setSaving(true);
-          try {
-          const program = selectedProgram;
-          const sessionNumber = nextSessionNumber;
-          const scheduled = Boolean(date);
-
-          const session: Session = {
-            id: `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            coachId: coachId,
-            studentId: primaryStudentId,
-            type: sessionType,
-            programId: program?.id,
-            sessionNumber,
-            date: scheduled ? date : undefined,
-            time: scheduled ? formatTimeDisplay(startTime) : "TBD",
-            endTime: scheduled ? formatTimeDisplay(endTime) : "TBD",
-            courtId,
-            status: "upcoming",
-            paymentStatus,
-            price,
-            playerCount,
-            participants,
-          };
-
-          await createSessionsAction([session]);
-          notifySessionsUpdated(coachId);
-          showToast(
-            scheduled
-              ? "Session scheduled!"
-              : `Session ${sessionNumber} saved — add a date when ready`
-          );
-          onClose();
-          } catch (e) {
-            showToast(e instanceof Error ? e.message : "Could not save session", "error");
-          } finally {
-            setSaving(false);
-          }
+          if (canSave) setStep("confirm");
         }}
       >
         <CoachSheetField label="Session type">
@@ -385,23 +576,58 @@ export function AddSessionSheet({
         />
 
         <SessionPaymentFields value={paymentStatus} onChange={setPaymentStatus} />
+        <CoachSheetField
+          label="Tip (optional)"
+          htmlFor="session-tip"
+          hint="Extra on top of the session fee"
+        >
+          <div className="relative">
+            <span
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6B7280]"
+              aria-hidden
+            >
+              ₱
+            </span>
+            <input
+              id="session-tip"
+              type="number"
+              min={0}
+              step={50}
+              inputMode="numeric"
+              className="coach-input coach-input-icon"
+              value={tip}
+              onChange={(e) => setTip(Math.max(0, Math.round(Number(e.target.value) || 0)))}
+              placeholder="0"
+            />
+          </div>
+        </CoachSheetField>
+        {tip > 0 && (
+          <p className="text-sm text-[#374151]">
+            Total received{" "}
+            <span className="font-heading font-semibold text-[#14532D]">
+              {formatCurrency(price + tip)}
+            </span>
+          </p>
+        )}
 
         {showScheduleFields && (
           <>
-            {scheduleSummary && (
-              <div className="rounded-xl bg-[#F9FAFB] px-3 py-2.5 ring-1 ring-[#E5E7EB]">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">
-                  Schedule
-                </p>
-                <p className="font-heading mt-0.5 text-sm font-semibold text-[#111827]">
-                  {scheduleSummary}
-                </p>
-              </div>
+            {date && (
+              <p className="rounded-xl border border-[#D1FAE5] bg-[#F0FDF4] px-3 py-2 text-xs text-[#166534]">
+                Tip: start times marked as Booked or Blocked are unavailable. Pick an open time, then choose
+                duration.
+              </p>
             )}
 
             {hasConflict && (
               <p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs font-medium text-[#B91C1C]">
-                That hour is already booked. Pick an open slot on the schedule.
+                That time conflicts with another session or blocked slot. Pick an open time.
+              </p>
+            )}
+
+            {date && allowedDurations.length === 0 && (
+              <p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs font-medium text-[#B91C1C]">
+                No open duration fits this start time. Choose another time.
               </p>
             )}
 
@@ -443,13 +669,42 @@ export function AddSessionSheet({
             </CoachSheetField>
 
             {date && (
-              <SessionTimeFields
-                startTime={startTime}
-                endTime={endTime}
-                fixedDurationMinutes={60}
-                onStartTimeChange={setStartTime}
-                onEndTimeChange={setEndTime}
-              />
+              <>
+                <SessionTimeFields
+                  startTime={startTime}
+                  endTime={endTime}
+                  fixedDurationMinutes={canAdjustDuration ? undefined : durationMinutes}
+                  showEndTime={!canAdjustDuration}
+                  startTimeOptions={startTimeOptions}
+                  onStartTimeChange={handleStartTimeChange}
+                  onEndTimeChange={setEndTime}
+                />
+
+                {canAdjustDuration ? (
+                  <CoachSheetField label="Duration">
+                    <div className="flex flex-wrap gap-2">
+                      {allowedDurations.map((mins) => (
+                        <button
+                          key={mins}
+                          type="button"
+                          onClick={() => handleDurationChange(mins)}
+                          className={cn(
+                            "min-h-[40px] rounded-full px-3 py-2 text-sm font-semibold transition-colors",
+                            durationMinutes === mins
+                              ? "bg-[#14532D] text-white"
+                              : "border border-[#E5E7EB] bg-white text-[#6B7280]"
+                          )}
+                        >
+                          {formatDurationMinutes(mins)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-xs text-[#6B7280]">
+                      Ends {formatTimeDisplay(endTime)}
+                    </p>
+                  </CoachSheetField>
+                ) : null}
+              </>
             )}
           </>
         )}
@@ -473,6 +728,7 @@ export function AddSessionSheet({
           />
         </CoachSheetField>
       </form>
+      )}
     </CoachBottomSheet>
   );
 }

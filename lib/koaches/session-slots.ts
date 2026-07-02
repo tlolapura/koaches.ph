@@ -30,6 +30,8 @@ export type AvailableSlot = {
 
 export const HOURLY_SESSION_MINUTES = 60;
 
+export const SESSION_DURATION_OPTIONS = [60, 120, 180] as const;
+
 export const OPERATING_DAY_START = 6 * 60;
 export const OPERATING_DAY_END = 21 * 60;
 
@@ -278,6 +280,55 @@ export function hasScheduleConflict(
     if (excludeSessionId && session.id === excludeSessionId) return false;
     return intervalsOverlap(candidate, sessionToInterval(session));
   });
+}
+
+export function getMaxDurationMinutesForStart(
+  sessions: Session[],
+  date: string,
+  startValue: string,
+  options?: SlotGridOptions
+): number {
+  const startMin = parseTimeToMinutes(startValue);
+  const windows = resolveAvailabilityWindows(options);
+  const containingWindow = windows.find((w) => startMin >= w.startMin && startMin < w.endMin);
+  if (!containingWindow) return 0;
+
+  const blocked = (options?.blockedIntervals ?? []).map((interval) => ({
+    startMin: interval.startMin,
+    endMin: interval.endMin,
+  }));
+  const busy = mergeIntervals([...getBusyBlocksForDate(sessions, date), ...blocked]);
+  const startProbe = { startMin, endMin: startMin + 1 };
+
+  if (busy.some((block) => intervalsOverlap(startProbe, block))) return 0;
+
+  let maxEnd = containingWindow.endMin;
+  for (const block of busy) {
+    if (block.startMin > startMin) {
+      maxEnd = Math.min(maxEnd, block.startMin);
+      break;
+    }
+  }
+
+  return Math.max(0, maxEnd - startMin);
+}
+
+export function getAllowedSessionDurations(
+  maxMinutes: number,
+  preferredMinutes = HOURLY_SESSION_MINUTES
+): number[] {
+  if (maxMinutes < HOURLY_SESSION_MINUTES) return [];
+
+  const allowed = SESSION_DURATION_OPTIONS.filter((minutes) => minutes <= maxMinutes);
+  if (allowed.length > 0) {
+    if (preferredMinutes <= maxMinutes && !allowed.includes(preferredMinutes as (typeof SESSION_DURATION_OPTIONS)[number])) {
+      return [...allowed, preferredMinutes].sort((a, b) => a - b);
+    }
+    return allowed;
+  }
+
+  const stepped = Math.floor(maxMinutes / HOURLY_SESSION_MINUTES) * HOURLY_SESSION_MINUTES;
+  return stepped >= HOURLY_SESSION_MINUTES ? [stepped] : [];
 }
 
 export function findNearestAvailableSlot(

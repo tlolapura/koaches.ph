@@ -39,6 +39,15 @@ export function formatRelativeSessionStart(date: string, time: string, now = new
   return `In ${days} days`;
 }
 
+/** Human-readable duration from minutes (e.g. 90 -> "1 hr 30 min"). */
+export function formatDurationMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  if (remainder === 0) return hours === 1 ? "1 hr" : `${hours} hr`;
+  return `${hours} hr ${remainder} min`;
+}
+
 /** Duration label from start/end display times. */
 export function formatSessionDuration(time: string, endTime?: string): string | null {
   if (!endTime) return null;

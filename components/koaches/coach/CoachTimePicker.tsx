@@ -14,6 +14,8 @@ type CoachTimePickerProps = {
   className?: string;
   id?: string;
   placeholder?: string;
+  allowedValues?: string[];
+  options?: CoachSelectOption[];
 };
 
 export function CoachTimePicker({
@@ -26,12 +28,30 @@ export function CoachTimePicker({
   className,
   id,
   placeholder = "Pick a time",
+  allowedValues,
+  options: optionsOverride,
 }: CoachTimePickerProps) {
   const options = useMemo<CoachSelectOption[]>(() => {
-    const base = buildTimeOptions();
     const current = value ?? defaultValue ?? "";
-    return withTimeOption(base, current);
-  }, [value, defaultValue]);
+    if (optionsOverride) {
+      if (!current || optionsOverride.some((option) => option.value === current)) return optionsOverride;
+      const fallback = withTimeOption([], current)[0];
+      return [
+        ...optionsOverride,
+        { ...fallback, label: `${fallback.label} (Unavailable)`, disabled: true },
+      ];
+    }
+
+    const base = buildTimeOptions();
+    const withCurrent = withTimeOption(base, current);
+    if (!allowedValues || allowedValues.length === 0) return withCurrent;
+
+    const allowedSet = new Set(allowedValues);
+    return withCurrent.map((option) => ({
+      ...option,
+      disabled: !allowedSet.has(option.value),
+    }));
+  }, [value, defaultValue, allowedValues, optionsOverride]);
 
   return (
     <CoachSelect
