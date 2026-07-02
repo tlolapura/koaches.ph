@@ -24,6 +24,7 @@ import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
+import { SpecializationPicker } from "@/components/koaches/shared/SpecializationPicker";
 import {
   completeCoachOnboardingAction,
   updateCoachBioAction,
@@ -42,43 +43,44 @@ import { invalidateCoachProfile, setCoachProfileCache } from "@/lib/koaches/quer
 import type { CoachSessionPricing } from "@/lib/koaches/types";
 import { cn } from "@/lib/utils";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
+import { LegalLinks } from "@/components/koaches/shared/LegalLinks";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 
 const STEPS = [
   {
     id: "welcome",
-    title: "Welcome aboard",
-    subtitle: "Let's set up your coach profile",
+    title: `Welcome to ${BRAND_NAME}`,
+    subtitle: "We're so glad you're here",
     icon: Sparkles,
   },
   {
     id: "profile",
     title: "Photo & bio",
-    subtitle: "Help players get to know you",
+    subtitle: "Help players get to know the coach behind the court",
     icon: Camera,
   },
   {
     id: "contact",
     title: "Contact",
-    subtitle: "How students reach you",
+    subtitle: "How students can reach you when they're ready",
     icon: Phone,
   },
   {
     id: "rates",
     title: "Drop-in rates",
-    subtitle: "Price your hourly sessions",
+    subtitle: "Set your session pricing. You can change this anytime.",
     icon: Wallet,
   },
   {
     id: "levels",
     title: "Player levels",
-    subtitle: "Who you coach",
+    subtitle: "Who you love coaching most",
     icon: Target,
   },
   {
     id: "share",
-    title: "You're ready!",
-    subtitle: "Share your profile link",
+    title: "You're all set!",
+    subtitle: "Thank you for setting up with us",
     icon: PartyPopper,
   },
 ] as const;
@@ -184,7 +186,7 @@ export function CoachOnboardingPage() {
         await queryClient.refetchQueries({
           queryKey: [...coachKeys.all, "profile", coachId],
         });
-        showToast("Welcome to the court!");
+        showToast("Welcome! We're so glad you're here.");
         router.replace("/coach/dashboard");
       } catch (e) {
         showToast(e instanceof Error ? e.message : "Could not finish setup", "error");
@@ -252,12 +254,13 @@ export function CoachOnboardingPage() {
             {current.id === "welcome" && (
               <div className="space-y-4">
                 <p className="text-sm leading-relaxed text-[#6B7280]">
-                  Hey {greeting}! PickleKoach is your home court for students, sessions, and progress.
-                  This quick setup takes about 3 minutes — then you&apos;re ready to coach.
+                  Hey {greeting}! Thank you for trying {BRAND_NAME}. We built this for coaches, and
+                  it means a lot that you signed in. This quick setup takes about 3 minutes, then
+                  you&apos;re ready to coach.
                 </p>
                 <ul className="space-y-3">
                   {[
-                    "Photo & bio for your public page",
+                    "A photo and bio for your public page",
                     "Contact info so players can reach you",
                     "Drop-in rates and player levels",
                     "Your shareable profile link",
@@ -293,12 +296,11 @@ export function CoachOnboardingPage() {
                     onChange={(e) => setBio(e.target.value)}
                   />
                 </CoachSheetField>
-                <CoachSheetField label="Specialization">
-                  <input
-                    className="coach-input"
-                    placeholder="e.g. Beginners, competitive doubles, juniors"
+                <CoachSheetField label="What do you coach?">
+                  <SpecializationPicker
+                    id="onboarding-specialization"
                     value={specialization}
-                    onChange={(e) => setSpecialization(e.target.value)}
+                    onChange={setSpecialization}
                   />
                 </CoachSheetField>
               </div>
@@ -340,10 +342,11 @@ export function CoachOnboardingPage() {
                   <PartyPopper className="h-7 w-7" strokeWidth={1.75} />
                 </div>
                 <p className="font-heading mt-4 text-lg font-bold text-[#111827]">
-                  Nice work, {greeting}!
+                  Thank you, {greeting}!
                 </p>
                 <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
-                  Your profile is live. Share this link when you&apos;re ready for students to find you.
+                  Your profile is live. We&apos;re grateful you took the time to set this up. Share
+                  your link whenever you&apos;re ready for students to find you.
                 </p>
                 <div className="mt-5 text-left">
                   <CoachPublicProfileLinkCard coach={coach} />
@@ -388,8 +391,9 @@ export function CoachOnboardingPage() {
             </CoachButton>
           </div>
           <p className="mt-2 text-center text-xs text-[#9CA3AF]">
-            Required one-time setup · You can edit everything later in Profile
+            One-time setup · Thank you for being an early coach · Edit anytime in Profile
           </p>
+          <LegalLinks className="mt-2 justify-center" />
         </div>
       </footer>
     </div>

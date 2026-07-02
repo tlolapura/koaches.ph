@@ -180,7 +180,7 @@ export function validateIdentityStep(draft: ApplicationDraft): string | null {
 }
 
 export function validateCoachingStep(draft: ApplicationDraft): string | null {
-  if (!draft.specialization.trim()) return "Please add your specialization.";
+  if (!draft.specialization.trim()) return "Pick what you coach, or add your own.";
   if (!draft.bio.trim()) return "Please tell us about your coaching.";
   return null;
 }

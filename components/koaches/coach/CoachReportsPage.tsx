@@ -312,7 +312,7 @@ export function CoachReportsPage() {
                   </Link>
                 )}
                 <Link
-                  href="/coach/billing"
+                  href="/coach/settings/billing"
                   className="coach-card flex items-center justify-between gap-3 p-4"
                 >
                   <div>

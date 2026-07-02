@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   AlertTriangle,
@@ -145,10 +146,23 @@ export function CoachBillingPage() {
     return <CoachBillingSkeleton />;
   }
 
+  const backToSettings = (
+    <Link
+      href="/coach/settings"
+      className="inline-flex min-h-[44px] items-center rounded-xl border border-[#E5E7EB] px-3 text-sm font-medium text-[#374151] hover:bg-[#F9FAFB]"
+    >
+      Back to settings
+    </Link>
+  );
+
   if (loading || !data) {
     return (
       <CoachPageShell className="pb-8">
-        <CoachPageHeader title="Billing" subtitle="Subscription and payment receipts" />
+        <CoachPageHeader
+          title="Billing"
+          subtitle="Subscription and payment receipts"
+          actions={backToSettings}
+        />
         <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading billing">
           <div className="h-24 rounded-2xl bg-[#E5E7EB]" />
           <div className="h-40 rounded-2xl bg-[#E5E7EB]/80" />
@@ -167,7 +181,11 @@ export function CoachBillingPage() {
 
   return (
     <CoachPageShell className="pb-8">
-      <CoachPageHeader title="Billing" subtitle="Subscription and payments" />
+      <CoachPageHeader
+        title="Billing"
+        subtitle="Subscription and payments"
+        actions={backToSettings}
+      />
 
       {isRestricted && (
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]">

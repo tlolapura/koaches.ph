@@ -58,7 +58,7 @@ export function buildCoachNotifications(
   if (billingStatus === "overdue") {
     items.push({
       id: "billing-overdue",
-      href: "/coach/billing",
+      href: "/coach/settings/billing",
       title: "Subscription overdue",
       message: "Submit your payment receipt to keep full portal access.",
       tone: "red",
@@ -66,7 +66,7 @@ export function buildCoachNotifications(
   } else if (billingStatus === "payment_due") {
     items.push({
       id: "billing-due",
-      href: "/coach/billing",
+      href: "/coach/settings/billing",
       title: "Payment due today",
       message: "Upload your receipt on the billing page.",
       tone: "amber",
@@ -74,7 +74,7 @@ export function buildCoachNotifications(
   } else if (billingStatus === "send_invoice") {
     items.push({
       id: "billing-invoice",
-      href: "/coach/billing",
+      href: "/coach/settings/billing",
       title: billingLabel === "Invoice window" ? "Subscription renewing soon" : billingLabel,
       message: "Review billing and upload your payment when ready.",
       tone: "amber",

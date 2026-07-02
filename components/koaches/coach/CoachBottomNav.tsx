@@ -16,7 +16,7 @@ const tabs = [
   { id: "more", label: "More", icon: Menu },
 ] as const;
 
-const moreSectionPrefixes = ["/coach/profile", "/coach/social", "/coach/billing", "/coach/programs"];
+const moreSectionPrefixes = ["/coach/profile", "/coach/social", "/coach/settings", "/coach/programs"];
 
 export function CoachBottomNav() {
   const pathname = usePathname();

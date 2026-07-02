@@ -11,6 +11,8 @@ export function coachBadgeForNavHref(href: string, counts: CoachNavBadgeCounts):
       return counts.pendingIntakes + counts.progressReady;
     case "/coach/sessions":
       return counts.unpaidSessionsToday;
+    case "/coach/settings":
+    case "/coach/settings/billing":
     case "/coach/billing":
       return counts.billingAttention;
     case "/coach/more":

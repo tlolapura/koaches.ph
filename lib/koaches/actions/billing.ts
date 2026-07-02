@@ -143,6 +143,7 @@ export async function submitCoachPaymentReceiptAction(
     .update({ status: "payment_submitted" })
     .eq("id", invoiceId);
 
+  revalidatePath("/coach/settings/billing");
   revalidatePath("/coach/billing");
   return { ok: true, submissionId };
 }

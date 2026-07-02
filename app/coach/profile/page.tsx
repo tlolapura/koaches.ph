@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useEffect, useState } from "react";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
+import { SpecializationPicker } from "@/components/koaches/shared/SpecializationPicker";
 import {
   formatCoachingLevelsLabel,
   resolveCoachCoachingLevels,
@@ -28,8 +28,6 @@ import {
 } from "@/lib/koaches/actions/coach-profile";
 import { CoachContactSocialsCard } from "@/components/koaches/coach/CoachContactSocialsCard";
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
-import { CoachChangePasswordCard } from "@/components/koaches/coach/CoachChangePasswordCard";
-import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import { invalidateCoachProfile } from "@/lib/koaches/queries/invalidate";
 import { coachGreetingLabel } from "@/lib/koaches/person-name";
 import { formatDisplayDate } from "@/lib/utils";
@@ -43,6 +41,7 @@ export default function ProfilePage() {
   const [pricingOpen, setPricingOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [bio, setBio] = useState("");
+  const [editSpecialization, setEditSpecialization] = useState("");
   const [pricing, setPricing] = useState<import("@/lib/koaches/types").CoachSessionPricing>(DEFAULT_SESSION_PRICING);
   const [coachingLevels, setCoachingLevels] = useState<CoachingLevelId[]>(["intermediate"]);
   const [savingBio, setSavingBio] = useState(false);
@@ -53,6 +52,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!coach) return;
     setBio(coach.bio);
+    setEditSpecialization(coach.specialization ?? "");
     setPricing(coach.sessionPricing ?? DEFAULT_SESSION_PRICING);
     setCoachingLevels(resolveCoachCoachingLevels(coach));
   }, [coach]);
@@ -66,7 +66,7 @@ export default function ProfilePage() {
       <CoachPageShell>
         <CoachPageHeader
           title="Profile"
-          subtitle="Public page, drop-in rates, availability, and account"
+          subtitle="Public page, drop-in rates, and availability"
         />
         <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading profile">
           <div className="h-64 rounded-2xl bg-[#E5E7EB]" />
@@ -86,7 +86,7 @@ export default function ProfilePage() {
     <CoachPageShell>
       <CoachPageHeader
         title="Profile"
-        subtitle="Public page, drop-in rates, availability, and account"
+        subtitle="Public page, drop-in rates, and availability"
       />
 
       <div className="coach-card mt-6 p-5 sm:p-6">
@@ -193,24 +193,10 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="coach-card mt-4 p-4">
-        <p className="font-heading font-semibold">Subscription</p>
-        <p className="mt-1 text-sm text-[#6B7280]">
-          Manage billing, invoices, and payment receipts.
-        </p>
-        <Link href="/coach/billing" className="mt-3 inline-block text-sm font-semibold text-[#4F8FF7]">
-          Go to billing →
-        </Link>
-      </div>
-
-      <CoachChangePasswordCard />
-
-      <CoachSignOutButton className="coach-btn-ghost-danger mt-6 w-full" />
-
       <CoachBottomSheet
         open={editOpen}
         onClose={() => setEditOpen(false)}
-        title="Edit bio"
+        title="Edit bio & focus"
         footer={
           <CoachSheetFooter>
             <CoachButton type="submit" form={EDIT_BIO_FORM_ID} loading={savingBio} loadingLabel="Saving…">
@@ -226,7 +212,7 @@ export default function ProfilePage() {
             e.preventDefault();
             setSavingBio(true);
             try {
-              await updateCoachBioAction(coachId, bio, coach.specialization);
+              await updateCoachBioAction(coachId, bio, editSpecialization);
               invalidateCoachProfile(coachId);
               await refresh();
               showToast("Bio updated!");
@@ -245,6 +231,13 @@ export default function ProfilePage() {
               placeholder="Tell students about your coaching style and experience"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
+            />
+          </CoachSheetField>
+          <CoachSheetField label="What do you coach?">
+            <SpecializationPicker
+              id="coach-profile-specialization"
+              value={editSpecialization}
+              onChange={setEditSpecialization}
             />
           </CoachSheetField>
           <button type="submit" form={EDIT_BIO_FORM_ID} className="hidden" />

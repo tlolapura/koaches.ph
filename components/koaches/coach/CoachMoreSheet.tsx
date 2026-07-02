@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, CreditCard, FileText, Share2, User } from "lucide-react";
+import { ChevronRight, FileText, Settings, Share2, User } from "lucide-react";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
-import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -21,16 +20,16 @@ const links = [
     desc: "Story images for open slots",
   },
   {
-    href: "/coach/billing",
-    label: "Billing",
-    icon: CreditCard,
-    desc: "Subscription, invoices, and receipts",
-  },
-  {
     href: "/coach/profile",
     label: "Profile",
     icon: User,
     desc: "Bio, rates, hours, public page",
+  },
+  {
+    href: "/coach/settings",
+    label: "Settings",
+    icon: Settings,
+    desc: "Billing, password, and legal",
   },
 ] as const;
 
@@ -47,7 +46,7 @@ export function CoachMoreSheet({ open, onClose }: CoachMoreSheetProps) {
       open={open}
       onClose={onClose}
       title="More"
-      subtitle="Programs, social, billing, and account"
+      subtitle="Programs, social, profile, and settings"
     >
       <div className="space-y-2">
         {links.map((l) => {
@@ -77,8 +76,6 @@ export function CoachMoreSheet({ open, onClose }: CoachMoreSheetProps) {
           );
         })}
       </div>
-
-      <CoachSignOutButton className="coach-card mt-6 w-full min-h-[52px] rounded-2xl p-4 text-[#6B7280] hover:bg-[#F9FAFB]" />
     </CoachBottomSheet>
   );
 }

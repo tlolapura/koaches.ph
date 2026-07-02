@@ -108,6 +108,7 @@ export async function approvePaymentSubmissionAction(
 
   revalidatePath("/admin/coaches");
   revalidatePath("/admin");
+  revalidatePath("/coach/settings/billing");
   revalidatePath("/coach/billing");
   return { ok: true };
 }
@@ -146,6 +147,7 @@ export async function rejectPaymentSubmissionAction(
     .eq("status", "payment_submitted");
 
   revalidatePath("/admin/coaches");
+  revalidatePath("/coach/settings/billing");
   revalidatePath("/coach/billing");
   return { ok: true };
 }

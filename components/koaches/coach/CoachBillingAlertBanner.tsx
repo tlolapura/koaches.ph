@@ -42,7 +42,7 @@ export function CoachBillingAlertBanner({ coach, className }: CoachBillingAlertB
             {billing.planLabel} · {formatCurrency(billing.amount)}/mo
           </p>
           <Link
-            href="/coach/billing"
+            href="/coach/settings/billing"
             className="mt-2 inline-block text-sm font-semibold text-[#4F8FF7] hover:underline"
           >
             Go to billing →

@@ -13,7 +13,16 @@ const SECTIONS: Array<{ prefix: string; title: string; backHref?: string; backLa
   { prefix: "/coach/reports", title: "Reports" },
   { prefix: "/coach/social", title: "Social", backHref: "/coach/dashboard", backLabel: "Home" },
   { prefix: "/coach/profile", title: "Profile", backHref: "/coach/dashboard", backLabel: "Home" },
-  { prefix: "/coach/billing", title: "Billing", backHref: "/coach/dashboard", backLabel: "Home" },
+  { prefix: "/coach/settings/billing", title: "Billing", backHref: "/coach/settings", backLabel: "Settings" },
+  { prefix: "/coach/settings/terms", title: "Terms", backHref: "/coach/settings", backLabel: "Settings" },
+  { prefix: "/coach/settings/privacy", title: "Privacy", backHref: "/coach/settings", backLabel: "Settings" },
+  {
+    prefix: "/coach/settings/refund-policy",
+    title: "Refund Policy",
+    backHref: "/coach/settings",
+    backLabel: "Settings",
+  },
+  { prefix: "/coach/settings", title: "Settings", backHref: "/coach/dashboard", backLabel: "Home" },
   { prefix: "/coach/onboarding", title: "Setup" },
 ];
 

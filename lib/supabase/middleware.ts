@@ -27,6 +27,7 @@ function isCoachPublicRoute(pathname: string) {
       "promos",
       "free-trial",
       "billing",
+      "settings",
       "onboarding",
       "login",
       "apply",
@@ -49,6 +50,7 @@ function isCoachPublicRoute(pathname: string) {
       "promos",
       "free-trial",
       "billing",
+      "settings",
       "onboarding",
       "login",
       "apply",
@@ -136,7 +138,7 @@ export async function updateSession(request: NextRequest) {
       !isCoachRestrictedPathAllowed(pathname)
     ) {
       const url = request.nextUrl.clone();
-      url.pathname = "/coach/billing";
+      url.pathname = "/coach/settings/billing";
       url.searchParams.set("restricted", "1");
       return NextResponse.redirect(url);
     }

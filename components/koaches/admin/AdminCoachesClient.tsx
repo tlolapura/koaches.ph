@@ -12,6 +12,7 @@ import {
   type CreateCoachManuallyResult,
 } from "@/lib/koaches/actions/coaches";
 import { AdminAddCoachSheet } from "@/components/koaches/admin/AdminAddCoachSheet";
+import { AdminEditCoachSheet } from "@/components/koaches/admin/AdminEditCoachSheet";
 import { AdminPendingPayments } from "@/components/koaches/admin/AdminPendingPayments";
 import type { AdminPendingPayment } from "@/lib/koaches/actions/admin-billing";
 import {
@@ -38,6 +39,7 @@ export function AdminCoachesClient({
   const [coaches, setCoaches] = useState(initialCoaches);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [editCoach, setEditCoach] = useState<CoachProfile | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [courtEditId, setCourtEditId] = useState<string | null>(null);
@@ -290,6 +292,14 @@ export function AdminCoachesClient({
               <div className="mt-4 flex flex-wrap gap-2">
                 <CoachButton
                   type="button"
+                  variant="outline"
+                  className="w-auto min-h-[40px] px-4 py-2 text-sm"
+                  onClick={() => setEditCoach(c)}
+                >
+                  Edit profile
+                </CoachButton>
+                <CoachButton
+                  type="button"
                   variant={c.isActive ? "outline" : "primary"}
                   className={cn(
                     "w-auto min-h-[40px] px-4 py-2 text-sm",
@@ -325,6 +335,17 @@ export function AdminCoachesClient({
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onCreated={handleCreated}
+      />
+
+      <AdminEditCoachSheet
+        coach={editCoach}
+        open={editCoach !== null}
+        onClose={() => setEditCoach(null)}
+        onSaved={(updated) => {
+          updateCoach(updated.id, updated);
+          setSuccessMessage(`Saved changes for ${updated.name}.`);
+          router.refresh();
+        }}
       />
     </AdminPageShell>
   );

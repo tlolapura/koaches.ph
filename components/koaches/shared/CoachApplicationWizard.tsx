@@ -24,50 +24,57 @@ import {
 } from "@/components/koaches/shared/CoachApplicationFields";
 import { submitCoachApplicationAction } from "@/lib/koaches/actions/applications";
 import {
+  displayFacebook,
+  displayInstagram,
+  facebookProfileUrl,
+  instagramProfileUrl,
+} from "@/lib/koaches/social-links";
+import {
   draftToSubmitInput,
   validateBusinessStep,
   validateCoachingStep,
   validateIdentityStep,
 } from "@/lib/koaches/application-form";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
+import { LegalLinks } from "@/components/koaches/shared/LegalLinks";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
   {
     id: "welcome",
-    title: "Join PickleKoach",
-    subtitle: "Apply for your coach portal",
+    title: "We're so glad you're here",
+    subtitle: "Thank you for trying PickleKoach",
     icon: Sparkles,
   },
   {
     id: "identity",
     title: "Let's start with you",
-    subtitle: "We'll use this to set up your account and keep you in the loop",
+    subtitle: "So we can set up your account and stay in touch",
     icon: User,
   },
   {
     id: "coaching",
-    title: "Tell your coaching story",
-    subtitle: "This becomes your public profile",
+    title: "Your coaching story",
+    subtitle: "This is what players will see on your public page",
     icon: Sparkles,
   },
   {
     id: "business",
-    title: "Your public profile",
-    subtitle: "Profile link and player levels you coach",
+    title: "Almost there",
+    subtitle: "Your profile link and the player levels you coach",
     icon: Link2,
   },
   {
     id: "review",
-    title: "Ready to join?",
-    subtitle: "Give it a quick look, then send",
+    title: "One last look",
+    subtitle: "Take a moment to review, then send when you're ready",
     icon: ClipboardCheck,
   },
   {
     id: "success",
-    title: "You're on the list!",
-    subtitle: "Here's what happens next",
+    title: "Thank you!",
+    subtitle: "We're grateful you applied",
     icon: CheckCircle2,
   },
 ] as const;
@@ -76,17 +83,17 @@ const NEXT_STEPS = [
   {
     icon: ClipboardCheck,
     title: "We review your application",
-    body: "Usually within 1–2 business days.",
+    body: "Usually within 1 to 2 business days. We read every one.",
   },
   {
     icon: MessageCircle,
-    title: "We reach out via SMS & email",
-    body: "Payment and onboarding details.",
+    title: "We reach out personally",
+    body: "SMS and email with payment and onboarding details.",
   },
   {
     icon: CheckCircle2,
     title: "Your portal goes live",
-    body: "Sign in and start coaching on PickleKoach.",
+    body: "Sign in and start coaching on PickleKoach. We're rooting for you.",
   },
 ] as const;
 
@@ -231,14 +238,16 @@ export function CoachApplicationWizard({
             {current.id === "welcome" && (
               <div className="space-y-4">
                 <p className="text-sm leading-relaxed text-[#6B7280]">
-                  A few quick steps — about 5 minutes — and you&apos;re in the queue for your coach portal.
+                  Seriously, thank you for giving PickleKoach a try. A few quick steps, about 5
+                  minutes, and you&apos;ll be in the queue for your coach portal. We built this for
+                  coaches like you, and it means a lot that you&apos;re here.
                 </p>
                 <ul className="space-y-3">
                   {[
-                    "Your details and contact info",
-                    "Coaching story for your public page",
-                    "Profile link and player levels",
-                    "Quick review, then we reach out",
+                    "Your details and how we can reach you",
+                    "Your coaching story for your public page",
+                    "Your profile link and player levels",
+                    "A quick review, then we take it from there",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-3 text-sm text-[#374151]">
                       <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
@@ -281,10 +290,31 @@ export function CoachApplicationWizard({
                     <dd className="mt-1 text-[#374151]">{review.bio}</dd>
                   </div>
                   {(review.instagram || review.facebook) && (
-                    <ReviewRow
-                      label="Social"
-                      value={[review.instagram, review.facebook].filter(Boolean).join(" · ")}
-                    />
+                    <div className="space-y-2">
+                      <dt className="text-[#6B7280]">Social</dt>
+                      <dd className="space-y-1.5">
+                        {review.instagram ? (
+                          <a
+                            href={instagramProfileUrl(review.instagram)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block break-all text-sm font-medium text-[#4F8FF7] hover:underline"
+                          >
+                            {displayInstagram(review.instagram)}
+                          </a>
+                        ) : null}
+                        {review.facebook ? (
+                          <a
+                            href={facebookProfileUrl(review.facebook)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block break-all text-sm font-medium text-[#4F8FF7] hover:underline"
+                          >
+                            {displayFacebook(review.facebook)}
+                          </a>
+                        ) : null}
+                      </dd>
+                    </div>
                   )}
                   <ReviewRow label="Player levels" value={review.coachingLevelsLabel} />
                   {review.students > 0 && (
@@ -295,7 +325,8 @@ export function CoachApplicationWizard({
                   )}
                 </dl>
                 <p className="mt-4 text-xs text-[#6B7280]">
-                  After you submit, our team will reach out via SMS and email for payment and onboarding.
+                  When you submit, our team will reach out via SMS and email. We&apos;re grateful you
+                  took the time to apply.
                 </p>
               </div>
             )}
@@ -303,7 +334,9 @@ export function CoachApplicationWizard({
             {current.id === "success" && review && (
               <div className="space-y-5">
                 <p className="text-sm text-[#6B7280]">
-                  Thanks for applying{review.email ? ` — we'll contact ${review.email}` : ""}.
+                  Thank you so much for applying
+                  {review.email ? `. We'll be in touch at ${review.email}` : ""}. We&apos;re really
+                  glad you&apos;re interested in coaching on PickleKoach.
                 </p>
                 <ol className="space-y-3">
                   {NEXT_STEPS.map((item) => (
@@ -400,9 +433,10 @@ export function CoachApplicationWizard({
 
           {!isSuccess && (
             <p className="mt-2 text-center text-xs text-[#9CA3AF]">
-              Free to apply · We&apos;ll reach out within 1–2 business days
+              Free to apply · We&apos;re grateful you&apos;re here · Usually hear back in 1 to 2 days
             </p>
           )}
+          <LegalLinks className="mt-2 justify-center" />
         </div>
       </footer>
     </div>
@@ -419,11 +453,11 @@ function ReviewRow({
   highlight?: boolean;
 }) {
   return (
-    <div className="flex justify-between gap-4">
-      <dt className="text-[#6B7280]">{label}</dt>
+    <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:gap-4">
+      <dt className="shrink-0 text-[#6B7280]">{label}</dt>
       <dd
         className={cn(
-          "text-right font-medium",
+          "min-w-0 font-medium break-words sm:max-w-[65%] sm:text-right",
           highlight ? "text-[#4F8FF7]" : "text-[#111827]"
         )}
       >

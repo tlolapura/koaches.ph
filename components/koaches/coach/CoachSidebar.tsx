@@ -9,7 +9,7 @@ import {
   BarChart3,
   FileText,
   Share2,
-  CreditCard,
+  Settings,
   User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -28,8 +28,8 @@ const navItems = [
   { href: "/coach/programs", label: "Programs", icon: FileText },
   { href: "/coach/reports", label: "Reports", icon: BarChart3 },
   { href: "/coach/social", label: "Social", icon: Share2 },
-  { href: "/coach/billing", label: "Billing", icon: CreditCard },
   { href: "/coach/profile", label: "Profile", icon: User },
+  { href: "/coach/settings", label: "Settings", icon: Settings },
 ];
 
 function SidebarAccount() {

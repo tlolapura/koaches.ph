@@ -9,6 +9,11 @@ import type { Court } from "@/lib/koaches/types";
 import { mapCoach, mapCourt, type DbCoach, type DbCourt } from "@/lib/koaches/db/mappers";
 import { provisionCoachAccount, type ProvisionCoachResult } from "@/lib/koaches/provision-coach";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
+import { isValidCoachSlug } from "@/lib/koaches/coach-slug";
+import type { CoachingLevelId } from "@/lib/koaches/application-form";
+import { primarySkillTemplateFromLevels } from "@/lib/koaches/application-form";
+import { joinPersonName } from "@/lib/koaches/person-name";
+import type { CoachSessionPricing } from "@/lib/koaches/types";
 
 export async function fetchCoachBySlugAction(slug: string): Promise<CoachProfile | null> {
   const normalized = slug.trim().toLowerCase();
@@ -116,6 +121,7 @@ export async function extendCoachSubscriptionAction(
     const nextExpiry = await extendCoachSubscriptionByMonths(supabase, coachId, months);
     revalidatePath("/admin/coaches");
     revalidatePath("/admin");
+    revalidatePath("/coach/settings/billing");
     revalidatePath("/coach/billing");
     if (row.slug) revalidatePath(`/coach/${row.slug}`);
     return { ok: true, subscriptionExpiry: nextExpiry };
@@ -200,4 +206,104 @@ export async function createCoachManuallyAction(
   }
 
   return result;
+}
+
+export type AdminUpdateCoachInput = {
+  coachId: string;
+  firstName: string;
+  lastName: string;
+  slug: string;
+  bio: string;
+  specialization: string;
+  mobile: string;
+  instagram: string;
+  facebook: string;
+  coachingLevels: CoachingLevelId[];
+  sessionPricing: CoachSessionPricing;
+  subscriptionPlan: CoachProfile["subscriptionPlan"];
+  subscriptionExpiry: string;
+};
+
+export async function adminUpdateCoachAction(
+  input: AdminUpdateCoachInput
+): Promise<CoachMutationResult> {
+  try {
+    await requireAdmin();
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Not authorized." };
+  }
+
+  const firstName = input.firstName.trim();
+  const lastName = input.lastName.trim();
+  const displayName = joinPersonName(firstName, lastName);
+  if (!displayName) return { ok: false, error: "First name is required." };
+
+  const slug = input.slug.trim().toLowerCase();
+  if (!isValidCoachSlug(slug)) {
+    return {
+      ok: false,
+      error: "Profile URL can only use lowercase letters, numbers, and hyphens.",
+    };
+  }
+
+  if (input.coachingLevels.length === 0) {
+    return { ok: false, error: "Select at least one player level." };
+  }
+
+  const supabase = createServiceClient();
+  const { data: existing, error: fetchError } = await supabase
+    .from("coaches")
+    .select("id, slug, user_id")
+    .eq("id", input.coachId)
+    .maybeSingle();
+  if (fetchError) return { ok: false, error: fetchError.message };
+  if (!existing) return { ok: false, error: "Coach not found." };
+
+  if (slug !== existing.slug) {
+    const { data: slugTaken } = await supabase
+      .from("coaches")
+      .select("id")
+      .eq("slug", slug)
+      .neq("id", input.coachId)
+      .maybeSingle();
+    if (slugTaken) return { ok: false, error: "That profile URL is already taken." };
+  }
+
+  const row = {
+    name: displayName,
+    first_name: firstName,
+    last_name: lastName,
+    slug,
+    bio: input.bio.trim(),
+    specialization: input.specialization.trim(),
+    mobile: input.mobile.trim() || null,
+    instagram: input.instagram.trim() || null,
+    facebook: input.facebook.trim() || null,
+    coaching_levels: input.coachingLevels,
+    skill_template_id: primarySkillTemplateFromLevels(input.coachingLevels),
+    session_pricing: input.sessionPricing,
+    rate_per_session: input.sessionPricing.tiers[0]?.rate ?? 0,
+    subscription_plan: input.subscriptionPlan,
+    subscription_expiry: input.subscriptionExpiry,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error: coachError } = await supabase.from("coaches").update(row).eq("id", input.coachId);
+  if (coachError) return { ok: false, error: coachError.message };
+
+  if (existing.user_id) {
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ full_name: displayName })
+      .eq("id", existing.user_id);
+    if (profileError) return { ok: false, error: profileError.message };
+  }
+
+  revalidatePath("/admin/coaches");
+  revalidatePath("/admin");
+  revalidatePath("/coach/profile");
+  if (existing.slug) revalidatePath(buildPublicCoachPath(existing.slug));
+  if (slug !== existing.slug) revalidatePath(buildPublicCoachPath(slug));
+
+  return { ok: true, subscriptionExpiry: input.subscriptionExpiry };
 }

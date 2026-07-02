@@ -3,6 +3,7 @@ import { getSubscriptionBillingInfo } from "@/lib/koaches/subscription-billing";
 
 /** Routes a restricted coach may still access (billing, account, sign out). */
 export const COACH_RESTRICTED_ALLOWED_PREFIXES = [
+  "/coach/settings",
   "/coach/billing",
   "/coach/profile",
   "/coach/more",

@@ -8,6 +8,7 @@ import {
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
+import { SpecializationPicker } from "@/components/koaches/shared/SpecializationPicker";
 import type { CoachProfile } from "@/lib/koaches/types";
 
 const EMPTY_FORM = {
@@ -183,13 +184,12 @@ export function AdminAddCoachSheet({ open, onClose, onCreated }: AdminAddCoachSh
           </div>
         </CoachSheetField>
 
-        <CoachSheetField label="Specialization (optional)" htmlFor="add-coach-specialization">
-          <input
+        <CoachSheetField label="Specialization (optional)">
+          <SpecializationPicker
             id="add-coach-specialization"
-            className="coach-input"
             value={form.specialization}
-            onChange={(e) => patch({ specialization: e.target.value })}
-            placeholder="e.g. Beginner fundamentals"
+            onChange={(specialization) => patch({ specialization })}
+            hint="Optional when creating an account — coach can set this later."
           />
         </CoachSheetField>
 

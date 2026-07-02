@@ -17,6 +17,7 @@ export const COACH_PORTAL_SEGMENTS = new Set([
   "certificates",
   "courts",
   "billing",
+  "settings",
   "onboarding",
 ]);
 

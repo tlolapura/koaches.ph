@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Settings } from "lucide-react";
 import { getCoachPageMeta } from "@/lib/koaches/coach-page-titles";
 import { CoachAvatar } from "@/components/koaches/coach/CoachAvatar";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
@@ -36,6 +36,14 @@ export function CoachMobileHeader() {
         )}
       </div>
       <div className="flex shrink-0 items-center gap-2">
+        <Link
+          href="/coach/settings"
+          className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl text-[#6B7280] hover:bg-[#F3F4F6]"
+          title="Settings"
+        >
+          <Settings className="h-5 w-5" />
+          <span className="sr-only">Settings</span>
+        </Link>
         <Link
           href="/coach/profile"
           className="shrink-0"
