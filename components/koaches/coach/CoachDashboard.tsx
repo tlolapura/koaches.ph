@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
-import { endOfWeek, format, isWithinInterval, parseISO, startOfWeek } from "date-fns";
+import { useMemo, useState } from "react";
+import {
+  endOfMonth,
+  endOfWeek,
+  format,
+  isWithinInterval,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import {
   ChevronRight,
   Plus,
@@ -50,6 +58,8 @@ type AttentionItem = {
   tone: "coral" | "navy" | "amber";
 };
 
+type OverviewRange = "week" | "month";
+
 export function CoachDashboard() {
   const coachId = usePortalCoachId();
   const { coach } = useCoachProfile(coachId);
@@ -58,10 +68,16 @@ export function CoachDashboard() {
   const todayLabel = format(today, "EEEE, MMM d");
   const { sessions: allSessions, loading } = useCoachSessions(coachId);
   const { cards, candidates } = useProgressCards(coachId);
+  const [overviewRange, setOverviewRange] = useState<OverviewRange>("week");
 
   const weekInterval = useMemo(() => {
     const start = startOfWeek(today, { weekStartsOn: 1 });
     const end = endOfWeek(today, { weekStartsOn: 1 });
+    return { start, end };
+  }, [todayKey]);
+  const monthInterval = useMemo(() => {
+    const start = startOfMonth(today);
+    const end = endOfMonth(today);
     return { start, end };
   }, [todayKey]);
 
@@ -95,6 +111,23 @@ export function CoachDashboard() {
       weekSessions,
     };
   }, [todaySessions, todayUpcoming, allSessions, weekInterval]);
+
+  const periodOverview = useMemo(() => {
+    const interval = overviewRange === "week" ? weekInterval : monthInterval;
+    const upcoming = allSessions.filter((s) => {
+      if (!s.date || isCanceledStatus(s.status)) return false;
+      if (getSessionDisplayStatus(s, cards) !== "upcoming") return false;
+      return isWithinInterval(parseISO(s.date), interval);
+    });
+    const expected = upcoming.reduce((sum, s) => sum + s.price + (s.tip ?? 0), 0);
+    const unpaid = upcoming.filter((s) => !isCollectedSession(s)).length;
+
+    return {
+      upcomingCount: upcoming.length,
+      expected,
+      unpaid,
+    };
+  }, [overviewRange, weekInterval, monthInterval, allSessions, cards]);
 
   const nextSession = useMemo(() => {
     const now = new Date();
@@ -178,13 +211,49 @@ export function CoachDashboard() {
           </div>
         </section>
 
-        <div className="grid grid-cols-3 divide-x divide-[#E5E7EB] border-t border-[#E5E7EB] bg-white">
+        <div className="border-t border-[#E5E7EB] bg-white px-3 pt-2">
+          <div className="mb-2 inline-flex rounded-lg bg-[#F3F4F6] p-1">
+            <button
+              type="button"
+              className={cn(
+                "rounded-md px-3 py-1 text-xs font-semibold transition-colors",
+                overviewRange === "week"
+                  ? "bg-white text-[#111827] shadow-sm"
+                  : "text-[#6B7280] hover:text-[#111827]"
+              )}
+              onClick={() => setOverviewRange("week")}
+            >
+              This week
+            </button>
+            <button
+              type="button"
+              className={cn(
+                "rounded-md px-3 py-1 text-xs font-semibold transition-colors",
+                overviewRange === "month"
+                  ? "bg-white text-[#111827] shadow-sm"
+                  : "text-[#6B7280] hover:text-[#111827]"
+              )}
+              onClick={() => setOverviewRange("month")}
+            >
+              This month
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 bg-white pb-1">
           {[
-            { value: String(todayStats.upcomingCount), label: "Upcoming", color: "text-[#16A34A]" },
-            { value: formatCurrency(todayStats.booked), label: "Expected", color: "text-[#4F8FF7]" },
-            { value: String(todayStats.weekSessions), label: "This week", color: "text-[#111827]" },
-          ].map((stat) => (
-            <div key={stat.label} className="px-2 py-3.5 text-center">
+            { value: String(periodOverview.upcomingCount), label: "Upcoming", color: "text-[#16A34A]" },
+            { value: formatCurrency(periodOverview.expected), label: "Expected", color: "text-[#4F8FF7]" },
+            { value: String(periodOverview.unpaid), label: "Unpaid", color: "text-[#111827]" },
+          ].map((stat, idx) => (
+            <div
+              key={stat.label}
+              className={cn(
+                "relative px-2 py-3.5 text-center",
+                idx < 2 &&
+                  "after:absolute after:right-0 after:top-1/2 after:h-12 after:w-px after:-translate-y-1/2 after:bg-[#E5E7EB]/80"
+              )}
+            >
               <p className={cn("font-heading text-lg font-bold leading-none sm:text-xl", stat.color)}>
                 {stat.value}
               </p>
