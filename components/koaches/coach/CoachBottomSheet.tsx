@@ -117,6 +117,7 @@ type ConfirmSheetProps = {
   onClose: () => void;
   onConfirm: () => void | Promise<void>;
   message?: string;
+  description?: string;
   confirmLabel?: string;
 };
 
@@ -125,6 +126,7 @@ export function ConfirmSheet({
   onClose,
   onConfirm,
   message = "Are you sure?",
+  description,
   confirmLabel = "Confirm",
 }: ConfirmSheetProps) {
   const [pending, setPending] = useState(false);
@@ -144,6 +146,9 @@ export function ConfirmSheet({
       open={open}
       onClose={pending ? () => {} : onClose}
       title={message}
+      children={
+        description ? <p className="whitespace-pre-line text-sm text-[#6B7280]">{description}</p> : undefined
+      }
       footer={
         <CoachSheetFooterActions>
           <CoachButton

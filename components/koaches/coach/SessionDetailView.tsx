@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CalendarX, CircleCheck } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
 import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
@@ -12,7 +13,7 @@ import { SessionPaymentCard } from "@/components/koaches/coach/SessionPaymentCar
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { ScheduleTbdSessionSheet } from "@/components/koaches/coach/ScheduleTbdSessionSheet";
 import { useSessionStatus } from "@/hooks/useSessionStatus";
-import { updateSessionNotesAction } from "@/lib/koaches/actions/sessions";
+import { deleteSessionAction, updateSessionNotesAction } from "@/lib/koaches/actions/sessions";
 import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { formatSessionTimeRange } from "@/lib/koaches/session-time";
@@ -94,7 +95,9 @@ function SessionInfoCard({
 }
 
 export function SessionDetailView({ session }: SessionDetailViewProps) {
+  const router = useRouter();
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [notes, setNotes] = useState(session.notes ?? "");
   const [savingNotes, setSavingNotes] = useState(false);
@@ -107,6 +110,10 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
   const primaryName = formatSessionParticipantNames(session);
   const { lookup } = useCourts();
   const courtName = courtNameFromLookup(lookup, session.courtId);
+  const deleteSessionDetails = isSessionDateScheduled(session)
+    ? `${formatDisplayDate(session.date!)} · ${formatSessionTimeRange(session.time, session.endTime)}`
+    : "Date & time not set yet";
+  const deleteDescription = `You are deleting: ${primaryName}\n${deleteSessionDetails}\n${courtName} · ${formatCurrency(session.price)}\n\nThis permanently removes the record and cannot be undone.`;
 
   const handleMarkDone = async () => {
     setMarkingDone(true);
@@ -187,6 +194,13 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
             >
               Save notes
             </CoachButton>
+            <button
+              type="button"
+              className="coach-btn-ghost-danger mt-3"
+              onClick={() => setDeleteOpen(true)}
+            >
+              Delete session
+            </button>
           </div>
 
           {status !== "canceled" && (
@@ -235,6 +249,25 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
         onConfirm={async () => {
           await markCanceled();
           showToast("Session canceled");
+        }}
+      />
+
+      <ConfirmSheet
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        message="Delete this session permanently?"
+        description={deleteDescription}
+        confirmLabel="Delete Session"
+        onConfirm={async () => {
+          try {
+            await deleteSessionAction(session.id);
+            invalidateCoachSessions(session.coachId);
+            showToast("Session deleted");
+            router.push("/coach/sessions");
+            router.refresh();
+          } catch (e) {
+            showToast(e instanceof Error ? e.message : "Could not delete session", "error");
+          }
         }}
       />
 

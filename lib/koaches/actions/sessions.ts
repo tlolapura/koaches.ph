@@ -49,6 +49,18 @@ export async function updateSessionStatusAction(sessionId: string, status: Sessi
   revalidatePath("/coach/students");
 }
 
+export async function deleteSessionAction(sessionId: string) {
+  await assertCoachOwnsSession(sessionId);
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("sessions").delete().eq("id", sessionId);
+  if (error) throw error;
+  revalidatePath(`/coach/sessions/${sessionId}`);
+  revalidatePath("/coach/sessions");
+  revalidatePath("/coach/dashboard");
+  revalidatePath("/coach/students");
+  revalidatePath("/coach/reports");
+}
+
 export async function updateSessionScheduleAction(
   sessionId: string,
   patch: { date: string; time: string; endTime: string; courtId?: string }
