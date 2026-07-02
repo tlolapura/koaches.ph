@@ -69,9 +69,9 @@ export function CoachBottomSheet({
 
       <div
         className={cn(
-          "coach-portal coach-sheet-panel relative flex w-full min-h-0 flex-col bg-white shadow-xl",
+          "coach-portal coach-sheet-panel relative flex w-full min-h-0 flex-col overflow-hidden bg-white shadow-xl",
           "max-h-[min(92dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)))]",
-          "rounded-t-2xl animate-in slide-in-from-bottom duration-300",
+          "rounded-t-2xl rounded-b-none animate-in slide-in-from-bottom duration-300",
           "md:max-h-[min(85vh,720px)] md:rounded-2xl md:animate-none",
           wide ? "md:max-w-2xl" : "md:max-w-lg"
         )}

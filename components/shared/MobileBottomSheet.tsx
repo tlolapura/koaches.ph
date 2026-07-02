@@ -39,8 +39,8 @@ export function MobileBottomSheet({
       />
       <div
         className={cn(
-          "coach-portal coach-sheet-panel panel-accent absolute right-0 bottom-0 left-0 flex max-h-[min(85dvh,calc(100dvh-env(safe-area-inset-top,0px)))] flex-col rounded-b-none border-b-0",
-          "rounded-t-2xl bg-white"
+          "coach-portal coach-sheet-panel panel-accent absolute right-0 bottom-0 left-0 flex max-h-[min(85dvh,calc(100dvh-env(safe-area-inset-top,0px)))] flex-col overflow-hidden",
+          "rounded-t-2xl rounded-b-none bg-white"
         )}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-4">
