@@ -43,12 +43,18 @@ import { SessionPriceFields } from "@/components/koaches/coach/SessionPriceField
 import { SessionTimeFields } from "@/components/koaches/coach/SessionTimeFields";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import { formatDisplayDate, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 const ADD_SESSION_FORM_ID = "add-session-form";
 
 type AddSessionStep = "form" | "confirm";
+
+const ADD_SESSION_STEPS = [
+  { id: "form", label: "Details" },
+  { id: "confirm", label: "Review" },
+];
 
 function paymentStatusLabel(status: SessionPaymentStatus) {
   return status === "paid" ? "Paid" : "Unpaid";
@@ -416,6 +422,17 @@ export function AddSessionSheet({
         )
       }
     >
+      <CoachStepper
+        card={false}
+        variant="compact"
+        steps={ADD_SESSION_STEPS.map((s) =>
+          s.id === "confirm" ? { ...s, disabled: !canSave && step === "form" } : s
+        )}
+        currentStepId={step}
+        onStepChange={(id) => setStep(id as AddSessionStep)}
+        className="mb-4"
+      />
+
       {step === "confirm" ? (
         <div className="coach-card space-y-4 p-4">
           <p className="text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">Session summary</p>

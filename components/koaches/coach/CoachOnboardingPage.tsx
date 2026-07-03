@@ -14,11 +14,11 @@ import {
   Target,
   Wallet,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import { PricingTiersEditor } from "@/components/koaches/coach/PricingTiersEditor";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
@@ -129,7 +129,6 @@ export function CoachOnboardingPage() {
 
   const current = STEPS[step];
   const StepIcon = current.icon;
-  const progress = Math.round(((step + 1) / STEPS.length) * 100);
   const isFirst = step === 0;
   const isLast = step === STEPS.length - 1;
   const greeting = coachGreetingLabel(coach);
@@ -212,39 +211,26 @@ export function CoachOnboardingPage() {
             </span>
           </div>
 
-          <div className="mt-5 flex items-end justify-between gap-4">
-            <div>
-              <div
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0FDF4] text-[#16A34A]"
-                aria-hidden
-              >
-                <StepIcon className="h-5 w-5" strokeWidth={2} />
-              </div>
-              <h1 className="font-heading mt-2.5 text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
-                {current.title}
-              </h1>
-              <p className="mt-0.5 text-sm text-[#6B7280]">{current.subtitle}</p>
-            </div>
-            <div className="text-right">
-              <p className="font-heading text-2xl font-bold leading-none text-[#16A34A]">{progress}%</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                Step {step + 1}/{STEPS.length}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
+          <div className="mt-5">
             <div
-              className="h-full rounded-full bg-[#16A34A] transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
+              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0FDF4] text-[#16A34A]"
+              aria-hidden
+            >
+              <StepIcon className="h-5 w-5" strokeWidth={2} />
+            </div>
+            <h1 className="font-heading mt-2.5 text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
+              {current.title}
+            </h1>
+            <p className="mt-0.5 text-sm text-[#6B7280]">{current.subtitle}</p>
           </div>
 
-          <div className="mt-3 flex justify-between gap-1">
-            {STEPS.map((s, i) => (
-              <StepDot key={s.id} icon={s.icon} active={i === step} done={i < step} />
-            ))}
-          </div>
+          <CoachStepper
+            card={false}
+            variant="header"
+            className="mt-4"
+            steps={STEPS.map((s) => ({ id: s.id, label: s.title, icon: s.icon }))}
+            currentStepId={current.id}
+          />
         </div>
       </header>
 
@@ -397,28 +383,5 @@ export function CoachOnboardingPage() {
         </div>
       </footer>
     </div>
-  );
-}
-
-function StepDot({
-  icon: Icon,
-  active,
-  done,
-}: {
-  icon: LucideIcon;
-  active: boolean;
-  done: boolean;
-}) {
-  return (
-    <span
-      className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-full transition-all",
-        done && "bg-[#F0FDF4] text-[#16A34A]",
-        active && !done && "bg-[#EFF6FF] text-[#4F8FF7] ring-2 ring-[#BFDBFE] scale-110",
-        !active && !done && "bg-[#F3F4F6] text-[#9CA3AF]"
-      )}
-    >
-      {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Icon className="h-3.5 w-3.5" />}
-    </span>
   );
 }

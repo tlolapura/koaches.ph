@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, PartyPopper } from "lucide-react";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { SendProgressCardEmailButton } from "@/components/koaches/coach/SendProgressCardEmailButton";
 import {
   ALL_SKILL_CATEGORIES,
   getSkillsForRubric,
@@ -21,9 +21,20 @@ import {
   buildProgressCardUrl,
 } from "@/lib/koaches/progress-cards";
 import type { SkillCategory, SkillRating, SkillRubricId } from "@/lib/koaches/types";
+import type { SessionRatingStep } from "@/lib/koaches/session-detail-steps";
 import { cn } from "@/lib/utils";
 
+export type SkillRatingActions = {
+  canContinueFromRatings: boolean;
+  saving: boolean;
+  continueToFeedback: () => void;
+  saveSession: () => Promise<void>;
+};
+
 type SkillRatingPanelProps = {
+  step: SessionRatingStep;
+  onStepChange: (step: SessionRatingStep) => void;
+  onActionsChange?: (actions: SkillRatingActions | null) => void;
   initialBefore?: SkillRating[];
   initialAfter?: SkillRating[];
   rubricId?: SkillRubricId;
@@ -194,6 +205,8 @@ function SkillRatingRow({
 }
 
 export function SkillRatingPanel({
+  step,
+  onStepChange,
   initialBefore,
   initialAfter,
   rubricId,
@@ -204,6 +217,7 @@ export function SkillRatingPanel({
   initialFeedback,
   participantName,
   onSave,
+  onActionsChange,
 }: SkillRatingPanelProps) {
   const activeRubric = rubricId ?? templateId ?? "intermediate";
   const skillConfig = useMemo(
@@ -221,7 +235,6 @@ export function SkillRatingPanel({
       : defaultRatings(activeRubric, customSkillIds, customSkills, skillLabelOverrides)
   );
   const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState<"coverage" | "ratings" | "feedback" | "complete">("coverage");
   const [savedCardId, setSavedCardId] = useState<string | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const [feedback, setFeedback] = useState<SessionFeedback>(() => ({
@@ -236,13 +249,6 @@ export function SkillRatingPanel({
     if (step === "coverage" || step === "complete") return;
     panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [step]);
-
-  const subSteps = [
-    { id: "coverage" as const, label: "Coverage" },
-    { id: "ratings" as const, label: "Ratings" },
-    { id: "feedback" as const, label: "Feedback" },
-  ];
-  const subStepIndex = subSteps.findIndex((s) => s.id === step);
 
   const skillChanges = useMemo(() => buildSkillChanges(before, after), [before, after]);
 
@@ -291,13 +297,48 @@ export function SkillRatingPanel({
   const ratedCount = before.filter((s) => s.skipped === false).length;
   const skippedCount = before.length - ratedCount;
 
-  const goToFeedback = () => {
+  const goToFeedback = useCallback(() => {
     if (!feedback.strengths && !feedback.toImprove && !feedback.generalNote && !feedbackPrefilled.current) {
       feedbackPrefilled.current = true;
       setFeedback(suggestSessionFeedback(skillChanges));
     }
-    setStep("feedback");
-  };
+    onStepChange("feedback");
+  }, [feedback.generalNote, feedback.strengths, feedback.toImprove, onStepChange, skillChanges]);
+
+  const saveSession = useCallback(async () => {
+    if (!onSave || saving) return;
+    setSaving(true);
+    try {
+      const cardId = await onSave(before, after, feedback);
+      if (typeof cardId === "string") setSavedCardId(cardId);
+      onStepChange("complete");
+    } finally {
+      setSaving(false);
+    }
+  }, [after, before, feedback, onSave, onStepChange, saving]);
+
+  useEffect(() => {
+    if (step === "complete" || !onActionsChange) return;
+    onActionsChange({
+      canContinueFromRatings: ratedSkillsByCategory.length > 0,
+      saving,
+      continueToFeedback: goToFeedback,
+      saveSession,
+    });
+  }, [
+    goToFeedback,
+    onActionsChange,
+    ratedSkillsByCategory.length,
+    saveSession,
+    saving,
+    step,
+  ]);
+
+  useEffect(() => {
+    if (step === "complete") {
+      onActionsChange?.(null);
+    }
+  }, [onActionsChange, step]);
 
   const updateFeedback = (key: keyof SessionFeedback, value: string) => {
     setFeedback((prev) => ({ ...prev, [key]: value }));
@@ -333,10 +374,11 @@ export function SkillRatingPanel({
                 >
                   {linkCopied ? "Link copied!" : "Copy share link"}
                 </button>
+                <SendProgressCardEmailButton cardId={savedCardId} className="w-full" />
                 <button
                   type="button"
                   className="coach-btn-ghost w-full text-sm text-[#6B7280]"
-                  onClick={() => setStep("coverage")}
+                  onClick={() => onStepChange("coverage")}
                 >
                   Edit ratings
                 </button>
@@ -345,7 +387,7 @@ export function SkillRatingPanel({
               <button
                 type="button"
                 className="coach-btn-outline mt-6 w-full"
-                onClick={() => setStep("coverage")}
+                onClick={() => onStepChange("coverage")}
               >
                 Edit ratings
               </button>
@@ -353,29 +395,7 @@ export function SkillRatingPanel({
           </div>
         ) : (
           <>
-            <div className="flex gap-2">
-              {subSteps.map((sub, index) => {
-                const active = step === sub.id;
-                const done = subStepIndex > index;
-                return (
-                  <div
-                    key={sub.id}
-                    className={cn(
-                      "flex min-h-[36px] flex-1 items-center justify-center rounded-full px-2 text-[11px] font-semibold",
-                      active
-                        ? "bg-[#16A34A] text-white"
-                        : done
-                          ? "bg-[#DCFCE7] text-[#166534]"
-                          : "bg-[#F3F4F6] text-[#9CA3AF]"
-                    )}
-                  >
-                    {sub.label}
-                  </div>
-                );
-              })}
-            </div>
-
-            <p className="mt-3 text-sm text-[#6B7280]">
+            <p className="text-sm text-[#6B7280]">
               {step === "coverage" && (
                 <>
                   {ratedCount} covered
@@ -514,71 +534,6 @@ export function SkillRatingPanel({
             ))}
           </div>
         )}
-
-        <div className="mt-6 border-t border-[#E5E7EB] pt-4">
-          {step === "coverage" ? (
-            <CoachButton
-              type="button"
-              variant="soft"
-              className="w-full"
-              onClick={() => setStep("ratings")}
-            >
-              Continue to ratings
-            </CoachButton>
-          ) : step === "ratings" ? (
-            <div className="space-y-2">
-              <CoachButton
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => setStep("coverage")}
-              >
-                Back to coverage
-              </CoachButton>
-              <CoachButton
-                type="button"
-                variant="soft"
-                className="w-full"
-                disabled={ratedSkillsByCategory.length === 0}
-                onClick={goToFeedback}
-              >
-                Continue to feedback
-              </CoachButton>
-            </div>
-          ) : step === "feedback" ? (
-            <div className="space-y-2">
-              <CoachButton
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => setStep("ratings")}
-              >
-                Back to ratings
-              </CoachButton>
-              <CoachButton
-                type="button"
-                variant="soft"
-                className="w-full"
-                loading={saving}
-                loadingLabel="Saving…"
-                onClick={async () => {
-                  if (!onSave || saving) return;
-                  setSaving(true);
-                  try {
-                    const cardId = await onSave(before, after, feedback);
-                    if (typeof cardId === "string") setSavedCardId(cardId);
-                    setStep("complete");
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
-              >
-                <Check className="h-4 w-4" strokeWidth={2.5} />
-                Save session
-              </CoachButton>
-            </div>
-          ) : null}
-            </div>
           </>
         )}
       </div>

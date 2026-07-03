@@ -19,9 +19,17 @@ import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { getSessionParticipants } from "@/lib/koaches/session-participants";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
+import { SendProgressCardEmailButton } from "@/components/koaches/coach/SendProgressCardEmailButton";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { RadarChart, SkillComparisonTable } from "@/components/koaches/RadarChart";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
+
+const CARD_STEPS = [
+  { id: "1", label: "Review" },
+  { id: "2", label: "Feedback" },
+  { id: "3", label: "Preview" },
+];
 
 type GenerateProgressCardSheetProps = {
   open: boolean;
@@ -176,6 +184,7 @@ export function GenerateProgressCardSheet({
             <Link href={`/progress/${generatedId}`} className="coach-btn-primary text-center">
               View card
             </Link>
+            {generatedId ? <SendProgressCardEmailButton cardId={generatedId} /> : null}
             <button
               type="button"
               className="coach-btn-outline"
@@ -192,6 +201,16 @@ export function GenerateProgressCardSheet({
         )
       }
     >
+      {step < 4 && (
+        <CoachStepper
+          card={false}
+          variant="compact"
+          steps={CARD_STEPS}
+          currentStepId={String(step)}
+          className="mb-4"
+        />
+      )}
+
       {step === 1 && (
         <div className="space-y-4">
           <RadarChart before={cardBefore} after={cardAfter} height={240} compact />

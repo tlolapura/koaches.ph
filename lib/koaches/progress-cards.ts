@@ -16,6 +16,7 @@ import { buildSkillChanges, type SkillChange } from "./skill-progress-display";
 import type { CoachProfile, Program, ProgressCard, Session, Student } from "./types";
 import { progressCardCoachName } from "./person-name";
 import { formatDisplayDate } from "@/lib/utils";
+import { SITE_URL } from "@/lib/koaches/site-metadata";
 
 export const PROGRESS_CARDS_UPDATED_EVENT = "koaches-progress-cards-updated";
 
@@ -43,7 +44,12 @@ export function buildProgressCardUrl(id: string): string {
   if (typeof window !== "undefined") {
     return `${window.location.origin}/progress/${id}`;
   }
-  return `/progress/${id}`;
+  return absoluteProgressCardUrl(id);
+}
+
+export function absoluteProgressCardUrl(id: string): string {
+  const base = SITE_URL.replace(/\/$/, "");
+  return `${base}/progress/${id}`;
 }
 
 export function newProgressCardId(): string {

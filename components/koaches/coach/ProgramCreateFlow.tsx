@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
-  Check,
   ChevronRight,
   Layers,
   PenLine,
@@ -24,6 +23,7 @@ import {
 } from "@/components/koaches/coach/SkillRubricPicker";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import { CoachSheetField, CoachSheetStickyActions } from "@/components/koaches/coach/CoachSheet";
 import { SessionCountField } from "@/components/koaches/coach/SessionCountField";
 import { cn } from "@/lib/utils";
@@ -268,30 +268,12 @@ export function ProgramCreateFlow({
           </button>
 
           {/* Step indicator */}
-          <div className="flex items-center gap-1">
-            {customSteps.map((s, i) => (
-              <div key={s.id} className="flex flex-1 items-center gap-1">
-                <div
-                  className={cn(
-                    "font-heading flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                    customStep === s.id
-                      ? "bg-[#16A34A] text-white"
-                      : customSteps.findIndex((x) => x.id === customStep) > i
-                        ? "bg-[#16A34A]/30 text-[#166534]"
-                        : "bg-[#E5E7EB] text-[#6B7280]"
-                  )}
-                >
-                  {customSteps.findIndex((x) => x.id === customStep) > i ? (
-                    <Check className="h-3.5 w-3.5" />
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                <span className="hidden text-[10px] font-medium text-[#6B7280] sm:inline">{s.label}</span>
-                {i < customSteps.length - 1 && <div className="h-px flex-1 bg-[#E5E7EB]" />}
-              </div>
-            ))}
-          </div>
+          <CoachStepper
+            card={false}
+            variant="compact"
+            steps={customSteps}
+            currentStepId={customStep}
+          />
 
           {customStep === "details" && (
             <div className="space-y-4">

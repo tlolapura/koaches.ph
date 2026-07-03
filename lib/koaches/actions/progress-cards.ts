@@ -1,12 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertCoachAccess } from "@/lib/koaches/actions/guards";
+import { assertCoachAccess, requireAuthenticatedCoachId } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { ProgressCard } from "@/lib/koaches/types";
 import { mapProgressCard, mapSession, type DbProgressCard, type DbSession } from "@/lib/koaches/db/mappers";
 import { applySessionRatingsToProgressCard } from "@/lib/koaches/progress-cards";
 import { progressCardCoachName } from "@/lib/koaches/person-name";
+import {
+  buildProgressCardEmailHtml,
+  buildProgressCardEmailSubject,
+  buildProgressCardEmailText,
+} from "@/lib/koaches/email/progress-card-email";
+import { getResendClient, getResendFromAddress } from "@/lib/koaches/email/resend";
 
 async function resolveCoachNameForCard(
   supabase: ReturnType<typeof createServiceClient>,
@@ -112,4 +118,68 @@ export async function saveProgressCardAction(card: ProgressCard): Promise<SavePr
   revalidatePath(`/coach/students/${card.studentId}`);
   revalidatePath(`/progress/${card.id}`);
   return { ok: true, id: card.id };
+}
+
+export type SendProgressCardEmailResult =
+  | { ok: true; to: string }
+  | { ok: false; error: string };
+
+export async function sendProgressCardEmailAction(
+  cardId: string
+): Promise<SendProgressCardEmailResult> {
+  const coachId = await requireAuthenticatedCoachId();
+  const supabase = createServiceClient();
+
+  const { data: row, error } = await supabase
+    .from("progress_cards")
+    .select("*")
+    .eq("id", cardId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!row || row.coach_id !== coachId) {
+    return { ok: false, error: "Progress card not found." };
+  }
+
+  let card = await resolveCoachNameForCard(supabase, mapProgressCard(row as DbProgressCard));
+
+  if (card.sessionId) {
+    const { data: sessionRow } = await supabase
+      .from("sessions")
+      .select("*")
+      .eq("id", card.sessionId)
+      .maybeSingle();
+    if (sessionRow) {
+      card = applySessionRatingsToProgressCard(card, mapSession(sessionRow as DbSession));
+    }
+  }
+
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("email, name")
+    .eq("id", card.studentId)
+    .maybeSingle();
+  if (studentError) throw studentError;
+
+  const to = student?.email?.trim();
+  if (!to) {
+    return {
+      ok: false,
+      error: "This player has no email on file. Add one on their student profile first.",
+    };
+  }
+
+  const resend = getResendClient();
+  const { error: sendError } = await resend.emails.send({
+    from: getResendFromAddress(),
+    to,
+    subject: buildProgressCardEmailSubject(card),
+    html: buildProgressCardEmailHtml(card),
+    text: buildProgressCardEmailText(card),
+  });
+
+  if (sendError) {
+    return { ok: false, error: sendError.message || "Could not send email." };
+  }
+
+  return { ok: true, to };
 }

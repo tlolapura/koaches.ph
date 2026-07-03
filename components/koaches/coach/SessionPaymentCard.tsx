@@ -4,14 +4,10 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
 import { useSessionPayment } from "@/hooks/useSessionPayment";
-import {
-  PAYMENT_STATUS_OPTIONS,
-  getPaymentStatusHint,
-  getPaymentStatusLabel,
-  sessionCollectedAmount,
-} from "@/lib/koaches/session-payment";
-import { SessionPaymentBadge, useCoachToast } from "@/components/koaches/coach/CoachUi";
+import { sessionCollectedAmount } from "@/lib/koaches/session-payment";
+import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
+import { SessionPaymentCheckbox } from "@/components/koaches/coach/SessionPaymentFields";
 import { formatCurrency, cn } from "@/lib/utils";
 
 type SessionPaymentCardProps = {
@@ -29,12 +25,13 @@ export function SessionPaymentCard({ session }: SessionPaymentCardProps) {
     setTipInput(String(tip));
   }, [tip]);
 
-  const handleStatusChange = async (status: typeof paymentStatus) => {
+  const handlePaidChange = async (paid: boolean) => {
+    const status = paid ? "paid" : "unpaid";
     if (updating || status === paymentStatus) return;
     setUpdating(true);
     try {
       await setPaymentStatus(status);
-      showToast(status === "paid" ? "Marked as paid" : "Marked as unpaid");
+      showToast(paid ? "Marked as paid" : "Marked as unpaid");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Could not update payment", "error");
     } finally {
@@ -62,41 +59,24 @@ export function SessionPaymentCard({ session }: SessionPaymentCardProps) {
 
   return (
     <div className="coach-card mt-4 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-heading text-sm font-semibold">Payment</p>
-          <p className="mt-1 text-xs text-[#6B7280]">
-            Session fee {formatCurrency(session.price)}
-            {tip > 0 ? ` · tip ${formatCurrency(tip)}` : ""}
-          </p>
-          <p className="mt-0.5 text-xs text-[#6B7280]">{getPaymentStatusHint(paymentStatus)}</p>
-        </div>
-        <SessionPaymentBadge status={paymentStatus} />
-      </div>
+      <p className="font-heading text-sm font-semibold">Payment</p>
+      <p className="mt-1 text-xs text-[#6B7280]">
+        Session fee {formatCurrency(session.price)}
+        {tip > 0 ? ` · tip ${formatCurrency(tip)}` : ""}
+      </p>
 
-      <div className="mt-3 flex gap-1 rounded-xl bg-[#F3F4F6] p-1">
-        {PAYMENT_STATUS_OPTIONS.map((status) => (
-          <button
-            key={status}
-            type="button"
-            disabled={updating}
-            onClick={() => void handleStatusChange(status)}
-            className={cn(
-              "font-heading flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all min-h-[44px] disabled:opacity-60",
-              paymentStatus === status
-                ? "bg-[#16A34A] text-white shadow-sm"
-                : "text-[#6B7280] hover:bg-white/70"
-            )}
-          >
-            {updating && paymentStatus !== status ? (
-              <span className="inline-flex items-center gap-1">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              </span>
-            ) : (
-              getPaymentStatusLabel(status)
-            )}
-          </button>
-        ))}
+      <div className="relative mt-3">
+        <SessionPaymentCheckbox
+          checked={paymentStatus === "paid"}
+          disabled={updating}
+          onChange={(paid) => void handlePaidChange(paid)}
+        />
+        {updating && (
+          <Loader2
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-[#9CA3AF]"
+            aria-hidden
+          />
+        )}
       </div>
 
       <div className="mt-4 border-t border-[#E5E7EB] pt-4">

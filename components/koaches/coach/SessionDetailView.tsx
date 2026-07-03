@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck } from "lucide-react";
+import { Check, CircleCheck } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
 import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
 import { formatParticipantProgramLabel, resolveParticipantProgramContext } from "@/lib/koaches/participant-program";
 import { SessionSkillRatingsSection } from "@/components/koaches/coach/SessionSkillRatingsSection";
 import { SessionDetailStepper } from "@/components/koaches/coach/SessionDetailStepper";
+import { SessionDetailStepFooter } from "@/components/koaches/coach/SessionDetailStepFooter";
+import type { SkillRatingActions } from "@/components/koaches/coach/SkillRatingPanel";
 import { SessionTypeBadge, SessionDisplayStatusBadge, useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { SessionPaymentCard } from "@/components/koaches/coach/SessionPaymentCard";
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
@@ -15,7 +17,6 @@ import { ScheduleTbdSessionSheet } from "@/components/koaches/coach/ScheduleTbdS
 import { useSessionStatus } from "@/hooks/useSessionStatus";
 import { deleteSessionAction } from "@/lib/koaches/actions/sessions";
 import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { formatSessionTimeRange } from "@/lib/koaches/session-time";
 import { isSessionDateScheduled } from "@/lib/koaches/session-schedule";
 import {
@@ -29,6 +30,7 @@ import {
   CoachEntityTitle,
   CoachPageShell,
 } from "@/components/koaches/coach/CoachPageLayout";
+import { isSessionRatingStep, type SessionDetailStep } from "@/lib/koaches/session-detail-steps";
 
 type SessionDetailViewProps = {
   session: Session;
@@ -99,7 +101,8 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<SessionDetailStep>("session");
+  const [ratingActions, setRatingActions] = useState<SkillRatingActions | null>(null);
   const { showToast } = useCoachToast();
   const { status, displayStatus, markDone } = useSessionStatus(session);
   const ratingsUnlocked = status !== "upcoming" && status !== "canceled";
@@ -112,12 +115,23 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
     : "Date & time not set yet";
   const deleteDescription = `You are deleting: ${primaryName}\n${deleteSessionDetails}\n${courtName} · ${formatCurrency(session.price)}\n\nThis permanently removes the record and cannot be undone.`;
 
+  useEffect(() => {
+    if (step === "session") return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
+  useEffect(() => {
+    if (!isSessionRatingStep(step) || step === "complete") {
+      setRatingActions(null);
+    }
+  }, [step]);
+
   const handleMarkDone = async () => {
     setMarkingDone(true);
     try {
       await markDone();
-      showToast("Session marked done — add skill ratings");
-      setStep(2);
+      showToast("Session marked done — mark skill coverage");
+      setStep("coverage");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Could not update session", "error");
     } finally {
@@ -125,11 +139,70 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
     }
   };
 
+  const renderStepFooter = () => {
+    if (status === "canceled" || step === "complete") return null;
+
+    if (step === "session") {
+      if (status === "upcoming") {
+        return (
+          <SessionDetailStepFooter
+            nextLabel="Mark done & continue"
+            nextIcon={<CircleCheck className="h-4 w-4" strokeWidth={2.5} />}
+            onNext={() => void handleMarkDone()}
+            nextLoading={markingDone}
+            nextLoadingLabel="Saving…"
+          />
+        );
+      }
+
+      return (
+        <SessionDetailStepFooter
+          onNext={() => setStep("coverage")}
+          nextDisabled={!ratingsUnlocked}
+        />
+      );
+    }
+
+    if (step === "coverage") {
+      return (
+        <SessionDetailStepFooter
+          onBack={() => setStep("session")}
+          onNext={() => setStep("ratings")}
+        />
+      );
+    }
+
+    if (step === "ratings") {
+      return (
+        <SessionDetailStepFooter
+          onBack={() => setStep("coverage")}
+          onNext={() => ratingActions?.continueToFeedback()}
+          nextDisabled={!ratingActions?.canContinueFromRatings}
+        />
+      );
+    }
+
+    if (step === "feedback") {
+      return (
+        <SessionDetailStepFooter
+          onBack={() => setStep("ratings")}
+          nextLabel="Save session"
+          nextIcon={<Check className="h-4 w-4" strokeWidth={2.5} />}
+          onNext={() => void ratingActions?.saveSession()}
+          nextLoading={ratingActions?.saving}
+          nextLoadingLabel="Saving…"
+        />
+      );
+    }
+
+    return null;
+  };
+
   return (
     <CoachPageShell>
       <CoachBackLink href="/coach/sessions" label="Schedule" className="hidden md:inline-flex" />
 
-      {status !== "canceled" && (
+      {status !== "canceled" && step !== "complete" && (
         <SessionDetailStepper
           step={step}
           onStep={setStep}
@@ -137,7 +210,7 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
         />
       )}
 
-      {step === 1 && (
+      {step === "session" && (
         <div className="mt-4 space-y-4 coach-portal-fixed-cta-pad lg:pb-4">
           <SessionInfoCard
             session={session}
@@ -166,34 +239,21 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
           >
             Delete session
           </button>
-
-          {status !== "canceled" && (
-            <div className="coach-session-step-footer">
-              {status === "upcoming" ? (
-                <CoachButton
-                  type="button"
-                  loading={markingDone}
-                  loadingLabel="Saving…"
-                  onClick={() => void handleMarkDone()}
-                >
-                  <CircleCheck className="h-4 w-4" strokeWidth={2.5} />
-                  Mark done & continue
-                </CoachButton>
-              ) : (
-                <CoachButton type="button" onClick={() => setStep(2)}>
-                  Continue to ratings
-                </CoachButton>
-              )}
-            </div>
-          )}
         </div>
       )}
 
-      {step === 2 && ratingsUnlocked && (
-        <div className="mt-4 space-y-4 pb-8">
-          <SessionSkillRatingsSection session={session} />
+      {isSessionRatingStep(step) && ratingsUnlocked && (
+        <div className="mt-4 coach-portal-fixed-cta-pad pb-8">
+          <SessionSkillRatingsSection
+            session={session}
+            step={step}
+            onStepChange={setStep}
+            onRatingActionsChange={setRatingActions}
+          />
         </div>
       )}
+
+      {renderStepFooter()}
 
       <ConfirmSheet
         open={deleteOpen}
