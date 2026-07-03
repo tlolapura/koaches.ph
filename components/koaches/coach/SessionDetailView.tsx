@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarX, CircleCheck } from "lucide-react";
+import { CircleCheck } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
 import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
 import { formatParticipantProgramLabel, resolveParticipantProgramContext } from "@/lib/koaches/participant-program";
@@ -96,13 +96,12 @@ function SessionInfoCard({
 
 export function SessionDetailView({ session }: SessionDetailViewProps) {
   const router = useRouter();
-  const [cancelOpen, setCancelOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const { showToast } = useCoachToast();
-  const { status, displayStatus, markDone, markCanceled } = useSessionStatus(session);
+  const { status, displayStatus, markDone } = useSessionStatus(session);
   const ratingsUnlocked = status !== "upcoming" && status !== "canceled";
   const participants = getSessionParticipants(session);
   const primaryName = formatSessionParticipantNames(session);
@@ -171,25 +170,15 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
           {status !== "canceled" && (
             <div className="coach-session-step-footer">
               {status === "upcoming" ? (
-                <>
-                  <CoachButton
-                    type="button"
-                    loading={markingDone}
-                    loadingLabel="Saving…"
-                    onClick={() => void handleMarkDone()}
-                  >
-                    <CircleCheck className="h-4 w-4" strokeWidth={2.5} />
-                    Mark done & continue
-                  </CoachButton>
-                  <button
-                    type="button"
-                    className="coach-btn-ghost-danger"
-                    onClick={() => setCancelOpen(true)}
-                  >
-                    <CalendarX className="h-4 w-4" strokeWidth={2.5} />
-                    Cancel session
-                  </button>
-                </>
+                <CoachButton
+                  type="button"
+                  loading={markingDone}
+                  loadingLabel="Saving…"
+                  onClick={() => void handleMarkDone()}
+                >
+                  <CircleCheck className="h-4 w-4" strokeWidth={2.5} />
+                  Mark done & continue
+                </CoachButton>
               ) : (
                 <CoachButton type="button" onClick={() => setStep(2)}>
                   Continue to ratings
@@ -205,17 +194,6 @@ export function SessionDetailView({ session }: SessionDetailViewProps) {
           <SessionSkillRatingsSection session={session} />
         </div>
       )}
-
-      <ConfirmSheet
-        open={cancelOpen}
-        onClose={() => setCancelOpen(false)}
-        message="Cancel this session?"
-        confirmLabel="Cancel Session"
-        onConfirm={async () => {
-          await markCanceled();
-          showToast("Session canceled");
-        }}
-      />
 
       <ConfirmSheet
         open={deleteOpen}

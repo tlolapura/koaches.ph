@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { Check, PartyPopper } from "lucide-react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import {
   ALL_SKILL_CATEGORIES,
@@ -18,6 +18,7 @@ import {
 import {
   suggestSessionFeedback,
   type SessionFeedback,
+  buildProgressCardUrl,
 } from "@/lib/koaches/progress-cards";
 import type { SkillCategory, SkillRating, SkillRubricId } from "@/lib/koaches/types";
 import { cn } from "@/lib/utils";
@@ -35,11 +36,12 @@ type SkillRatingPanelProps = {
   totalSessions?: number;
   phaseLabel?: string;
   initialFeedback?: SessionFeedback;
+  participantName?: string;
   onSave?: (
     before: SkillRating[],
     after: SkillRating[],
     feedback: SessionFeedback
-  ) => void | Promise<void>;
+  ) => Promise<string | void>;
 };
 
 function defaultRatings(
@@ -200,6 +202,7 @@ export function SkillRatingPanel({
   customSkills,
   skillLabelOverrides,
   initialFeedback,
+  participantName,
   onSave,
 }: SkillRatingPanelProps) {
   const activeRubric = rubricId ?? templateId ?? "intermediate";
@@ -218,7 +221,9 @@ export function SkillRatingPanel({
       : defaultRatings(activeRubric, customSkillIds, customSkills, skillLabelOverrides)
   );
   const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState<"coverage" | "ratings" | "feedback">("coverage");
+  const [step, setStep] = useState<"coverage" | "ratings" | "feedback" | "complete">("coverage");
+  const [savedCardId, setSavedCardId] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [feedback, setFeedback] = useState<SessionFeedback>(() => ({
     strengths: initialFeedback?.strengths ?? "",
     toImprove: initialFeedback?.toImprove ?? "",
@@ -228,9 +233,16 @@ export function SkillRatingPanel({
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (step !== "ratings" && step !== "feedback") return;
+    if (step === "coverage" || step === "complete") return;
     panelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [step]);
+
+  const subSteps = [
+    { id: "coverage" as const, label: "Coverage" },
+    { id: "ratings" as const, label: "Ratings" },
+    { id: "feedback" as const, label: "Feedback" },
+  ];
+  const subStepIndex = subSteps.findIndex((s) => s.id === step);
 
   const skillChanges = useMemo(() => buildSkillChanges(before, after), [before, after]);
 
@@ -294,18 +306,87 @@ export function SkillRatingPanel({
   return (
     <div ref={panelRef} className="space-y-4">
       <div className="coach-card p-4">
-        <p className="text-sm text-[#6B7280]">
-          {step === "coverage" && (
-            <>
-              {ratedCount} covered
-              {skippedCount > 0 && (
-                <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
+        {step === "complete" ? (
+          <div className="py-4 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDF4]">
+              <PartyPopper className="h-7 w-7 text-[#166534]" />
+            </div>
+            <p className="font-heading mt-4 text-lg font-semibold text-[#111827]">Session saved</p>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              {savedCardId
+                ? `Progress card is ready${participantName ? ` for ${participantName}` : ""}.`
+                : `Ratings saved${participantName ? ` for ${participantName}` : ""}.`}
+            </p>
+            {savedCardId ? (
+              <div className="mt-6 space-y-2">
+                <a href={`/progress/${savedCardId}`} className="coach-btn-primary block w-full text-center">
+                  View progress card
+                </a>
+                <button
+                  type="button"
+                  className="coach-btn-outline w-full"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(buildProgressCardUrl(savedCardId));
+                    setLinkCopied(true);
+                    setTimeout(() => setLinkCopied(false), 3000);
+                  }}
+                >
+                  {linkCopied ? "Link copied!" : "Copy share link"}
+                </button>
+                <button
+                  type="button"
+                  className="coach-btn-ghost w-full text-sm text-[#6B7280]"
+                  onClick={() => setStep("coverage")}
+                >
+                  Edit ratings
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="coach-btn-outline mt-6 w-full"
+                onClick={() => setStep("coverage")}
+              >
+                Edit ratings
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="flex gap-2">
+              {subSteps.map((sub, index) => {
+                const active = step === sub.id;
+                const done = subStepIndex > index;
+                return (
+                  <div
+                    key={sub.id}
+                    className={cn(
+                      "flex min-h-[36px] flex-1 items-center justify-center rounded-full px-2 text-[11px] font-semibold",
+                      active
+                        ? "bg-[#16A34A] text-white"
+                        : done
+                          ? "bg-[#DCFCE7] text-[#166534]"
+                          : "bg-[#F3F4F6] text-[#9CA3AF]"
+                    )}
+                  >
+                    {sub.label}
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className="mt-3 text-sm text-[#6B7280]">
+              {step === "coverage" && (
+                <>
+                  {ratedCount} covered
+                  {skippedCount > 0 && (
+                    <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
+                  )}
+                </>
               )}
-            </>
-          )}
-          {step === "ratings" && `Rate ${ratedCount} covered skill${ratedCount !== 1 ? "s" : ""}`}
-          {step === "feedback" && "Add session feedback for the player"}
-        </p>
+              {step === "ratings" && `Rate ${ratedCount} covered skill${ratedCount !== 1 ? "s" : ""}`}
+              {step === "feedback" && "Add session feedback for the player"}
+            </p>
 
         {step === "coverage" ? (
           <div className="mt-5 space-y-6">
@@ -464,7 +545,7 @@ export function SkillRatingPanel({
                 Continue to feedback
               </CoachButton>
             </div>
-          ) : (
+          ) : step === "feedback" ? (
             <div className="space-y-2">
               <CoachButton
                 type="button"
@@ -484,7 +565,9 @@ export function SkillRatingPanel({
                   if (!onSave || saving) return;
                   setSaving(true);
                   try {
-                    await onSave(before, after, feedback);
+                    const cardId = await onSave(before, after, feedback);
+                    if (typeof cardId === "string") setSavedCardId(cardId);
+                    setStep("complete");
                   } finally {
                     setSaving(false);
                   }
@@ -494,8 +577,10 @@ export function SkillRatingPanel({
                 Save session
               </CoachButton>
             </div>
-          )}
-        </div>
+          ) : null}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

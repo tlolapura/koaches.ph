@@ -1,10 +1,10 @@
 "use client";
 
 import { ChevronDown, ChevronUp, ClipboardList } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { SkillRubricId } from "@/lib/koaches/types";
 import { resolveSkills, SKILL_CATEGORY_LABELS } from "@/lib/koaches/constants";
-import { getRubric } from "@/lib/koaches/program-templates";
+import { SkillScoreGuideToggle } from "@/components/koaches/SkillProgressDisplay";
 import { cn } from "@/lib/utils";
 
 type SkillRubricPreviewProps = {
@@ -25,16 +25,17 @@ export function SkillRubricPreview({
   className,
 }: SkillRubricPreviewProps) {
   const [expanded, setExpanded] = useState(!compact);
-  const rubric = rubricId !== "custom" ? getRubric(rubricId) : null;
   const resolvedSkills = resolveSkills({ rubricId, customSkillIds, customSkills, skillLabelOverrides });
-  const breakdown = Object.entries(
-    resolvedSkills.reduce<Record<string, string[]>>((acc, skill) => {
+  const breakdown = useMemo(() => {
+    const groups = new Map<string, typeof resolvedSkills>();
+    for (const skill of resolvedSkills) {
       const label = SKILL_CATEGORY_LABELS[skill.category];
-      acc[label] = acc[label] ?? [];
-      acc[label].push(skill.name);
-      return acc;
-    }, {})
-  ).map(([category, items]) => ({ category, items }));
+      const list = groups.get(label) ?? [];
+      list.push(skill);
+      groups.set(label, list);
+    }
+    return [...groups.entries()].map(([category, skills]) => ({ category, skills }));
+  }, [resolvedSkills]);
   const skillCount = resolvedSkills.length;
 
   return (
@@ -48,16 +49,10 @@ export function SkillRubricPreview({
           <ClipboardList className="h-5 w-5 text-[#166534]" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="font-heading text-sm font-semibold text-[#111827]">
-            {rubricId === "custom" ? "Custom Rubric" : `${rubric?.name} Rubric`}
-          </p>
+          <p className="font-heading text-sm font-semibold text-[#111827]">Program skills</p>
           <p className="text-xs text-[#6B7280]">
             {skillCount} skills · {breakdown.length} categories
-            {rubric && ` · ${rubric.duprRange}`}
           </p>
-          {!compact && rubric && (
-            <p className="mt-1 text-xs leading-relaxed text-[#6B7280]">{rubric.description}</p>
-          )}
         </div>
         {expanded ? (
           <ChevronUp className="h-5 w-5 shrink-0 text-[#6B7280]" />
@@ -69,18 +64,21 @@ export function SkillRubricPreview({
       {expanded && (
         <div className="space-y-3 border-t border-[#E5E7EB] px-4 pb-4">
           <p className="pt-3 text-[10px] font-semibold tracking-wide text-[#6B7280] uppercase">
-            Skill questionnaire preview
+            Skills & 0-5 rating guide
           </p>
           {breakdown.map((section) => (
             <div key={section.category} className="rounded-lg bg-white p-3 shadow-sm">
               <p className="font-heading text-xs font-semibold text-[#14532D]">{section.category}</p>
-              <ul className="mt-2 space-y-1.5">
-                {section.items.map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-xs text-[#6B7280]">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded border border-[#E5E7EB] text-[9px] font-medium text-[#9CA3AF]">
-                      0–5
-                    </span>
-                    {item}
+              <ul className="mt-2 space-y-3">
+                {section.skills.map((skill) => (
+                  <li key={skill.id}>
+                    <p className="text-sm font-medium text-[#374151]">{skill.name}</p>
+                    <SkillScoreGuideToggle
+                      skillId={skill.id}
+                      category={skill.category}
+                      overrides={skillLabelOverrides}
+                      className="mt-2"
+                    />
                   </li>
                 ))}
               </ul>

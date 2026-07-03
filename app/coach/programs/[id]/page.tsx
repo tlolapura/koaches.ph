@@ -5,9 +5,8 @@ import { use, useState } from "react";
 import { notFound } from "next/navigation";
 import {
   getProgramPreset,
-  resolveProgramRubric,
-  SKILL_RUBRICS,
 } from "@/lib/koaches/program-templates";
+import { programSkillsFromProgram } from "@/components/koaches/coach/SkillRubricPicker";
 import { SkillRubricPreview } from "@/components/koaches/coach/SkillRubricPreview";
 import { PresetIcon } from "@/components/koaches/coach/CoachIcons";
 import { InitialsAvatar } from "@/components/koaches/coach/CoachUi";
@@ -41,9 +40,8 @@ export default function ProgramDetailPage({
 
   if (!program) notFound();
 
-  const rubricId = resolveProgramRubric(program);
   const preset = program.presetId ? getProgramPreset(program.presetId) : null;
-  const rubric = rubricId !== "custom" ? SKILL_RUBRICS[rubricId as keyof typeof SKILL_RUBRICS] : null;
+  const programSkills = programSkillsFromProgram(program);
 
   const enrolled = rosterStudents.filter((s) => program.enrolledStudentIds.includes(s.id));
 
@@ -62,8 +60,9 @@ export default function ProgramDetailPage({
               {formatProgramBundleSummary(program)}
             </p>
             <p className="mt-1 text-sm text-[#6B7280]">
-              {program.sessionCount} sessions · {program.targetLevel}
-              {rubric && ` · ${rubric.name} rubric`}
+              {program.sessionCount} sessions
+              {programSkills.customSkillIds.length > 0 &&
+                ` · ${programSkills.customSkillIds.length} skills`}
             </p>
           </div>
         </div>
@@ -82,10 +81,10 @@ export default function ProgramDetailPage({
         </div>
         <CoachSectionHint>Students in this program are rated on these skills each session</CoachSectionHint>
         <SkillRubricPreview
-          rubricId={rubricId}
-          customSkillIds={program.customSkillIds}
-          customSkills={program.customSkills}
-          skillLabelOverrides={program.skillLabelOverrides}
+          rubricId={programSkills.rubricId}
+          customSkillIds={programSkills.customSkillIds}
+          customSkills={programSkills.customSkills}
+          skillLabelOverrides={programSkills.skillLabelOverrides}
           className="mt-3"
         />
       </section>

@@ -64,6 +64,7 @@ export function ProgramSkillsEditSheet({
         value={value}
         onChange={setValue}
         hint="Pick catalog skills, add your own per category, or rename anything."
+        defaultExpanded
       />
 
       <CoachSheetFooter>

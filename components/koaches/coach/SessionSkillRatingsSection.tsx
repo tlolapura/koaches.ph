@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import type { Session } from "@/lib/koaches/types";
 import { getSessionParticipants } from "@/lib/koaches/session-participants";
 import {
@@ -14,7 +13,6 @@ import { useParticipantProgress } from "@/hooks/useParticipantProgress";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { SkillRatingPanel } from "@/components/koaches/coach/SkillRatingPanel";
-import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { cn } from "@/lib/utils";
 
 type SessionSkillRatingsSectionProps = {
@@ -36,14 +34,10 @@ function ParticipantProgressPanel({
   const { ratings, saveRatings } = useParticipantProgress(session, participant.id);
   const { cards, saveCard } = useProgressCards(session.coachId);
   const { coach } = useCoachProfile(session.coachId);
-  const { showToast } = useCoachToast();
-  const [progressCardId, setProgressCardId] = useState<string | null>(null);
 
   const existingCard = participant.studentId
     ? findProgressCardForSession(cards, session.id, participant.studentId)
     : undefined;
-
-  const cardLinkId = existingCard?.id ?? progressCardId;
 
   const progressCardLookup = coach
     ? {
@@ -72,6 +66,7 @@ function ParticipantProgressPanel({
 
       <SkillRatingPanel
         key={`${participant.id}-${ctx.rubricId}`}
+        participantName={participant.name}
         initialBefore={ratings.ratingsBefore}
         initialAfter={ratings.ratingsAfter}
         rubricId={ctx.rubricId}
@@ -89,7 +84,6 @@ function ParticipantProgressPanel({
           await saveRatings({ ratingsBefore: before, ratingsAfter: after });
 
           if (!participant.studentId) {
-            showToast(`Ratings saved for ${participant.name}`);
             return;
           }
 
@@ -110,22 +104,9 @@ function ParticipantProgressPanel({
                 lookup: progressCardLookup,
               });
 
-          const savedId = await saveCard(card);
-          setProgressCardId(savedId);
-          showToast(`Session saved for ${participant.name}`);
+          return saveCard(card);
         }}
       />
-
-      {cardLinkId && (
-        <div className="mt-4">
-          <Link
-            href={`/progress/${cardLinkId}`}
-            className="coach-btn-outline w-full text-center text-sm"
-          >
-            View progress card
-          </Link>
-        </div>
-      )}
     </div>
   );
 }

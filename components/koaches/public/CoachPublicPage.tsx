@@ -172,11 +172,6 @@ export function CoachPublicPage({
                         <Calendar className="h-3 w-3" />
                         {program.sessionCount} sessions
                       </span>
-                      {program.targetLevel ? (
-                        <span className="rounded-full bg-[#EFF6FF] px-2.5 py-1 text-xs font-semibold text-[#1D4ED8]">
-                          {program.targetLevel}
-                        </span>
-                      ) : null}
                     </div>
                   </div>
                 </article>

@@ -5,18 +5,14 @@ import {
   ArrowLeft,
   Check,
   ChevronRight,
-  ClipboardList,
   Layers,
   PenLine,
-  Sparkles,
 } from "lucide-react";
 import type { ProgramDraft } from "@/lib/koaches/program-templates";
 import {
   PROGRAM_PRESETS,
-  SKILL_RUBRICS,
   draftCustom,
   draftFromPreset,
-  draftFromRubric,
 } from "@/lib/koaches/program-templates";
 import type { ProgramPresetId } from "@/lib/koaches/types";
 import { getSkillsForRubric } from "@/lib/koaches/constants";
@@ -33,7 +29,7 @@ import { SessionCountField } from "@/components/koaches/coach/SessionCountField"
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
 
-type FlowMode = "home" | "templates" | "rubrics" | "custom";
+type FlowMode = "home" | "templates" | "custom";
 type CustomStep = "details" | "rubric" | "review";
 type TemplateStep = "pick" | "customize";
 
@@ -46,6 +42,15 @@ type ProgramCreateFlowProps = {
 };
 
 function draftToSkillRubric(draft: ProgramDraft): SkillRubricPickerValue {
+  if (draft.source === "custom") {
+    return {
+      rubricId: "custom",
+      customSkillIds: draft.customSkillIds ?? [],
+      customSkills: draft.customSkills ?? [],
+      skillLabelOverrides: draft.skillLabelOverrides ?? {},
+    };
+  }
+
   if (draft.customSkillIds?.length) {
     return {
       rubricId: draft.rubricId === "custom" ? "custom" : draft.rubricId,
@@ -137,13 +142,6 @@ export function ProgramCreateFlow({
     setTemplateStep("customize");
   };
 
-  const pickRubric = (id: Exclude<import("@/lib/koaches/types").SkillRubricId, "custom">) => {
-    const d = draftFromRubric(id);
-    setDraft(d);
-    setMode("templates");
-    setTemplateStep("customize");
-  };
-
   const skillCount = draft?.customSkillIds?.length ?? 0;
   const canSaveCustom = draft?.name.trim() && skillCount > 0;
 
@@ -151,7 +149,6 @@ export function ProgramCreateFlow({
     if (mode === "home") return "New Program";
     if (mode === "templates" && templateStep === "pick") return "Choose a Template";
     if (mode === "templates") return "Customize Template";
-    if (mode === "rubrics") return "Choose Skill Level";
     if (mode === "custom") {
       if (customStep === "details") return "Create Your Program";
       if (customStep === "rubric") return "Build Your Skill Rubric";
@@ -210,25 +207,6 @@ export function ProgramCreateFlow({
               <ChevronRight className="h-5 w-5 text-[#6B7280]" />
             </div>
           </button>
-
-          <button
-            type="button"
-            onClick={() => setMode("rubrics")}
-            className="coach-card w-full p-4 text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#FACC15] text-[#14532D]">
-                <ClipboardList className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <p className="font-heading font-semibold">Start from Skill Level</p>
-                <p className="text-xs text-[#6B7280]">
-                  Beginner, Intermediate, or Advanced rubric — like a Google Form
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-[#6B7280]" />
-            </div>
-          </button>
         </div>
       )}
 
@@ -272,36 +250,6 @@ export function ProgramCreateFlow({
           onSave={() => void submitDraft(draft)}
           saving={saving}
         />
-      )}
-
-      {/* ── RUBRICS: pick skill level ── */}
-      {mode === "rubrics" && (
-        <div className="space-y-3">
-          <button type="button" onClick={() => setMode("home")} className="inline-flex items-center gap-1 text-sm text-[#6B7280]">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </button>
-          <p className="text-xs text-[#6B7280]">Pick the skill questionnaire for this program</p>
-          {(Object.keys(SKILL_RUBRICS) as Array<keyof typeof SKILL_RUBRICS>).map((id) => {
-            const rubric = SKILL_RUBRICS[id];
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => pickRubric(id)}
-                className="coach-card w-full p-4 text-left hover:border-[#16A34A]"
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#4F8FF7]" />
-                  <p className="font-heading font-semibold">{rubric.name}</p>
-                  <span className="rounded-full bg-[#F0FDF4] px-2 py-0.5 text-[10px] font-medium text-[#166534]">
-                    {rubric.subtitle}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-[#6B7280]">{rubric.description}</p>
-              </button>
-            );
-          })}
-        </div>
       )}
 
       {/* ── CUSTOM: 3-step wizard ── */}
@@ -365,28 +313,17 @@ export function ProgramCreateFlow({
                   onChange={(e) => setDraft({ ...draft, description: e.target.value })}
                 />
               </CoachSheetField>
-              <div className="grid grid-cols-2 gap-3">
-                <CoachSheetField label="Bundle price per person (₱)" htmlFor="program-price">
-                  <input
-                    id="program-price"
-                    className="coach-input"
-                    type="number"
-                    min={0}
-                    placeholder="2500"
-                    value={draft.price}
-                    onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })}
-                  />
-                </CoachSheetField>
-                <CoachSheetField label="Target level" htmlFor="program-level">
-                  <input
-                    id="program-level"
-                    className="coach-input"
-                    placeholder="e.g. 2.5 to 3.0"
-                    value={draft.targetLevel}
-                    onChange={(e) => setDraft({ ...draft, targetLevel: e.target.value })}
-                  />
-                </CoachSheetField>
-              </div>
+              <CoachSheetField label="Bundle price per person (₱)" htmlFor="program-price">
+                <input
+                  id="program-price"
+                  className="coach-input"
+                  type="number"
+                  min={0}
+                  placeholder="2500"
+                  value={draft.price}
+                  onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })}
+                />
+              </CoachSheetField>
               <SessionCountField
                 value={draft.sessionCount}
                 onChange={(sessionCount) => setDraft({ ...draft, sessionCount })}
@@ -410,6 +347,7 @@ export function ProgramCreateFlow({
                 value={draftToSkillRubric(draft)}
                 onChange={(value) => setDraft(applySkillRubricToDraft(draft, value))}
                 hint="Pick catalog skills, add your own per category, or rename anything."
+                defaultExpanded
               />
 
               <CoachSheetStickyActions>
@@ -438,9 +376,6 @@ export function ProgramCreateFlow({
                   </span>
                   <span className="rounded-full bg-[#14532D] px-2.5 py-0.5 text-xs font-semibold text-white">
                     {draft.sessionCount} sessions
-                  </span>
-                  <span className="rounded-full bg-[#F0FDF4] px-2.5 py-0.5 text-xs font-semibold text-[#166534]">
-                    {draft.targetLevel}
                   </span>
                   <span className="rounded-full border border-[#E5E7EB] px-2.5 py-0.5 text-xs text-[#6B7280]">
                     Custom rubric · {skillCount} skills
@@ -538,6 +473,7 @@ function TemplateCustomizeForm({
           <SkillRubricPicker
             value={draftToSkillRubric(draft)}
             onChange={(value) => setDraft(applySkillRubricToDraft(draft, value))}
+            defaultExpanded
           />
         </div>
       </div>

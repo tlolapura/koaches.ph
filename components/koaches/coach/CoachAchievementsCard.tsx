@@ -216,10 +216,6 @@ export function CoachAchievementsCard() {
             <Plus className="h-4 w-4" strokeWidth={2.5} />
             Add another
           </button>
-
-          <p className="text-xs text-[#6B7280]">
-            Use Education for degrees and sports science — e.g. BS Sports Science.
-          </p>
         </form>
       </CoachBottomSheet>
     </>

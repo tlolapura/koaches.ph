@@ -160,7 +160,7 @@ export function draftFromPreset(presetId: ProgramPresetId): ProgramDraft {
     description: preset.description,
     price: preset.price,
     sessionCount: preset.sessionCount,
-    targetLevel: preset.targetLevel,
+    targetLevel: "",
     customSkillIds,
     customSkills: [],
     skillLabelOverrides: {},
@@ -185,7 +185,6 @@ export function draftFromRubric(rubricId: Exclude<SkillRubricId, "custom">): Pro
 }
 
 export function draftCustom(): ProgramDraft {
-  const beginnerSkills = getSkillsForRubric("beginner").map((s) => s.id);
   return {
     source: "custom",
     rubricId: "custom",
@@ -193,8 +192,8 @@ export function draftCustom(): ProgramDraft {
     description: "",
     price: 3000,
     sessionCount: 4,
-    targetLevel: "2.0 to 3.0",
-    customSkillIds: beginnerSkills,
+    targetLevel: "",
+    customSkillIds: [],
     customSkills: [],
     skillLabelOverrides: {},
   };

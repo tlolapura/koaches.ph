@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 const STEPS = [
   { id: 1 as const, label: "Session", description: "Notes & wrap-up" },
-  { id: 2 as const, label: "Ratings", description: "Skill progress" },
+  { id: 2 as const, label: "Ratings", description: "Skills & feedback" },
 ];
 
 type SessionDetailStepperProps = {

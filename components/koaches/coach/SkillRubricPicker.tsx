@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Check, Pencil, Plus, Trash2 } from "lucide-react";
 import {
   ALL_SKILL_CATEGORIES,
@@ -8,10 +8,8 @@ import {
   getSkillsForRubric,
   newCustomSkillId,
   resolveSkillDefinition,
-  resolveSkills,
   SKILL_CATEGORY_LABELS,
 } from "@/lib/koaches/constants";
-import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
 import type { SkillCategory, SkillDefinition, SkillRubricId } from "@/lib/koaches/types";
 import {
   SKILL_SCORE_LABELS,
@@ -21,6 +19,7 @@ import {
   scoreOverrideKey,
 } from "@/lib/koaches/skill-progress-display";
 import { cn } from "@/lib/utils";
+import { SkillScoreGuideToggle } from "@/components/koaches/SkillProgressDisplay";
 
 export type SkillRubricPickerValue = {
   rubricId: SkillRubricId;
@@ -33,6 +32,7 @@ type SkillRubricPickerProps = {
   value: SkillRubricPickerValue;
   onChange: (value: SkillRubricPickerValue) => void;
   hint?: string;
+  defaultExpanded?: boolean;
 };
 
 function cleanOverrides(
@@ -68,8 +68,10 @@ function pruneCustomSkills(customSkillIds: string[], customSkills: SkillDefiniti
   return customSkills.filter((skill) => ids.has(skill.id));
 }
 
-export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerProps) {
-  const [openCategories, setOpenCategories] = useState<Set<string>>(() => new Set(["third-shot"]));
+export function SkillRubricPicker({ value, onChange, hint, defaultExpanded = false }: SkillRubricPickerProps) {
+  const [openCategories, setOpenCategories] = useState<Set<string>>(() =>
+    defaultExpanded ? new Set(ALL_SKILL_CATEGORIES) : new Set()
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftLabel, setDraftLabel] = useState("");
   const [editingScoreDescriptionsFor, setEditingScoreDescriptionsFor] = useState<string | null>(null);
@@ -80,18 +82,6 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
   const [newSkillName, setNewSkillName] = useState("");
 
   const skillCount = value.customSkillIds.length;
-  const previewSkills = useMemo(() => resolveSkills(value), [value]);
-
-  const applyBase = (base: Exclude<SkillRubricId, "custom"> | "scratch") => {
-    const customSkillIds =
-      base === "scratch" ? [] : getSkillsForRubric(base).map((skill) => skill.id);
-    onChange({
-      rubricId: "custom",
-      customSkillIds,
-      customSkills: [],
-      skillLabelOverrides: {},
-    });
-  };
 
   const toggleCategory = (cat: string) => {
     const catSkills = DEFAULT_SKILLS.filter((skill) => skill.category === cat).map((skill) => skill.id);
@@ -237,29 +227,6 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
   return (
     <div className="space-y-4">
       {hint && <p className="text-sm text-[#6B7280]">{hint}</p>}
-
-      <div>
-        <p className="text-xs font-medium text-[#6B7280]">Start from a base rubric</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {(["beginner", "intermediate", "advanced"] as const).map((id) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => applyBase(id)}
-              className="min-h-[40px] rounded-full border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-semibold active:bg-[#F3F4F6]"
-            >
-              {SKILL_RUBRICS[id].name}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => applyBase("scratch")}
-            className="min-h-[40px] rounded-full border border-[#E5E7EB] bg-white px-3 py-2 text-xs font-semibold active:bg-[#F3F4F6]"
-          >
-            Pick from scratch
-          </button>
-        </div>
-      </div>
 
       <p className="text-xs font-medium text-[#6B7280]">
         {skillCount} skill{skillCount !== 1 ? "s" : ""} selected
@@ -418,13 +385,20 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
                                     </div>
                                   </div>
                                 ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => startEditScoreDescriptions(skill.id)}
-                                    className="text-xs font-semibold text-[#4F8FF7]"
-                                  >
-                                    Edit 0-5 descriptions
-                                  </button>
+                                  <div className="space-y-2">
+                                    <SkillScoreGuideToggle
+                                      skillId={skill.id}
+                                      category={skill.category}
+                                      overrides={value.skillLabelOverrides}
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => startEditScoreDescriptions(skill.id)}
+                                      className="text-xs font-semibold text-[#4F8FF7]"
+                                    >
+                                      Edit 0-5 descriptions
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             )}
@@ -529,13 +503,20 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
                                 </div>
                               </div>
                             ) : (
-                              <button
-                                type="button"
-                                onClick={() => startEditScoreDescriptions(skill.id)}
-                                className="text-xs font-semibold text-[#4F8FF7]"
-                              >
-                                Edit 0-5 descriptions
-                              </button>
+                              <div className="space-y-2">
+                                <SkillScoreGuideToggle
+                                  skillId={skill.id}
+                                  category={skill.category}
+                                  overrides={value.skillLabelOverrides}
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => startEditScoreDescriptions(skill.id)}
+                                  className="text-xs font-semibold text-[#4F8FF7]"
+                                >
+                                  Edit 0-5 descriptions
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -598,22 +579,6 @@ export function SkillRubricPicker({ value, onChange, hint }: SkillRubricPickerPr
           );
         })}
       </div>
-
-      {previewSkills.length > 0 && (
-        <div className="rounded-xl border border-[#E5E7EB] bg-[#FAFAF8] p-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">Preview</p>
-          <ul className="mt-2 space-y-1">
-            {previewSkills.slice(0, 5).map((skill) => (
-              <li key={skill.id} className="text-sm text-[#374151]">
-                {skill.name}
-              </li>
-            ))}
-            {previewSkills.length > 5 && (
-              <li className="text-xs text-[#9CA3AF]">+ {previewSkills.length - 5} more</li>
-            )}
-          </ul>
-        </div>
-      )}
     </div>
   );
 }
@@ -648,20 +613,17 @@ export function programSkillsFromProgram(
     "rubricId" | "skillTemplateId" | "customSkillIds" | "customSkills" | "skillLabelOverrides"
   >
 ): SkillRubricPickerValue {
-  const rubricId = program.rubricId ?? program.skillTemplateId ?? "intermediate";
-  if (rubricId === "custom" && program.customSkillIds?.length) {
-    return {
-      rubricId: "custom",
-      customSkillIds: program.customSkillIds,
-      customSkills: program.customSkills ?? [],
-      skillLabelOverrides: program.skillLabelOverrides ?? {},
-    };
-  }
+  const legacyRubric = program.rubricId ?? program.skillTemplateId;
+  const customSkillIds =
+    program.customSkillIds?.length
+      ? program.customSkillIds
+      : legacyRubric && legacyRubric !== "custom"
+        ? getSkillsForRubric(legacyRubric).map((skill) => skill.id)
+        : [];
 
-  const base = rubricId === "custom" ? "intermediate" : rubricId;
   return {
-    rubricId: base,
-    customSkillIds: getSkillsForRubric(base, program.customSkillIds).map((skill) => skill.id),
+    rubricId: "custom",
+    customSkillIds,
     customSkills: program.customSkills ?? [],
     skillLabelOverrides: program.skillLabelOverrides ?? {},
   };

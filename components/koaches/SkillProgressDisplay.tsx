@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowRight, Minus, Star, TrendingDown, TrendingUp } from "lucide-react";
-import type { SkillRating } from "@/lib/koaches/types";
+import type { SkillCategory, SkillRating } from "@/lib/koaches/types";
 import {
   buildSkillChanges,
   scoreLabel,
@@ -9,8 +10,72 @@ import {
   sessionProgressHeadline,
   summarizeSkillChanges,
   type SkillChange,
+  type SkillScore,
 } from "@/lib/koaches/skill-progress-display";
 import { cn } from "@/lib/utils";
+
+export function SkillScoreGuide({
+  skillId,
+  category,
+  overrides,
+  className,
+}: {
+  skillId: string;
+  category?: SkillCategory;
+  overrides?: Record<string, string>;
+  className?: string;
+}) {
+  const labels = scoreLabelsForSkill(skillId, category, overrides);
+
+  return (
+    <div className={cn("space-y-1 rounded-lg border border-[#E5E7EB] bg-white p-2.5", className)}>
+      {([0, 1, 2, 3, 4, 5] as const).map((score) => (
+        <p key={`${skillId}-${score}`} className="text-[11px] leading-snug text-[#6B7280]">
+          <span className="font-semibold text-[#111827]">{score}</span>
+          <span className="text-[#9CA3AF]"> · </span>
+          {labels[score as SkillScore]}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+export function SkillScoreGuideToggle({
+  skillId,
+  category,
+  overrides,
+  className,
+}: {
+  skillId: string;
+  category?: SkillCategory;
+  overrides?: Record<string, string>;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className={className}>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={cn(
+          "rounded-full px-2.5 py-1 text-[10px] font-semibold",
+          open ? "bg-[#111827] text-white" : "bg-white text-[#6B7280] border border-[#E5E7EB]"
+        )}
+      >
+        {open ? "Hide 0-5 guide" : "View 0-5 guide"}
+      </button>
+      {open && (
+        <SkillScoreGuide
+          skillId={skillId}
+          category={category}
+          overrides={overrides}
+          className="mt-2"
+        />
+      )}
+    </div>
+  );
+}
 
 function starRow(
   filled: number,

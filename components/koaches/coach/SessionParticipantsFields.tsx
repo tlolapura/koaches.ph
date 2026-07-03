@@ -1,8 +1,6 @@
 "use client";
 
 import type { SessionParticipant, Student } from "@/lib/koaches/types";
-import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
-import { useCoachPrograms } from "@/hooks/useCoachPrograms";
 import { newParticipantId, resizeParticipants } from "@/lib/koaches/session-participants";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
@@ -13,11 +11,6 @@ type SessionParticipantsFieldsProps = {
   roster: Student[];
   onChange: (participants: SessionParticipant[]) => void;
 };
-
-function studentOptionLabel(student: Student, programs: import("@/lib/koaches/types").Program[]) {
-  const program = student.programId ? programs.find((p) => p.id === student.programId) : undefined;
-  return program ? `${student.name} · ${program.name}` : `${student.name} · Drop-in`;
-}
 
 function rosterOptionsForRow(
   roster: Student[],
@@ -39,9 +32,6 @@ export function SessionParticipantsFields({
   roster,
   onChange,
 }: SessionParticipantsFieldsProps) {
-  const coachId = usePortalCoachId();
-  const { programs } = useCoachPrograms(coachId);
-
   if (playerCount <= 1) {
     const studentId = participants[0]?.studentId ?? roster[0]?.id ?? "";
 
@@ -57,7 +47,7 @@ export function SessionParticipantsFields({
           }}
           options={roster.map((s) => ({
             value: s.id,
-            label: studentOptionLabel(s, programs),
+            label: s.name,
           }))}
           required
         />
@@ -101,7 +91,7 @@ export function SessionParticipantsFields({
                 { value: "", label: "Select student", disabled: true },
                 ...options.map((s) => ({
                   value: s.id,
-                  label: studentOptionLabel(s, programs),
+                  label: s.name,
                 })),
               ]}
               required

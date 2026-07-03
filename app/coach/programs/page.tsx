@@ -4,7 +4,7 @@ import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import Link from "next/link";
 import { useState } from "react";
 import { ClipboardList, PenLine, Plus, Zap } from "lucide-react";
-import { getProgramPreset, resolveProgramRubric } from "@/lib/koaches/program-templates";
+import { getProgramPreset } from "@/lib/koaches/program-templates";
 import type { ProgramDraft } from "@/lib/koaches/program-templates";
 import { resolveSkills } from "@/lib/koaches/constants";
 import { CoachFab, EmptyState } from "@/components/koaches/coach/CoachUi";
@@ -118,9 +118,9 @@ export default function ProgramsPage() {
         ) : (
           <div className="mt-3 space-y-3">
             {programs.map((p) => {
-              const rubricId = resolveProgramRubric(p);
               const preset = p.presetId ? getProgramPreset(p.presetId) : null;
               const isCustom = p.source === "custom";
+              const skillCount = p.customSkillIds?.length ?? 0;
 
               return (
                 <Link key={p.id} href={`/coach/programs/${p.id}`} className="coach-card block p-4">
@@ -140,7 +140,7 @@ export default function ProgramsPage() {
                         {formatProgramBundleSummary(p)}
                       </p>
                       <p className="mt-1 text-xs text-[#9CA3AF]">
-                        {p.enrolledStudentIds.length} enrolled · {rubricId} rubric
+                        {p.enrolledStudentIds.length} enrolled · {skillCount} skills
                       </p>
                     </div>
                   </div>
