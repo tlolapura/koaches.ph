@@ -57,7 +57,7 @@ function compactTime(timeValue: string) {
 }
 
 const slotCellBase =
-  "box-border flex w-full min-w-0 rounded-lg sm:rounded-xl min-h-[40px] sm:min-h-[44px] lg:min-h-[48px]";
+  "box-border flex w-full min-w-0 rounded-lg sm:rounded-xl min-h-[36px] sm:min-h-[40px] lg:min-h-[44px]";
 
 function DayNavigator({
   date,
@@ -270,8 +270,30 @@ function BookedCell({
 }) {
   const name = cell.bookedLabel ?? "Booked";
   const courtFull = courtLabel(courtLookup, cell.bookedCourtId);
-  const court = compact ? courtShort(courtLookup, cell.bookedCourtId) : courtFull;
   const title = `${name} · ${courtFull}`;
+
+  if (compact) {
+    return (
+      <Link
+        href={cell.bookedSessionId ? `/coach/sessions/${cell.bookedSessionId}` : "#"}
+        title={title}
+        className="flex min-h-[40px] w-full min-w-0 items-stretch overflow-hidden rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] transition-colors active:bg-[#DCFCE7]"
+      >
+        <span className="w-1 shrink-0 bg-[#16A34A]" aria-hidden />
+        <div className="flex min-w-0 flex-1 items-center gap-2 px-3 py-1.5">
+          <div className="min-w-0 flex-1">
+            <p className="font-heading truncate text-sm font-semibold leading-tight text-[#14532D]">
+              {name}
+            </p>
+            <p className="mt-0.5 truncate text-[11px] font-medium leading-tight text-[#6B7280]">
+              {courtFull}
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} aria-hidden />
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <Link
@@ -279,31 +301,15 @@ function BookedCell({
       title={title}
       className={cn(
         slotCellBase,
-        "flex-col items-center justify-center gap-0.5 border border-transparent bg-[#EDF2F7] px-1 py-1 transition-colors hover:bg-[#E2EAF3] sm:py-1.5"
+        "flex-col items-center justify-center gap-0.5 border border-[#BBF7D0] bg-[#F0FDF4] px-1 py-1 transition-colors hover:bg-[#DCFCE7] sm:py-1.5"
       )}
     >
-      <span
-        className={cn(
-          "line-clamp-1 w-full text-center font-bold leading-tight text-[#14532D]",
-          compact ? "text-[10px]" : "text-[9px] sm:text-[10px]"
-        )}
-      >
+      <span className="line-clamp-1 w-full text-center text-[9px] font-bold leading-tight text-[#14532D] sm:text-[10px]">
         {name}
       </span>
-      <span
-        className={cn(
-          "line-clamp-1 w-full text-center font-medium leading-tight text-[#6B7280]",
-          compact ? "text-[9px]" : "text-[8px] lg:text-[9px]"
-        )}
-      >
-        {compact ? (
-          court
-        ) : (
-          <>
-            <span className="lg:hidden">{courtShort(courtLookup, cell.bookedCourtId)}</span>
-            <span className="hidden lg:inline">{courtFull}</span>
-          </>
-        )}
+      <span className="line-clamp-1 w-full text-center text-[8px] font-medium leading-tight text-[#6B7280] lg:text-[9px]">
+        <span className="lg:hidden">{courtShort(courtLookup, cell.bookedCourtId)}</span>
+        <span className="hidden lg:inline">{courtFull}</span>
       </span>
     </Link>
   );
@@ -353,7 +359,7 @@ function MobileDayGrid({
   );
 
   return (
-    <div className="space-y-3 md:hidden">
+    <div className="space-y-2.5 md:hidden">
       <div className="grid grid-cols-7 gap-1">
         {weekDates.map((key) => (
           <DayHeaderButton
@@ -365,11 +371,11 @@ function MobileDayGrid({
           />
         ))}
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         {rows.map((cell) => (
-          <div key={cell.startValue} className="grid grid-cols-[52px_1fr] items-stretch gap-2">
-            <div className="flex flex-col justify-center py-1 text-right">
-              <span className="font-heading text-xs font-bold tabular-nums text-[#14532D]">
+          <div key={cell.startValue} className="grid grid-cols-[44px_1fr] items-center gap-2">
+            <div className="text-right">
+              <span className="font-heading text-[11px] font-bold tabular-nums text-[#6B7280]">
                 {formatTimeDisplay(cell.startValue).replace(":00", "")}
               </span>
             </div>
