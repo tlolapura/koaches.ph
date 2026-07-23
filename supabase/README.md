@@ -16,11 +16,15 @@ Fill in:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (server actions only — never expose to the browser)
 
-## 3. Run migration
+## 3. Run migrations
 
-In the Supabase SQL editor, run:
+In the Supabase SQL editor, run in order:
 
-`supabase/migrations/001_initial_schema.sql`
+1. `supabase/migrations/001_initial_schema.sql`
+2. `supabase/migrations/002_progress_card_feedback.sql`
+3. `supabase/migrations/003_coach_photos_storage.sql` (public `coach-photos` bucket)
+
+After (3), re-upload coach profile photos (or call `migrateCoachDataUrlPhotosAction` as admin) so existing data-URL blobs move to Storage.
 
 ## 4. Auth users & seed
 

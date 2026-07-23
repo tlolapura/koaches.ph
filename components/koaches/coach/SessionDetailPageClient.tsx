@@ -2,7 +2,7 @@
 
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import Link from "next/link";
-import { useCoachSessions } from "@/hooks/useCoachSessions";
+import { useCoachSession } from "@/hooks/useCoachSessions";
 import { SessionDetailView } from "@/components/koaches/coach/SessionDetailView";
 import { CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachDetailSkeleton } from "@/components/koaches/coach/CoachSkeletons";
@@ -12,9 +12,8 @@ type SessionDetailPageClientProps = {
 };
 
 export function SessionDetailPageClient({ sessionId }: SessionDetailPageClientProps) {
-  const coachId = usePortalCoachId();
-  const { sessions, loading } = useCoachSessions(coachId);
-  const session = sessions.find((s) => s.id === sessionId);
+  usePortalCoachId();
+  const { session, loading } = useCoachSession(sessionId);
 
   if (loading) return <CoachDetailSkeleton />;
 

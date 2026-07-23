@@ -65,9 +65,8 @@ export async function signOutAction(redirectTo: string) {
 export async function getProfileAction(): Promise<Profile | null> {
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return null;
 
   const { data } = await supabase
@@ -135,10 +134,10 @@ export async function coachResetPasswordAction(newPassword: string) {
 
   const supabase = await createClient();
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (!session?.user) {
+  if (!user) {
     return {
       ok: false as const,
       error: "This reset link has expired. Please request a new one.",
@@ -148,7 +147,7 @@ export async function coachResetPasswordAction(newPassword: string) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, coach_id")
-    .eq("id", session.user.id)
+    .eq("id", user.id)
     .maybeSingle();
 
   if (!isCoachRole(profile?.role) || !profile?.coach_id) {

@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { fetchCoachBySlugAction } from "@/lib/koaches/actions/coaches";
+import { getCachedPublicCoachBySlug } from "@/lib/koaches/public-coach";
 import { fetchCourtsForCoachAction } from "@/lib/koaches/actions/courts";
 import { fetchProgramsAction } from "@/lib/koaches/actions/programs";
 import { fetchCoachAchievementsAction } from "@/lib/koaches/actions/achievements";
 import { fetchCoachAvailabilityAction } from "@/lib/koaches/actions/availability";
 import { CoachPublicPage } from "@/components/koaches/public/CoachPublicPage";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type PageProps = {
   params: Promise<{ coachSlug: string }>;
@@ -15,7 +15,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { coachSlug } = await params;
-  const coach = await fetchCoachBySlugAction(coachSlug);
+  const coach = await getCachedPublicCoachBySlug(coachSlug);
   if (!coach) return { title: "Coach not found" };
 
   const description =
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function CoachPublicProfilePage({ params }: PageProps) {
   const { coachSlug } = await params;
-  const coach = await fetchCoachBySlugAction(coachSlug);
+  const coach = await getCachedPublicCoachBySlug(coachSlug);
   if (!coach || !coach.isActive) notFound();
 
   const [programs, courts, achievements, availability] = await Promise.all([

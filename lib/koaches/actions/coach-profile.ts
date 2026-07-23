@@ -7,13 +7,25 @@ import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koa
 import type { CoachingLevelId } from "@/lib/koaches/application-form";
 import { primarySkillTemplateFromLevels } from "@/lib/koaches/application-form";
 import { mapCoach, type DbCoach } from "@/lib/koaches/db/mappers";
+import { COACH_COLUMNS } from "@/lib/koaches/db/columns";
 import { buildJoinPath, buildPublicCoachPath } from "@/lib/koaches/coach-routes";
 import { isCoachProfileSetupComplete } from "@/lib/koaches/coach-onboarding";
+import {
+  ALLOWED_PHOTO_TYPES,
+  COACH_PHOTO_BUCKET,
+  coachPhotoExtension,
+  coachPhotoPathFromUrl,
+  MAX_PHOTO_BYTES,
+} from "@/lib/koaches/coach-photo";
 
 export async function fetchCoachProfileAction(coachId: string): Promise<CoachProfile> {
   await assertCoachAccess(coachId);
   const supabase = createServiceClient();
-  const { data, error } = await supabase.from("coaches").select("*").eq("id", coachId).single();
+  const { data, error } = await supabase
+    .from("coaches")
+    .select(COACH_COLUMNS as "*")
+    .eq("id", coachId)
+    .single();
   if (error) throw error;
   return mapCoach(data as DbCoach);
 }
@@ -127,30 +139,86 @@ export async function updateCoachContactAction(
   });
 }
 
-export async function updateCoachPhotoAction(coachId: string, photoUrl: string | null) {
+async function revalidateCoachPhotoPaths(slug: string | null | undefined) {
+  revalidatePath("/coach/profile");
+  revalidatePath("/coaches");
+  if (slug) {
+    const publicPath = buildPublicCoachPath(slug);
+    revalidatePath(publicPath);
+    revalidatePath(buildJoinPath(slug));
+  }
+}
+
+async function removeStoredCoachPhoto(
+  supabase: ReturnType<typeof createServiceClient>,
+  photoUrl: string | null | undefined
+) {
+  const path = coachPhotoPathFromUrl(photoUrl);
+  if (path) {
+    await supabase.storage.from(COACH_PHOTO_BUCKET).remove([path]);
+  }
+}
+
+/** Upload a profile photo to Storage (or clear it). Prefer FormData over data URLs. */
+export async function updateCoachPhotoAction(
+  coachId: string,
+  photo: FormData | File | null
+): Promise<{ photoUrl: string | null }> {
   await assertCoachAccess(coachId);
   const supabase = createServiceClient();
 
   const { data: existing, error: fetchError } = await supabase
     .from("coaches")
-    .select("slug")
+    .select("slug, photo_url")
     .eq("id", coachId)
     .single();
   if (fetchError) throw fetchError;
 
+  let nextPhotoUrl: string | null = null;
+
+  if (photo !== null) {
+    const file =
+      photo instanceof FormData ? (photo.get("file") as File | null) : photo;
+    if (!file || !(file instanceof File)) {
+      throw new Error("No photo file provided.");
+    }
+    if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
+      throw new Error("Use JPG, PNG, or WebP.");
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      throw new Error("Photo must be under 2 MB.");
+    }
+
+    const ext = coachPhotoExtension(file.type);
+    const storagePath = `${coachId}/profile.${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const { error: uploadError } = await supabase.storage
+      .from(COACH_PHOTO_BUCKET)
+      .upload(storagePath, buffer, { contentType: file.type, upsert: true });
+    if (uploadError) throw new Error(uploadError.message);
+
+    const { data: publicUrl } = supabase.storage
+      .from(COACH_PHOTO_BUCKET)
+      .getPublicUrl(storagePath);
+    nextPhotoUrl = `${publicUrl.publicUrl}?v=${Date.now()}`;
+
+    const previousPath = coachPhotoPathFromUrl(existing?.photo_url);
+    if (previousPath && previousPath !== storagePath) {
+      await supabase.storage.from(COACH_PHOTO_BUCKET).remove([previousPath]);
+    }
+  } else {
+    await removeStoredCoachPhoto(supabase, existing?.photo_url);
+  }
+
   const { error } = await supabase
     .from("coaches")
-    .update({ photo_url: photoUrl, updated_at: new Date().toISOString() })
+    .update({ photo_url: nextPhotoUrl, updated_at: new Date().toISOString() })
     .eq("id", coachId);
   if (error) throw error;
 
-  revalidatePath("/coach/profile");
-  revalidatePath("/coaches");
-  if (existing?.slug) {
-    const publicPath = buildPublicCoachPath(existing.slug);
-    revalidatePath(publicPath);
-    revalidatePath(buildJoinPath(existing.slug));
-  }
+  await revalidateCoachPhotoPaths(existing?.slug);
+  return { photoUrl: nextPhotoUrl };
 }
 
 export async function completeCoachOnboardingAction(coachId: string): Promise<CoachProfile> {
@@ -158,7 +226,7 @@ export async function completeCoachOnboardingAction(coachId: string): Promise<Co
   const supabase = createServiceClient();
   const { data, error: fetchError } = await supabase
     .from("coaches")
-    .select("*")
+    .select(COACH_COLUMNS as "*")
     .eq("id", coachId)
     .single();
   if (fetchError) throw fetchError;

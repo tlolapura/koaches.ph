@@ -12,8 +12,13 @@ export function useCoachPhoto(coachId: string, defaultPhoto: string | null = nul
   const photo = coach?.photo ?? defaultPhoto;
 
   const savePhoto = useCallback(
-    async (dataUrl: string | null) => {
-      await updateCoachPhotoAction(coachId, dataUrl);
+    async (file: File | null) => {
+      const result = await updateCoachPhotoAction(coachId, file);
+      queryClient.setQueryData(
+        [...coachKeys.all, "profile", coachId],
+        (prev: { photo?: string | null } | undefined) =>
+          prev ? { ...prev, photo: result.photoUrl } : prev
+      );
       await queryClient.invalidateQueries({
         queryKey: [...coachKeys.all, "profile", coachId],
       });

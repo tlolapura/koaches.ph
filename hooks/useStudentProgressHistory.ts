@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
-import { useStudentSessions } from "@/hooks/useCoachSessions";
+import { useStudentSessionsWithProgress } from "@/hooks/useCoachSessions";
 import { buildStudentProgressHistory } from "@/lib/koaches/student-progress";
 
 export function useStudentProgressHistory(studentId: string) {
   const coachId = usePortalCoachId();
-  const { sessions } = useStudentSessions(coachId, studentId);
+  const { sessions } = useStudentSessionsWithProgress(coachId, studentId);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {

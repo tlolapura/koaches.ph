@@ -21,7 +21,7 @@ type LogoSize = keyof typeof SIZE_CLASS;
 function KoachaMascot({ size, className }: { size: LogoSize; className?: string }) {
   return (
     <Image
-      src="/illustrations/mascot.png"
+      src="/illustrations/mascot.webp"
       alt=""
       width={96}
       height={96}

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
+import { MarketingDemoVideo } from "@/components/koaches/public/MarketingDemoVideo";
 import { BRAND_NAME } from "@/lib/koaches/constants";
 
 export function CoachMarketingLanding() {
@@ -36,7 +37,7 @@ export function CoachMarketingLanding() {
               className="order-1 -mx-4 w-auto sm:-mx-6 lg:order-2 lg:mx-0 lg:w-full"
             >
               <Image
-                src="/illustrations/coaches.png"
+                src="/illustrations/coaches.webp"
                 alt="Pickleball coaches using PickleKoach"
                 width={900}
                 height={900}
@@ -115,23 +116,18 @@ export function CoachMarketingLanding() {
 
             <div className="overflow-hidden rounded-2xl border border-[#E5E7EB] bg-[#0F172A] p-2.5 sm:p-3">
               <div className="mx-auto w-full max-w-5xl overflow-hidden rounded-xl border border-white/20 bg-black shadow-[0_16px_38px_rgba(0,0,0,0.35)]">
-                <video
+                <MarketingDemoVideo
                   key={recordingView}
-                  className={`w-full object-contain object-top ${
+                  className={
                     recordingView === "desktop"
-                      ? "aspect-[16/10]"
-                      : "h-[520px] sm:h-[560px]"
-                  }`}
+                      ? "aspect-[16/10] w-full"
+                      : "h-[520px] w-full sm:h-[560px]"
+                  }
                   src={
                     recordingView === "desktop"
                       ? "/illustrations/record-desktop.mov"
                       : "/illustrations/record-mobile.mov"
                   }
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
                 />
               </div>
               <p className="mt-2 text-center text-xs text-white/75 sm:text-sm">

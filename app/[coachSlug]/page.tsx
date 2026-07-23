@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { RESERVED_SLUGS } from "@/lib/koaches/constants";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
-import { fetchCoachBySlugAction } from "@/lib/koaches/actions/coaches";
+import { getCachedPublicCoachBySlug } from "@/lib/koaches/public-coach";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function LegacyCoachSlugPage({
   params,
@@ -13,7 +13,7 @@ export default async function LegacyCoachSlugPage({
   const { coachSlug } = await params;
   if (RESERVED_SLUGS.has(coachSlug)) redirect("/");
 
-  const coach = await fetchCoachBySlugAction(coachSlug);
+  const coach = await getCachedPublicCoachBySlug(coachSlug);
   if (!coach) redirect("/");
 
   redirect(buildPublicCoachPath(coach.slug));

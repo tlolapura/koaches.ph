@@ -17,7 +17,7 @@ import {
   CoachEarningsTrendChart,
   CoachRevenueMixChart,
   CoachStudentsByLevelChart,
-} from "@/components/koaches/coach/CoachReportCharts";
+} from "@/components/koaches/coach/CoachReportChartsLazy";
 import {
   buildCoachReport,
   REPORT_PERIOD_LABELS,

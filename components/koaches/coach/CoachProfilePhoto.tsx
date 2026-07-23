@@ -5,10 +5,7 @@ import { Camera, Loader2, Trash2 } from "lucide-react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { useCoachPhoto } from "@/hooks/useCoachPhoto";
 import { InitialsAvatar, useCoachToast } from "@/components/koaches/coach/CoachUi";
-import {
-  readImageFileAsDataUrl,
-  validateCoachPhotoFile,
-} from "@/lib/koaches/coach-photo";
+import { validateCoachPhotoFile } from "@/lib/koaches/coach-photo";
 import { cn } from "@/lib/utils";
 
 const sizeClasses = {
@@ -64,8 +61,7 @@ export function CoachProfilePhoto({
     }
     setUploading(true);
     try {
-      const dataUrl = await readImageFileAsDataUrl(file);
-      await savePhoto(dataUrl);
+      await savePhoto(file);
       onUpdated?.();
       showToast("Profile photo updated!");
     } catch {
@@ -99,7 +95,7 @@ export function CoachProfilePhoto({
   return (
     <div className={cn("relative inline-block", className)}>
       {photo ? (
-        // eslint-disable-next-line @next/next/no-img-element -- data URLs from local upload
+        // eslint-disable-next-line @next/next/no-img-element -- storage or legacy URLs
         <img
           src={photo}
           alt={name}
@@ -203,8 +199,7 @@ export function CoachPhotoUploadField({
     }
     setUploading(true);
     try {
-      const dataUrl = await readImageFileAsDataUrl(file);
-      await savePhoto(dataUrl);
+      await savePhoto(file);
       showToast("Profile photo updated!");
     } catch {
       showToast("Could not upload photo", "error");

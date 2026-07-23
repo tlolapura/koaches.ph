@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { Court } from "@/lib/koaches/types";
 import { mapCourt, type DbCourt } from "@/lib/koaches/db/mappers";
+import { COURT_COLUMNS } from "@/lib/koaches/db/columns";
 
 export type CourtMutationResult = { ok: true } | { ok: false; error: string };
 
@@ -11,7 +12,7 @@ export async function fetchCourtsAction(): Promise<Court[]> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("courts")
-    .select("*")
+    .select(COURT_COLUMNS as "*")
     .eq("is_active", true)
     .order("name");
   if (error) throw error;
@@ -22,7 +23,7 @@ export async function fetchCourtsAction(): Promise<Court[]> {
 export async function fetchAllCourtsAdminAction(): Promise<Court[]> {
   await requireAdmin();
   const supabase = createServiceClient();
-  const { data, error } = await supabase.from("courts").select("*").order("name");
+  const { data, error } = await supabase.from("courts").select(COURT_COLUMNS as "*").order("name");
   if (error) throw error;
   return ((data ?? []) as DbCourt[]).map(mapCourt);
 }
@@ -37,18 +38,19 @@ export async function fetchCourtsForCoachAction(coachId: string): Promise<Court[
   if (coachError) throw coachError;
 
   const courtIds = (coach?.court_ids ?? []) as string[];
-  const { data, error } = await supabase
-    .from("courts")
-    .select("*")
-    .eq("is_active", true)
-    .order("name");
+  let query = supabase.from("courts").select(COURT_COLUMNS as "*").eq("is_active", true).order("name");
+  if (courtIds.length > 0) {
+    query = query.in("id", courtIds);
+  }
+  const { data, error } = await query;
   if (error) throw error;
 
-  const all = ((data ?? []) as DbCourt[]).map(mapCourt);
-  if (courtIds.length === 0) return all;
-  const idSet = new Set(courtIds);
-  const filtered = all.filter((c) => idSet.has(c.id));
-  return filtered.length > 0 ? filtered : all;
+  const filtered = ((data ?? []) as DbCourt[]).map(mapCourt);
+  if (courtIds.length > 0 && filtered.length === 0) {
+    // Fallback if assigned courts were deactivated
+    return fetchCourtsAction();
+  }
+  return filtered;
 }
 
 export async function createCourtAction(

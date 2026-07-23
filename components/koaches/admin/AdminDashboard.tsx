@@ -13,9 +13,18 @@ import {
 } from "lucide-react";
 import type { AdminDashboardData } from "@/lib/koaches/admin-data";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
-import { AdminRevenueChart } from "@/components/koaches/admin/AdminRevenueChart";
+import dynamic from "next/dynamic";
 import { formatCurrency, formatDisplayDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+
+const AdminRevenueChart = dynamic(
+  () =>
+    import("@/components/koaches/admin/AdminRevenueChart").then((m) => m.AdminRevenueChart),
+  {
+    ssr: false,
+    loading: () => <div className="h-48 animate-pulse rounded-xl bg-[#E5E7EB]/60" />,
+  }
+);
 
 type AdminDashboardProps = {
   data: AdminDashboardData;

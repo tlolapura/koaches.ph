@@ -3,7 +3,20 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/koaches/actions/guards";
 import { isCollectedSession, sessionCollectedAmount } from "@/lib/koaches/session-payment";
-import { mapApplication, mapCoach, mapSession, mapStudent, type DbApplication, type DbCoach, type DbSession, type DbStudent } from "@/lib/koaches/db/mappers";
+import {
+  mapApplication,
+  mapCoach,
+  mapSession,
+  type DbApplication,
+  type DbCoach,
+  type DbSession,
+  type DbStudent,
+} from "@/lib/koaches/db/mappers";
+import {
+  ADMIN_COACH_SUMMARY_COLUMNS,
+  ADMIN_SESSION_AGG_COLUMNS,
+  ADMIN_STUDENT_AGG_COLUMNS,
+} from "@/lib/koaches/db/columns";
 import { SUBSCRIPTION_PRICES, type AdminDashboardData, type CoachSummary } from "@/lib/koaches/admin-data";
 import { EARLY_BIRD_SLOTS_TOTAL } from "@/lib/koaches/early-bird";
 
@@ -24,17 +37,28 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
     { count: courtCount, error: courtsError },
     { count: progressCardCount, error: progressError },
     { count: pendingPaymentCount, error: paymentsError },
+    { count: doneSessionCount, error: doneCountError },
   ] = await Promise.all([
-    supabase.from("coaches").select("*"),
-    supabase.from("sessions").select("*"),
-    supabase.from("students").select("*"),
-    supabase.from("coach_applications").select("*").order("applied_at", { ascending: false }),
+    supabase.from("coaches").select(ADMIN_COACH_SUMMARY_COLUMNS as "*"),
+    supabase.from("sessions").select(ADMIN_SESSION_AGG_COLUMNS as "*"),
+    supabase.from("students").select(ADMIN_STUDENT_AGG_COLUMNS as "*"),
+    supabase
+      .from("coach_applications")
+      .select(
+        "id, full_name, mobile, email, bio, specialization, instagram, facebook, skill_template_id, coaching_levels, session_pricing, preferred_slug, current_student_count, status, applied_at"
+      )
+      .order("applied_at", { ascending: false })
+      .limit(50),
     supabase.from("courts").select("*", { count: "exact", head: true }).eq("is_active", true),
     supabase.from("progress_cards").select("*", { count: "exact", head: true }),
     supabase
       .from("coach_payment_submissions")
       .select("*", { count: "exact", head: true })
       .eq("status", "pending"),
+    supabase
+      .from("sessions")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "done"),
   ]);
 
   if (coachesError) throw coachesError;
@@ -44,10 +68,11 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
   if (courtsError) throw courtsError;
   if (progressError) throw progressError;
   if (paymentsError) throw paymentsError;
+  if (doneCountError) throw doneCountError;
 
   const coachRows = (coaches ?? []) as DbCoach[];
   const sessionRows = ((sessions ?? []) as DbSession[]).map(mapSession);
-  const studentRows = (students ?? []) as DbStudent[];
+  const studentRows = (students ?? []) as Pick<DbStudent, "id" | "coach_id" | "is_archived">[];
   const appRows = ((applications ?? []) as DbApplication[]).map(mapApplication);
 
   const pendingApps = appRows.filter((a) => a.status === "pending");
@@ -58,7 +83,9 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
     (s) => s.status === "done" && Boolean(s.date?.startsWith(month))
   );
   const revenueThisMonth = collectedThisMonth.reduce((sum, s) => sum + sessionCollectedAmount(s), 0);
-  const totalRevenue = sessionRows.filter((s) => isCollectedSession(s)).reduce((sum, s) => sum + sessionCollectedAmount(s), 0);
+  const totalRevenue = sessionRows
+    .filter((s) => isCollectedSession(s))
+    .reduce((sum, s) => sum + sessionCollectedAmount(s), 0);
   const activeCoaches = coachRows.filter((c) => c.is_active);
   const mrr = activeCoaches.reduce(
     (sum, c) => sum + SUBSCRIPTION_PRICES[c.subscription_plan as keyof typeof SUBSCRIPTION_PRICES],
@@ -103,7 +130,7 @@ export async function fetchAdminDashboardAction(): Promise<AdminDashboardData> {
       totalCoaches: coachRows.length,
       activeCoaches: activeCoaches.length,
       totalStudents: studentRows.filter((s) => !s.is_archived).length,
-      totalSessions: sessionRows.filter((s) => s.status === "done").length,
+      totalSessions: doneSessionCount ?? sessionRows.filter((s) => s.status === "done").length,
       totalRevenue,
       revenueThisMonth,
       progressCardsGenerated: progressCardCount ?? 0,

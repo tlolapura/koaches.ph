@@ -1,6 +1,5 @@
-import { toPng } from "html-to-image";
-
 export async function exportStoryAsPng(element: HTMLElement, filename: string) {
+  const { toPng } = await import("html-to-image");
   const dataUrl = await toPng(element, {
     pixelRatio: 1,
     cacheBust: true,
@@ -15,6 +14,7 @@ export async function exportStoryAsPng(element: HTMLElement, filename: string) {
 }
 
 export async function storyPngBlob(element: HTMLElement): Promise<Blob | null> {
+  const { toPng } = await import("html-to-image");
   const dataUrl = await toPng(element, {
     pixelRatio: 1,
     cacheBust: true,

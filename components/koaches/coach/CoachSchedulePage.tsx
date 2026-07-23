@@ -16,7 +16,7 @@ import {
 } from "@/lib/koaches/session-participants";
 import type { AvailableSlot } from "@/lib/koaches/session-slots";
 import { CoachScheduleGrid } from "@/components/koaches/coach/CoachScheduleGrid";
-import { AddSessionSheet } from "@/components/koaches/coach/AddSessionSheet";
+import dynamic from "next/dynamic";
 import {
   EmptyState,
   InitialsAvatar,
@@ -24,6 +24,12 @@ import {
   SessionPaymentBadge,
   SessionDisplayStatusBadge,
 } from "@/components/koaches/coach/CoachUi";
+
+const AddSessionSheet = dynamic(
+  () =>
+    import("@/components/koaches/coach/AddSessionSheet").then((m) => m.AddSessionSheet),
+  { ssr: false }
+);
 import { resolveSessionStatus } from "@/lib/koaches/session-lifecycle";
 import { useSessionStatus } from "@/hooks/useSessionStatus";
 import { getSessionStatusLabel } from "@/lib/koaches/session-status";

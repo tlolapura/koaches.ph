@@ -4,7 +4,7 @@ import { fetchPublicCoachListingsAction } from "@/lib/koaches/actions/coaches";
 import { CoachesBrowse } from "@/components/koaches/public/CoachesBrowse";
 import { PublicFooter } from "@/components/koaches/public/PublicChrome";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Find a Coach",

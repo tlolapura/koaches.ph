@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-const BALL_SRC = "/illustrations/ball.png";
+const BALL_SRC = "/illustrations/ball.webp";
 
 function PickleballBallImage({ className }: { className?: string }) {
   return (

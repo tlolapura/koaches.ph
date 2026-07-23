@@ -64,7 +64,7 @@ function StoryBackground() {
         {/* Plain img for story PNG export (same ball art as login) */}
         {/* eslint-disable-next-line @next/next/no-img-element -- story export */}
         <img
-          src="/illustrations/ball.png"
+          src="/illustrations/ball.webp"
           alt=""
           crossOrigin="anonymous"
           className="absolute opacity-[0.16] rotate-12"
@@ -72,7 +72,7 @@ function StoryBackground() {
         />
         {/* eslint-disable-next-line @next/next/no-img-element -- story export */}
         <img
-          src="/illustrations/ball.png"
+          src="/illustrations/ball.webp"
           alt=""
           crossOrigin="anonymous"
           className="absolute opacity-[0.16] -rotate-[18deg]"
@@ -80,7 +80,7 @@ function StoryBackground() {
         />
         {/* eslint-disable-next-line @next/next/no-img-element -- story export */}
         <img
-          src="/illustrations/ball.png"
+          src="/illustrations/ball.webp"
           alt=""
           crossOrigin="anonymous"
           className="absolute opacity-[0.14] rotate-[8deg]"
@@ -96,7 +96,7 @@ export function SocialStoryBrandBar() {
     <div className="flex items-center gap-4 px-10 pt-12">
       {/* eslint-disable-next-line @next/next/no-img-element -- story export */}
       <img
-        src="/illustrations/mascot.png"
+        src="/illustrations/mascot.webp"
         alt=""
         crossOrigin="anonymous"
         className="h-20 w-20 shrink-0 object-contain"

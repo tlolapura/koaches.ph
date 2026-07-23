@@ -8,17 +8,89 @@ import {
 import { createServiceClient } from "@/lib/supabase/server";
 import type { Session, SessionPaymentStatus, SessionStatus } from "@/lib/koaches/types";
 import { mapSession, sessionToDb, type DbSession } from "@/lib/koaches/db/mappers";
+import { SESSION_DETAIL_COLUMNS, SESSION_LIST_COLUMNS } from "@/lib/koaches/db/columns";
 
-export async function fetchSessionsAction(coachId: string): Promise<Session[]> {
+/** Default list window: past year + next year (covers schedule / reports). */
+const DEFAULT_PAST_DAYS = 365;
+const DEFAULT_FUTURE_DAYS = 365;
+
+function isoDateOffset(days: number): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export type FetchSessionsOptions = {
+  /** Include ratings_* / participant_progress (needed for progress UI). */
+  includeProgress?: boolean;
+  /** Inclusive YYYY-MM-DD. Defaults to today - 365d. */
+  from?: string;
+  /** Inclusive YYYY-MM-DD. Defaults to today + 365d. */
+  to?: string;
+  /** When true, ignore date window (still uses lean columns unless includeProgress). */
+  allDates?: boolean;
+};
+
+export async function fetchSessionsAction(
+  coachId: string,
+  options: FetchSessionsOptions = {}
+): Promise<Session[]> {
+  await assertCoachAccess(coachId);
+  const supabase = createServiceClient();
+  const columns = (options.includeProgress ? SESSION_DETAIL_COLUMNS : SESSION_LIST_COLUMNS) as "*";
+  const from = options.from ?? isoDateOffset(-DEFAULT_PAST_DAYS);
+  const to = options.to ?? isoDateOffset(DEFAULT_FUTURE_DAYS);
+
+  let query = supabase
+    .from("sessions")
+    .select(columns)
+    .eq("coach_id", coachId)
+    .order("date", { ascending: true, nullsFirst: false });
+
+  if (!options.allDates) {
+    // Unscheduled (null date) + in-window dates
+    query = query.or(`date.is.null,and(date.gte.${from},date.lte.${to})`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return ((data ?? []) as unknown as DbSession[]).map(mapSession);
+}
+
+export async function fetchSessionByIdAction(sessionId: string): Promise<Session | null> {
+  const coachId = await assertCoachOwnsSession(sessionId);
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("sessions")
+    .select(SESSION_DETAIL_COLUMNS as "*")
+    .eq("id", sessionId)
+    .eq("coach_id", coachId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? mapSession(data as DbSession) : null;
+}
+
+/** Done sessions with ratings for one student (progress history). */
+export async function fetchStudentSessionsWithProgressAction(
+  coachId: string,
+  studentId: string
+): Promise<Session[]> {
   await assertCoachAccess(coachId);
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("sessions")
-    .select("*")
+    .select(SESSION_DETAIL_COLUMNS as "*")
     .eq("coach_id", coachId)
+    .eq("status", "done")
     .order("date", { ascending: true, nullsFirst: false });
   if (error) throw error;
-  return ((data ?? []) as DbSession[]).map(mapSession);
+
+  return ((data ?? []) as DbSession[])
+    .map(mapSession)
+    .filter(
+      (s) => s.studentId === studentId || s.participants.some((p) => p.studentId === studentId)
+    );
 }
 
 export async function createSessionsAction(sessions: Session[]) {
@@ -112,6 +184,7 @@ export async function updateSessionTipAction(sessionId: string, tip: number) {
   revalidatePath(`/coach/sessions/${sessionId}`);
   revalidatePath("/coach/reports");
 }
+
 export async function updateSessionProgressAction(sessionId: string, session: Session) {
   const coachId = await assertCoachOwnsSession(sessionId);
   if (session.coachId !== coachId) throw new Error("Not authorized.");

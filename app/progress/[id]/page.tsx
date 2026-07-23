@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { fetchProgressCardByIdAction } from "@/lib/koaches/actions/progress-cards";
 import { ProgressCardView } from "@/components/koaches/ProgressCardView";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function ProgressCardPage({
   params,

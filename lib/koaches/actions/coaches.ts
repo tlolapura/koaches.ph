@@ -7,6 +7,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import type { CoachProfile, CoachListing } from "@/lib/koaches/types";
 import type { Court } from "@/lib/koaches/types";
 import { mapCoach, mapCourt, type DbCoach, type DbCourt } from "@/lib/koaches/db/mappers";
+import { COACH_COLUMNS, COACH_LISTING_COLUMNS, COURT_COLUMNS } from "@/lib/koaches/db/columns";
 import { provisionCoachAccount, type ProvisionCoachResult } from "@/lib/koaches/provision-coach";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
 import { isValidCoachSlug } from "@/lib/koaches/coach-slug";
@@ -22,7 +23,7 @@ export async function fetchCoachBySlugAction(slug: string): Promise<CoachProfile
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("coaches")
-    .select("*")
+    .select(COACH_COLUMNS as "*")
     .eq("slug", normalized)
     .eq("is_active", true)
     .maybeSingle();
@@ -33,7 +34,7 @@ export async function fetchCoachBySlugAction(slug: string): Promise<CoachProfile
 export async function fetchCoachesAction(): Promise<CoachProfile[]> {
   await requireAdmin();
   const supabase = createServiceClient();
-  const { data, error } = await supabase.from("coaches").select("*").order("name");
+  const { data, error } = await supabase.from("coaches").select(COACH_COLUMNS as "*").order("name");
   if (error) throw error;
   return ((data ?? []) as DbCoach[]).map(mapCoach);
 }
@@ -42,8 +43,8 @@ export async function fetchPublicCoachListingsAction(): Promise<CoachListing[]> 
   const supabase = createServiceClient();
   const [{ data: coachRows, error: coachError }, { data: courtRows, error: courtError }] =
     await Promise.all([
-      supabase.from("coaches").select("*").eq("is_active", true).order("name"),
-      supabase.from("courts").select("*").eq("is_active", true),
+      supabase.from("coaches").select(COACH_LISTING_COLUMNS as "*").eq("is_active", true).order("name"),
+      supabase.from("courts").select(COURT_COLUMNS as "*").eq("is_active", true),
     ]);
   if (coachError) throw coachError;
   if (courtError) throw courtError;

@@ -6,6 +6,20 @@ import {
 } from "@/lib/koaches/coach-portal-access";
 import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseConfigured } from "./config";
 
+const COACH_CTX_COOKIE = "koach_portal_ctx";
+/** Skip profiles+coaches join for this long when cookie is fresh. */
+const COACH_CTX_MAX_AGE_SEC = 120;
+
+type CoachPortalCookie = {
+  uid: string;
+  coachId: string;
+  email: string;
+  isActive: boolean;
+  subscriptionExpiry: string;
+  subscriptionPlan: string;
+  checkedAt: number;
+};
+
 function isCoachPublicRoute(pathname: string) {
   if (pathname === "/coach/login" || pathname === "/coach/apply" || pathname === "/coach/forgot-password" || pathname === "/coach/reset-password") {
     return true;
@@ -61,6 +75,39 @@ function isCoachPublicRoute(pathname: string) {
   return false;
 }
 
+function readCoachCtx(request: NextRequest, userId: string): CoachPortalCookie | null {
+  const raw = request.cookies.get(COACH_CTX_COOKIE)?.value;
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as CoachPortalCookie;
+    if (parsed.uid !== userId || !parsed.coachId) return null;
+    if (Date.now() - parsed.checkedAt > COACH_CTX_MAX_AGE_SEC * 1000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeCoachCtx(response: NextResponse, ctx: CoachPortalCookie) {
+  response.cookies.set(COACH_CTX_COOKIE, JSON.stringify(ctx), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: COACH_CTX_MAX_AGE_SEC,
+  });
+}
+
+function clearCoachCtx(response: NextResponse) {
+  response.cookies.set(COACH_CTX_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
+}
+
 export async function updateSession(request: NextRequest) {
   if (!isSupabaseConfigured()) {
     return NextResponse.next({ request });
@@ -84,69 +131,96 @@ export async function updateSession(request: NextRequest) {
   });
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
   let coachPortalContext: { coachId: string; email: string } | null = null;
+  let coachCtxToStore: CoachPortalCookie | null = null;
 
   if (pathname.startsWith("/coach") && !isCoachPublicRoute(pathname)) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/coach/login";
       url.searchParams.set("next", pathname);
-      return NextResponse.redirect(url);
+      const redirect = NextResponse.redirect(url);
+      clearCoachCtx(redirect);
+      return redirect;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select(
-        "role, coach_id, coaches(is_active, subscription_expiry, subscription_plan)"
-      )
-      .eq("id", user.id)
-      .maybeSingle();
+    const cached = readCoachCtx(request, user.id);
+    let coachId = cached?.coachId ?? "";
+    let email = cached?.email ?? user.email ?? "";
+    let isActive = cached?.isActive ?? true;
+    let subscriptionExpiry = cached?.subscriptionExpiry ?? "";
+    let subscriptionPlan = cached?.subscriptionPlan ?? "regular";
 
-    if (profile?.role !== "coach" || !profile.coach_id) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/coach/login";
-      url.searchParams.set("error", "unauthorized");
-      return NextResponse.redirect(url);
+    if (!cached) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select(
+          "role, coach_id, coaches(is_active, subscription_expiry, subscription_plan)"
+        )
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.role !== "coach" || !profile.coach_id) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/coach/login";
+        url.searchParams.set("error", "unauthorized");
+        const redirect = NextResponse.redirect(url);
+        clearCoachCtx(redirect);
+        return redirect;
+      }
+
+      const coachRow = profile.coaches as
+        | {
+            is_active: boolean;
+            subscription_expiry: string | null;
+            subscription_plan: string;
+          }
+        | {
+            is_active: boolean;
+            subscription_expiry: string | null;
+            subscription_plan: string;
+          }[]
+        | null;
+      const coach = Array.isArray(coachRow) ? coachRow[0] : coachRow;
+
+      coachId = profile.coach_id;
+      email = user.email ?? "";
+      isActive = coach?.is_active ?? true;
+      subscriptionExpiry = coach?.subscription_expiry ?? "";
+      subscriptionPlan = coach?.subscription_plan ?? "regular";
+
+      coachCtxToStore = {
+        uid: user.id,
+        coachId,
+        email,
+        isActive,
+        subscriptionExpiry,
+        subscriptionPlan,
+        checkedAt: Date.now(),
+      };
     }
-
-    const coachRow = profile.coaches as
-      | {
-          is_active: boolean;
-          subscription_expiry: string | null;
-          subscription_plan: string;
-        }
-      | {
-          is_active: boolean;
-          subscription_expiry: string | null;
-          subscription_plan: string;
-        }[]
-      | null;
-    const coach = Array.isArray(coachRow) ? coachRow[0] : coachRow;
 
     if (
-      coach &&
       coachPortalIsRestricted({
-        isActive: coach.is_active,
-        subscriptionExpiry: coach.subscription_expiry ?? "",
-        subscriptionPlan: coach.subscription_plan as "early-bird" | "regular",
+        isActive,
+        subscriptionExpiry,
+        subscriptionPlan: subscriptionPlan as "early-bird" | "regular",
       }) &&
       !isCoachRestrictedPathAllowed(pathname)
     ) {
       const url = request.nextUrl.clone();
       url.pathname = "/coach/settings/billing";
       url.searchParams.set("restricted", "1");
-      return NextResponse.redirect(url);
+      const redirect = NextResponse.redirect(url);
+      if (coachCtxToStore) writeCoachCtx(redirect, coachCtxToStore);
+      return redirect;
     }
 
-    coachPortalContext = {
-      coachId: profile.coach_id,
-      email: user.email ?? "",
-    };
+    coachPortalContext = { coachId, email };
   }
 
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
@@ -181,6 +255,7 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       response.cookies.set(cookie);
     });
+    if (coachCtxToStore) writeCoachCtx(response, coachCtxToStore);
     return response;
   }
 

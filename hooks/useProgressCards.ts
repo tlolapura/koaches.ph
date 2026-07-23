@@ -6,7 +6,6 @@ import {
   fetchProgressCardsAction,
   saveProgressCardAction,
 } from "@/lib/koaches/actions/progress-cards";
-import { fetchSessionsAction } from "@/lib/koaches/actions/sessions";
 import {
   listProgressCardCandidates,
   PROGRESS_CARDS_UPDATED_EVENT,
@@ -14,20 +13,17 @@ import {
 import { coachKeys } from "@/lib/koaches/queries/keys";
 import type { ProgressCard } from "@/lib/koaches/types";
 import { useEffect } from "react";
+import { useCoachSessions } from "@/hooks/useCoachSessions";
 
 export function useProgressCards(coachId: string) {
   const queryClient = useQueryClient();
+  const { sessions } = useCoachSessions(coachId);
 
   const cardsQuery = useQuery({
     queryKey: [...coachKeys.all, "progress-cards", coachId] as const,
     queryFn: () => fetchProgressCardsAction(coachId),
     enabled: !!coachId,
-  });
-
-  const sessionsQuery = useQuery({
-    queryKey: coachKeys.sessions(coachId),
-    queryFn: () => fetchSessionsAction(coachId),
-    enabled: !!coachId,
+    staleTime: 60_000,
   });
 
   const refresh = useCallback(() => {
@@ -42,7 +38,6 @@ export function useProgressCards(coachId: string) {
   }, [refresh]);
 
   const cards = cardsQuery.data ?? [];
-  const sessions = sessionsQuery.data ?? [];
   const candidates = listProgressCardCandidates(coachId, cards, sessions);
 
   const saveCard = useCallback(
@@ -61,8 +56,8 @@ export function useProgressCards(coachId: string) {
   return {
     cards,
     candidates,
-    loading: !!coachId && (cardsQuery.isPending || sessionsQuery.isPending),
-    error: cardsQuery.error ?? sessionsQuery.error ?? null,
+    loading: !!coachId && cardsQuery.isPending && cards.length === 0,
+    error: cardsQuery.error ?? null,
     refresh,
     saveCard,
   };
