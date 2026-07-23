@@ -47,7 +47,7 @@ export function countImprovedSkills(before: SkillRating[], after: SkillRating[])
 
 export function formatSessionProgressLabel(session: Session): string {
   if (session.sessionNumber) return `Session ${session.sessionNumber}`;
-  return session.type === "drop-in" ? "Drop-in" : "Session";
+  return session.type === "drop-in" ? "Drop-in" : session.type === "clinic" ? "Clinic" : "Session";
 }
 
 export type StudentProgressGroup = {

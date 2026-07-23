@@ -11,6 +11,7 @@ import {
   Share2,
   Settings,
   User,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navActiveClass } from "@/lib/koaches/coach-colors";
@@ -25,6 +26,7 @@ const navItems = [
   { href: "/coach/dashboard", label: "Dashboard", icon: Home },
   { href: "/coach/sessions", label: "Schedule", icon: CalendarDays },
   { href: "/coach/students", label: "Students", icon: Users },
+  { href: "/coach/clinics", label: "Clinics", icon: GraduationCap },
   { href: "/coach/programs", label: "Programs", icon: FileText },
   { href: "/coach/reports", label: "Reports", icon: BarChart3 },
   { href: "/coach/social", label: "Social", icon: Share2 },

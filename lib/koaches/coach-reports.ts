@@ -15,9 +15,10 @@ import {
   coachingLevelFromDupr,
   type CoachingLevelId,
 } from "@/lib/koaches/application-form";
-import type { DuprLevel, Session, Student } from "@/lib/koaches/types";
+import type { Clinic, DuprLevel, Session, Student } from "@/lib/koaches/types";
 import { isCanceledStatus, isDoneStatus } from "@/lib/koaches/session-status";
 import { isCollectedSession, sessionCollectedAmount, sessionTipAmount } from "@/lib/koaches/session-payment";
+import { clinicExpectedRevenue } from "@/lib/koaches/clinic-pricing";
 
 export type ReportPeriod = "week" | "month" | "all";
 
@@ -48,6 +49,10 @@ export type CoachReportSummary = {
   unpaidSessionCount: number;
   programRevenue: number;
   dropInRevenue: number;
+  clinicRevenue: number;
+  clinicSessionsDone: number;
+  clinicAttendancePresent: number;
+  clinicAttendanceTotal: number;
   activeStudents: number;
   studentsWithSessions: number;
   avgPerCollectedSession: number;
@@ -129,13 +134,50 @@ function topRows(
     .slice(0, limit);
 }
 
+function clinicRevenueOnDate(
+  clinics: Clinic[],
+  sessions: Session[],
+  dateKey: string
+): number {
+  let total = 0;
+  for (const clinic of clinics) {
+    if (clinic.status === "canceled" || clinic.paymentStatus !== "paid") continue;
+    const hasSessionThatDay = sessions.some(
+      (s) =>
+        s.clinicId === clinic.id &&
+        s.type === "clinic" &&
+        s.date === dateKey &&
+        !isCanceledStatus(s.status)
+    );
+    if (!hasSessionThatDay) continue;
+    // Attribute series revenue to the first clinic date only (avoid multi-day double count)
+    const firstDate = sessions
+      .filter(
+        (s) =>
+          s.clinicId === clinic.id &&
+          s.type === "clinic" &&
+          s.date &&
+          !isCanceledStatus(s.status)
+      )
+      .map((s) => s.date!)
+      .sort()[0];
+    if (firstDate === dateKey) total += clinicExpectedRevenue(clinic);
+  }
+  return total;
+}
+
 function buildEarningsTrend(
   sessions: Session[],
   period: ReportPeriod,
-  now = new Date()
+  now = new Date(),
+  clinics: Clinic[] = []
 ): EarningsTrendPoint[] {
   const collectedSessions = sessions.filter(
-    (s) => s.date && isDoneStatus(s.status) && isCollectedSession(s)
+    (s) =>
+      s.date &&
+      s.type !== "clinic" &&
+      isDoneStatus(s.status) &&
+      isCollectedSession(s)
   );
 
   if (period === "week") {
@@ -145,7 +187,9 @@ function buildEarningsTrend(
       const daySessions = collectedSessions.filter((s) => s.date === key);
       return {
         label: format(day, "EEE"),
-        collected: daySessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0),
+        collected:
+          daySessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0) +
+          clinicRevenueOnDate(clinics, sessions, key),
         sessions: daySessions.length,
       };
     });
@@ -167,9 +211,27 @@ function buildEarningsTrend(
         const d = parseISO(s.date);
         return d >= rangeStart && d <= rangeEnd;
       });
+      const clinicAmount = clinics.reduce((sum, clinic) => {
+        if (clinic.status === "canceled" || clinic.paymentStatus !== "paid") return sum;
+        const firstDate = sessions
+          .filter(
+            (s) =>
+              s.clinicId === clinic.id &&
+              s.type === "clinic" &&
+              s.date &&
+              !isCanceledStatus(s.status)
+          )
+          .map((s) => s.date!)
+          .sort()[0];
+        if (!firstDate) return sum;
+        const d = parseISO(firstDate);
+        if (d < rangeStart || d > rangeEnd) return sum;
+        return sum + clinicExpectedRevenue(clinic);
+      }, 0);
       buckets.push({
         label: `W${weekNum}`,
-        collected: weekSessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0),
+        collected:
+          weekSessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0) + clinicAmount,
         sessions: weekSessions.length,
       });
       cursor = addWeeks(cursor, 1);
@@ -186,9 +248,26 @@ function buildEarningsTrend(
       if (!s.date) return false;
       return isWithinInterval(parseISO(s.date), { start: monthStart, end: monthEnd });
     });
+    const clinicAmount = clinics.reduce((sum, clinic) => {
+      if (clinic.status === "canceled" || clinic.paymentStatus !== "paid") return sum;
+      const firstDate = sessions
+        .filter(
+          (s) =>
+            s.clinicId === clinic.id &&
+            s.type === "clinic" &&
+            s.date &&
+            !isCanceledStatus(s.status)
+        )
+        .map((s) => s.date!)
+        .sort()[0];
+      if (!firstDate) return sum;
+      if (!isWithinInterval(parseISO(firstDate), { start: monthStart, end: monthEnd })) return sum;
+      return sum + clinicExpectedRevenue(clinic);
+    }, 0);
     points.push({
       label: format(monthStart, "MMM"),
-      collected: monthSessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0),
+      collected:
+        monthSessions.reduce((sum, s) => sum + sessionCollectedAmount(s), 0) + clinicAmount,
       sessions: monthSessions.length,
     });
   }
@@ -199,7 +278,8 @@ export function buildCoachReport(
   sessions: Session[],
   students: Student[],
   period: ReportPeriod,
-  now = new Date()
+  now = new Date(),
+  clinics: Clinic[] = []
 ): CoachReportSummary {
   const inPeriod = sessions.filter((s) => sessionInPeriod(s, period, now));
   const countable = inPeriod.filter((s) => !isCanceledStatus(s.status));
@@ -211,6 +291,10 @@ export function buildCoachReport(
   let expected = 0;
   let programRevenue = 0;
   let dropInRevenue = 0;
+  let clinicRevenue = 0;
+  let clinicSessionsDone = 0;
+  let clinicAttendancePresent = 0;
+  let clinicAttendanceTotal = 0;
   let sessionsDone = 0;
   let sessionsUpcoming = 0;
   let sessionsCanceled = 0;
@@ -233,15 +317,28 @@ export function buildCoachReport(
       continue;
     }
 
+    const isClinic = session.type === "clinic";
+
     if (session.status === "upcoming") {
       sessionsUpcoming += 1;
-      expected += session.price;
-      if (session.paymentStatus !== "paid") unpaidSessionCount += 1;
+      if (!isClinic) {
+        expected += session.price;
+        if (session.paymentStatus !== "paid") unpaidSessionCount += 1;
+      }
       continue;
     }
 
     if (isDoneStatus(session.status)) {
       sessionsDone += 1;
+      if (isClinic) {
+        clinicSessionsDone += 1;
+        const attendance = session.attendance ?? [];
+        clinicAttendanceTotal += attendance.length;
+        clinicAttendancePresent += attendance.filter((a) => a.present).length;
+        for (const id of studentIdsOnSession(session)) bumpStudent(id, 1, 0);
+        continue;
+      }
+
       const ids = studentIdsOnSession(session);
       const total = sessionCollectedAmount(session);
       const share = ids.length > 0 ? total / ids.length : total;
@@ -258,6 +355,25 @@ export function buildCoachReport(
         unpaidSessionCount += 1;
         for (const id of ids) bumpStudent(id, 1, 0);
       }
+    }
+  }
+
+  for (const clinic of clinics) {
+    if (clinic.status === "canceled") continue;
+    const clinicSessions = sessions.filter(
+      (s) => s.clinicId === clinic.id && s.type === "clinic" && !isCanceledStatus(s.status)
+    );
+    const inPeriodClinicSessions = clinicSessions.filter((s) => sessionInPeriod(s, period, now));
+    if (period !== "all" && inPeriodClinicSessions.length === 0) continue;
+
+    const amount = clinicExpectedRevenue(clinic);
+    expected += amount;
+    if (clinic.paymentStatus === "paid") {
+      collected += amount;
+      clinicRevenue += amount;
+    } else {
+      outstanding += amount;
+      unpaidSessionCount += 1;
     }
   }
 
@@ -299,6 +415,10 @@ export function buildCoachReport(
     unpaidSessionCount,
     programRevenue,
     dropInRevenue,
+    clinicRevenue,
+    clinicSessionsDone,
+    clinicAttendancePresent,
+    clinicAttendanceTotal,
     activeStudents: activeStudents.length,
     studentsWithSessions: studentIds.size,
     avgPerCollectedSession:
@@ -309,7 +429,7 @@ export function buildCoachReport(
     studentsOnProgram,
     dropInStudents,
     studentsByLevel,
-    earningsTrend: buildEarningsTrend(sessions, period, now),
+    earningsTrend: buildEarningsTrend(sessions, period, now, clinics),
   };
 }
 

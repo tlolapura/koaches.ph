@@ -171,6 +171,7 @@ export function listProgressCardCandidates(
   const candidates: ProgressCardCandidate[] = [];
 
   for (const session of sessions) {
+    if (session.type === "clinic") continue;
     if (resolveSessionStatus(session) !== "done") continue;
 
     for (const participant of getSessionParticipants(session)) {

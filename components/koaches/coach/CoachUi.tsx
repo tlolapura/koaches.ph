@@ -110,7 +110,14 @@ export function InitialsAvatar({
   );
 }
 
-export function SessionTypeBadge({ type }: { type: "drop-in" | "program" | string }) {
+export function SessionTypeBadge({ type }: { type: "drop-in" | "program" | "clinic" | string }) {
+  if (type === "clinic") {
+    return (
+      <span className="font-heading rounded-full bg-[#7C3AED] px-2.5 py-0.5 text-xs font-semibold text-white">
+        Clinic
+      </span>
+    );
+  }
   const isDropIn = type === "drop-in";
   return (
     <span
@@ -238,7 +245,7 @@ export function MilestoneBadges({ current, total }: { current: number; total: nu
 }
 
 const fabClassName =
-  "coach-portal-fab fixed right-4 bottom-[var(--portal-bottom-nav-offset)] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#16A34A] text-white shadow-lg transition-colors hover:bg-[#15803D] md:bottom-8";
+  "coach-portal-fab fixed right-4 bottom-[calc(var(--portal-bottom-nav-offset)+0.75rem)] z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#16A34A] text-white shadow-lg transition-colors hover:bg-[#15803D] md:bottom-8";
 
 export function CoachFab({
   onClick,

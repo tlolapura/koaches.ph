@@ -4,6 +4,7 @@ import {
   coachPortalIsRestricted,
   isCoachRestrictedPathAllowed,
 } from "@/lib/koaches/coach-portal-access";
+import { COACH_PORTAL_SEGMENTS } from "@/lib/koaches/coach-routes";
 import { getSupabaseAnonKey, getSupabaseUrl, isSupabaseConfigured } from "./config";
 
 const COACH_CTX_COOKIE = "koach_portal_ctx";
@@ -26,51 +27,11 @@ function isCoachPublicRoute(pathname: string) {
   }
   if (/^\/coach\/[^/]+\/join$/.test(pathname)) {
     const segment = pathname.split("/")[2];
-    const reserved = [
-      "dashboard",
-      "students",
-      "sessions",
-      "programs",
-      "reports",
-      "progress",
-      "profile",
-      "social",
-      "more",
-      "calendar",
-      "certificates",
-      "promos",
-      "free-trial",
-      "billing",
-      "settings",
-      "onboarding",
-      "login",
-      "apply",
-    ];
-    if (segment && !reserved.includes(segment)) return true;
+    if (segment && !COACH_PORTAL_SEGMENTS.has(segment)) return true;
   }
   if (/^\/coach\/[^/]+$/.test(pathname) && !pathname.startsWith("/coach/dashboard")) {
-    const reserved = [
-      "dashboard",
-      "students",
-      "sessions",
-      "programs",
-      "reports",
-      "progress",
-      "profile",
-      "social",
-      "more",
-      "calendar",
-      "certificates",
-      "promos",
-      "free-trial",
-      "billing",
-      "settings",
-      "onboarding",
-      "login",
-      "apply",
-    ];
     const segment = pathname.split("/")[2];
-    if (segment && !reserved.includes(segment)) return true;
+    if (segment && !COACH_PORTAL_SEGMENTS.has(segment)) return true;
   }
   return false;
 }

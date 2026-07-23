@@ -67,6 +67,7 @@ export const SESSION_LIST_COLUMNS = [
   "student_id",
   "type",
   "program_id",
+  "clinic_id",
   "session_number",
   "date",
   "time",
@@ -79,6 +80,7 @@ export const SESSION_LIST_COLUMNS = [
   "player_count",
   "participants",
   "notes",
+  "attendance",
   // Ratings kept for lifecycle / wrap-up in the date window (still far smaller than all-time *).
   "ratings_before",
   "ratings_after",

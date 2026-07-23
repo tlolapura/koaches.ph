@@ -18,6 +18,7 @@ export type BusyBlock = TimeInterval & {
   label: string;
   timeLabel: string;
   courtId?: string;
+  sessionType?: Session["type"];
 };
 
 export type AvailableSlot = {
@@ -42,6 +43,8 @@ export type SlotGridOptions = {
   dayEnd?: number;
   availabilityWindows?: TimeInterval[];
   blockedIntervals?: Array<TimeInterval & { id?: string }>;
+  /** Override calendar labels (e.g. clinic name + capacity). */
+  labelForSession?: (session: Session) => string | undefined;
 };
 
 function resolveAvailabilityWindows(options?: SlotGridOptions): TimeInterval[] {
@@ -62,6 +65,7 @@ export type HourlySlotRow = {
   bookedLabel?: string;
   bookedSessionId?: string;
   bookedCourtId?: string;
+  bookedSessionType?: Session["type"];
   blockedSlotId?: string;
 };
 
@@ -109,7 +113,11 @@ function mergeIntervals(intervals: TimeInterval[]): TimeInterval[] {
   return merged;
 }
 
-export function getBusyBlocksForDate(sessions: Session[], date: string): BusyBlock[] {
+export function getBusyBlocksForDate(
+  sessions: Session[],
+  date: string,
+  labelForSession?: (session: Session) => string | undefined
+): BusyBlock[] {
   return sessions
     .filter((s) => Boolean(s.date) && s.date === date && !isCanceledStatus(s.status))
     .map((session) => {
@@ -117,13 +125,20 @@ export function getBusyBlocksForDate(sessions: Session[], date: string): BusyBlo
       const timeLabel = session.endTime
         ? `${session.time} – ${session.endTime}`
         : session.time;
+      const override = labelForSession?.(session);
+      const label =
+        override ??
+        (session.type === "clinic"
+          ? `Clinic · ${Math.max(session.playerCount, 0)} players`
+          : formatSessionParticipantNames(session));
       return {
         startMin,
         endMin,
         sessionId: session.id,
-        label: formatSessionParticipantNames(session),
+        label,
         timeLabel,
         courtId: session.courtId,
+        sessionType: session.type,
       };
     })
     .sort((a, b) => a.startMin - b.startMin);
@@ -137,7 +152,7 @@ export function getHourlySlotRows(
 ): HourlySlotRow[] {
   const windows = resolveAvailabilityWindows(options);
   const blocked = options?.blockedIntervals ?? [];
-  const busy = getBusyBlocksForDate(sessions, date);
+  const busy = getBusyBlocksForDate(sessions, date, options?.labelForSession);
   const rows: HourlySlotRow[] = [];
   const seen = new Set<number>();
 
@@ -165,6 +180,7 @@ export function getHourlySlotRows(
         bookedLabel: sessionBlock?.label,
         bookedSessionId: sessionBlock?.sessionId,
         bookedCourtId: sessionBlock?.courtId,
+        bookedSessionType: sessionBlock?.sessionType,
         blockedSlotId: blockedBlock?.id,
       });
     }

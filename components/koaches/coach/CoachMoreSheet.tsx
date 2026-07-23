@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, FileText, Settings, Share2, User } from "lucide-react";
+import { ChevronRight, FileText, Settings, Share2, User, Users } from "lucide-react";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import { cn } from "@/lib/utils";
 
 const links = [
+  {
+    href: "/coach/clinics",
+    label: "Clinics",
+    icon: Users,
+    desc: "Multi-hour and multi-day group clinics",
+  },
   {
     href: "/coach/programs",
     label: "Programs",
@@ -47,7 +53,7 @@ export function CoachMoreSheet({ open, onClose }: CoachMoreSheetProps) {
       open={open}
       onClose={onClose}
       title="More"
-      subtitle="Programs, social, profile, and settings"
+      subtitle="Clinics, programs, social, profile, and settings"
     >
       <div className="space-y-2">
         {links.map((l) => {

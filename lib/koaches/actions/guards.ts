@@ -70,3 +70,17 @@ export async function assertCoachOwnsProgram(programId: string): Promise<string>
   if (!data || data.coach_id !== coachId) throw new Error("Program not found.");
   return coachId;
 }
+
+export async function assertCoachOwnsClinic(clinicId: string): Promise<string> {
+  const coachId = await requireAuthenticatedCoachId();
+
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from("clinics")
+    .select("coach_id")
+    .eq("id", clinicId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data || data.coach_id !== coachId) throw new Error("Clinic not found.");
+  return coachId;
+}

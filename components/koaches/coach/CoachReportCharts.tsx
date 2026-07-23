@@ -81,13 +81,19 @@ export function CoachEarningsTrendChart({ data }: EarningsTrendChartProps) {
 type RevenueMixChartProps = {
   programRevenue: number;
   dropInRevenue: number;
+  clinicRevenue?: number;
 };
 
-export function CoachRevenueMixChart({ programRevenue, dropInRevenue }: RevenueMixChartProps) {
-  const total = programRevenue + dropInRevenue;
+export function CoachRevenueMixChart({
+  programRevenue,
+  dropInRevenue,
+  clinicRevenue = 0,
+}: RevenueMixChartProps) {
+  const total = programRevenue + dropInRevenue + clinicRevenue;
   const data = [
     { name: "Programs", value: programRevenue, color: GREEN },
     { name: "Drop-in", value: dropInRevenue, color: BLUE },
+    { name: "Clinics", value: clinicRevenue, color: "#7C3AED" },
   ].filter((d) => d.value > 0);
 
   if (total === 0) {

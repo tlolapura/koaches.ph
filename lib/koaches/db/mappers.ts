@@ -1,4 +1,5 @@
 import type {
+  Clinic,
   CoachAchievement,
   CoachApplication,
   CoachProfile,
@@ -85,9 +86,10 @@ export type DbStudent = {
 export type DbSession = {
   id: string;
   coach_id: string;
-  student_id: string;
+  student_id: string | null;
   type: string;
   program_id: string | null;
+  clinic_id: string | null;
   session_number: number | null;
   date: string | null;
   time: string;
@@ -100,9 +102,27 @@ export type DbSession = {
   player_count: number;
   participants: Session["participants"];
   notes: string | null;
+  attendance: Session["attendance"] | null;
   ratings_before: Session["ratingsBefore"] | null;
   ratings_after: Session["ratingsAfter"] | null;
   participant_progress: Session["participantProgress"] | null;
+};
+
+export type DbClinic = {
+  id: string;
+  coach_id: string;
+  name: string;
+  description: string;
+  focus: string;
+  court_id: string;
+  capacity: number;
+  price_per_player: number | null;
+  flat_price: number | null;
+  payment_status: string;
+  status: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type DbIntake = {
@@ -289,9 +309,10 @@ export function mapSession(row: DbSession): Session {
   return {
     id: row.id,
     coachId: row.coach_id,
-    studentId: row.student_id,
+    studentId: row.student_id ?? "",
     type: row.type as Session["type"],
     programId: row.program_id ?? undefined,
+    clinicId: row.clinic_id ?? undefined,
     sessionNumber: row.session_number ?? undefined,
     date: row.date ?? undefined,
     time: row.time,
@@ -304,6 +325,7 @@ export function mapSession(row: DbSession): Session {
     playerCount: row.player_count,
     participants: row.participants ?? [],
     notes: row.notes ?? undefined,
+    attendance: row.attendance ?? undefined,
     ratingsBefore: normalizeSkillRatings(row.ratings_before ?? undefined),
     ratingsAfter: normalizeSkillRatings(row.ratings_after ?? undefined),
     participantProgress: participantProgress?.length ? participantProgress : undefined,
@@ -481,9 +503,10 @@ export function sessionToDb(session: Session): DbSession {
   return {
     id: session.id,
     coach_id: session.coachId,
-    student_id: session.studentId,
+    student_id: session.studentId || null,
     type: session.type,
     program_id: session.programId ?? null,
+    clinic_id: session.clinicId ?? null,
     session_number: session.sessionNumber ?? null,
     date: session.date ?? null,
     time: session.time,
@@ -496,8 +519,50 @@ export function sessionToDb(session: Session): DbSession {
     player_count: session.playerCount,
     participants: session.participants,
     notes: session.notes ?? null,
+    attendance: session.attendance ?? null,
     ratings_before: session.ratingsBefore ?? null,
     ratings_after: session.ratingsAfter ?? null,
     participant_progress: session.participantProgress ?? null,
+  };
+}
+
+export function mapClinic(row: DbClinic, enrolledStudentIds: string[]): Clinic {
+  return {
+    id: row.id,
+    coachId: row.coach_id,
+    name: row.name,
+    description: row.description ?? "",
+    focus: row.focus ?? "",
+    courtId: row.court_id ?? "",
+    capacity: row.capacity,
+    pricePerPlayer: row.price_per_player ?? undefined,
+    flatPrice: row.flat_price ?? undefined,
+    paymentStatus: row.payment_status as Clinic["paymentStatus"],
+    status: row.status as Clinic["status"],
+    notes: row.notes ?? undefined,
+    enrolledStudentIds,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function clinicToDb(clinic: Clinic): Omit<DbClinic, "created_at" | "updated_at"> & {
+  created_at?: string;
+  updated_at: string;
+} {
+  return {
+    id: clinic.id,
+    coach_id: clinic.coachId,
+    name: clinic.name,
+    description: clinic.description,
+    focus: clinic.focus,
+    court_id: clinic.courtId,
+    capacity: clinic.capacity,
+    price_per_player: clinic.pricePerPlayer ?? null,
+    flat_price: clinic.flatPrice ?? null,
+    payment_status: clinic.paymentStatus,
+    status: clinic.status,
+    notes: clinic.notes ?? null,
+    updated_at: new Date().toISOString(),
   };
 }

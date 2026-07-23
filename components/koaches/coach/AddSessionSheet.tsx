@@ -38,6 +38,7 @@ import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
 import { CoachSelect, type CoachSelectOption } from "@/components/koaches/coach/CoachSelect";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { SessionParticipantsFields } from "@/components/koaches/coach/SessionParticipantsFields";
+import { DropInPlayerCountField } from "@/components/koaches/coach/DropInPlayerCountField";
 import { SessionPaymentFields } from "@/components/koaches/coach/SessionPaymentFields";
 import { SessionPriceFields } from "@/components/koaches/coach/SessionPriceFields";
 import { SessionTimeFields } from "@/components/koaches/coach/SessionTimeFields";
@@ -575,6 +576,15 @@ export function AddSessionSheet({
           </>
         )}
 
+        {sessionType === "drop-in" ? (
+          <DropInPlayerCountField
+            value={playerCount}
+            min={coach?.sessionPricing?.minimumPlayers ?? DEFAULT_SESSION_PRICING.minimumPlayers}
+            max={coach?.sessionPricing?.maximumPlayers ?? DEFAULT_SESSION_PRICING.maximumPlayers}
+            onChange={handlePlayerCountChange}
+          />
+        ) : null}
+
         <SessionParticipantsFields
           playerCount={playerCount}
           participants={participants}
@@ -588,7 +598,6 @@ export function AddSessionSheet({
           pricing={coach?.sessionPricing ?? DEFAULT_SESSION_PRICING}
           playerCount={playerCount}
           price={price}
-          onPlayerCountChange={handlePlayerCountChange}
           onPriceChange={setPrice}
         />
 

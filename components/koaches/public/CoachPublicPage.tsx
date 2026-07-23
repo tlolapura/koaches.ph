@@ -16,14 +16,18 @@ import {
   Users,
 } from "lucide-react";
 import { FacebookIcon, InstagramIcon } from "@/components/koaches/shared/SocialIcons";
-import type { CoachAchievement, CoachProfile, Program } from "@/lib/koaches/types";
-import type { Court } from "@/lib/koaches/types";
+import type { CoachAchievement, CoachProfile, Program, Session } from "@/lib/koaches/types";
+import type { Court, Clinic } from "@/lib/koaches/types";
 import { buildIntakePath } from "@/lib/koaches/coach-routes";
 import { formatWorkingHoursSummary, type CoachWorkingHours } from "@/lib/koaches/coach-availability";
 import { formatAchievementSubtitle } from "@/lib/koaches/coach-achievements";
 import { formatTierLabel, formatTierRate } from "@/lib/koaches/pricing";
 import { formatPublicCoachingFocus } from "@/lib/koaches/application-form";
 import { formatProgramBundleSummary } from "@/lib/koaches/program-pricing";
+import {
+  clinicDateRangeLabel,
+  formatClinicPriceSummary,
+} from "@/lib/koaches/clinic-pricing";
 import {
   displayFacebook,
   displayInstagram,
@@ -35,12 +39,15 @@ import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto"
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { CoachAchievementKindBadge } from "@/components/koaches/coach/CoachAchievementKindBadge";
 
+type UpcomingClinic = Clinic & { sessions: Session[] };
+
 type CoachPublicPageProps = {
   coach: CoachProfile;
   programs: Program[];
   courts: Court[];
   achievements: CoachAchievement[];
   workingHours: CoachWorkingHours;
+  upcomingClinics?: UpcomingClinic[];
 };
 
 export function CoachPublicPage({
@@ -49,6 +56,7 @@ export function CoachPublicPage({
   courts,
   achievements,
   workingHours,
+  upcomingClinics = [],
 }: CoachPublicPageProps) {
   const router = useRouter();
   const pricing = coach.sessionPricing;
@@ -149,6 +157,63 @@ export function CoachPublicPage({
             <p className="mt-1 text-sm text-[#9CA3AF]">{coachingFocus.duprRange} DUPR</p>
           </div>
         </PublicSection>
+
+        {upcomingClinics.length > 0 ? (
+          <PublicSection
+            icon={Users}
+            title="Upcoming clinics"
+            subtitle="Group clinics · message the coach to join"
+          >
+            <div className="space-y-3">
+              {upcomingClinics.map((clinic) => (
+                <article key={clinic.id} className="coach-card overflow-hidden">
+                  <div className="border-l-4 border-l-[#7C3AED] p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="font-heading text-lg font-semibold text-[#111827]">
+                          {clinic.name}
+                        </h3>
+                        {clinic.focus ? (
+                          <p className="mt-1 text-sm font-medium text-[#7C3AED]">{clinic.focus}</p>
+                        ) : null}
+                        {clinic.description ? (
+                          <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
+                            {clinic.description}
+                          </p>
+                        ) : null}
+                      </div>
+                      <p className="shrink-0 text-right font-heading text-sm font-bold text-[#5B21B6]">
+                        {formatClinicPriceSummary(clinic)}
+                      </p>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#F3F4F6] px-2.5 py-1 text-xs font-medium text-[#6B7280]">
+                        <Calendar className="h-3 w-3" />
+                        {clinicDateRangeLabel(clinic.sessions)}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#EDE9FE] px-2.5 py-1 text-xs font-medium text-[#5B21B6]">
+                        {clinic.enrolledStudentIds.length}/{clinic.capacity} spots
+                      </span>
+                    </div>
+                    {coach.mobile ? (
+                      <a
+                        href={`tel:${coach.mobile}`}
+                        className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#7C3AED] hover:underline"
+                      >
+                        <Phone className="h-3.5 w-3.5" />
+                        Message coach to join
+                      </a>
+                    ) : (
+                      <p className="mt-4 text-sm font-medium text-[#6B7280]">
+                        Message coach to join
+                      </p>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </PublicSection>
+        ) : null}
 
         {activePrograms.length > 0 ? (
           <PublicSection icon={BookOpen} title="Programs" subtitle="Structured coaching bundles · price per person">

@@ -19,6 +19,8 @@ export function resolveSessionStatus(session: Pick<Session, "status">): SessionS
 }
 
 export function sessionNeedsProgressReview(session: Session): boolean {
+  if (session.type === "clinic") return false;
+
   const status = resolveSessionStatus(session);
   if (!isDoneStatus(status) || isCanceledStatus(status)) return false;
 

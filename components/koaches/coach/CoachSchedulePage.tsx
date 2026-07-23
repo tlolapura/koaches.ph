@@ -36,6 +36,8 @@ import { getSessionStatusLabel } from "@/lib/koaches/session-status";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useSessionPayment } from "@/hooks/useSessionPayment";
 import { useCoachSessions } from "@/hooks/useCoachSessions";
+import { useCoachClinics } from "@/hooks/useCoachClinics";
+import { clinicBlockLabel, clinicExpectedRevenue } from "@/lib/koaches/clinic-pricing";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachScheduleSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 
@@ -87,6 +89,18 @@ export function CoachSchedulePage() {
   const [addDraft, setAddDraft] = useState<{ date: string; startTime: string; endTime: string } | null>(null);
 
   const { sessions: allSessions, loading } = useCoachSessions(coachId);
+  const { clinics } = useCoachClinics(coachId);
+
+  const clinicById = useMemo(() => new Map(clinics.map((c) => [c.id, c])), [clinics]);
+
+  const labelForSession = useMemo(
+    () => (session: Session) => {
+      if (session.type !== "clinic" || !session.clinicId) return undefined;
+      const clinic = clinicById.get(session.clinicId);
+      return clinic ? clinicBlockLabel(clinic) : undefined;
+    },
+    [clinicById]
+  );
 
   const listSessions = useMemo(() => {
     if (listTab === "upcoming") {
@@ -163,6 +177,7 @@ export function CoachSchedulePage() {
             sessions={allSessions}
             onDateChange={handleSelectDate}
             onBookSlot={handleBookSlot}
+            labelForSession={labelForSession}
           />
         </div>
       ) : (
@@ -202,17 +217,23 @@ export function CoachSchedulePage() {
           ) : (
             <div className="mt-6 space-y-3">
               {listSessions.map((s) => {
-                const label = formatSessionParticipantNames(s);
+                const clinic = s.clinicId ? clinicById.get(s.clinicId) : undefined;
+                const label =
+                  s.type === "clinic" && clinic
+                    ? clinicBlockLabel(clinic)
+                    : formatSessionParticipantNames(s);
                 const primary = getSessionParticipants(s)[0];
                 return (
                   <Link key={s.id} href={`/coach/sessions/${s.id}`} className="coach-card block p-4">
                     <div className="flex items-start gap-3">
-                      <InitialsAvatar name={primary?.name ?? "?"} size="sm" />
+                      <InitialsAvatar name={primary?.name ?? (s.type === "clinic" ? "C" : "?")} size="sm" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
                           <p className="font-heading font-semibold">{label}</p>
                           <span className="shrink-0 text-sm font-semibold text-[#14532D]">
-                            {formatCurrency(s.price)}
+                            {s.type === "clinic" && clinic
+                              ? formatCurrency(clinicExpectedRevenue(clinic))
+                              : formatCurrency(s.price)}
                           </span>
                         </div>
                         <p className="text-sm text-[#6B7280]">

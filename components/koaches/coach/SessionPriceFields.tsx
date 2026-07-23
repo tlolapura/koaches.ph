@@ -12,7 +12,6 @@ type SessionPriceFieldsProps = {
   pricing: CoachSessionPricing;
   playerCount: number;
   price: number;
-  onPlayerCountChange: (count: number) => void;
   onPriceChange: (price: number) => void;
 };
 
@@ -22,7 +21,6 @@ export function SessionPriceFields({
   pricing,
   playerCount,
   price,
-  onPlayerCountChange,
   onPriceChange,
 }: SessionPriceFieldsProps) {
   if (sessionType === "program" && program) {
@@ -57,42 +55,22 @@ export function SessionPriceFields({
   });
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <CoachSheetField
-        label="Players"
-        hint={`Drop-in · min ${pricing.minimumPlayers} pax`}
-      >
-        <input
-          type="number"
-          min={pricing.minimumPlayers}
-          max={pricing.maximumPlayers}
-          className="coach-input"
-          value={playerCount}
-          onChange={(e) => {
-            const count = Math.max(
-              pricing.minimumPlayers,
-              Math.min(pricing.maximumPlayers, Number(e.target.value) || 1)
-            );
-            onPlayerCountChange(count);
-            onPriceChange(
-              suggestSessionPrice({ type: "drop-in", playerCount: count, pricing })
-            );
-          }}
-        />
-      </CoachSheetField>
-      <CoachSheetField
-        label="Drop-in rate (₱)"
-        hint={suggested !== price ? `Suggested: ${formatCurrency(suggested)}` : undefined}
-      >
-        <input
-          type="number"
-          min={0}
-          step={50}
-          className="coach-input"
-          value={price}
-          onChange={(e) => onPriceChange(Math.max(0, Number(e.target.value) || 0))}
-        />
-      </CoachSheetField>
-    </div>
+    <CoachSheetField
+      label="Drop-in rate (₱)"
+      hint={
+        suggested !== price
+          ? `Suggested for ${playerCount} player${playerCount === 1 ? "" : "s"}: ${formatCurrency(suggested)}`
+          : `${playerCount} player${playerCount === 1 ? "" : "s"} · from your rate card`
+      }
+    >
+      <input
+        type="number"
+        min={0}
+        step={50}
+        className="coach-input"
+        value={price}
+        onChange={(e) => onPriceChange(Math.max(0, Number(e.target.value) || 0))}
+      />
+    </CoachSheetField>
   );
 }

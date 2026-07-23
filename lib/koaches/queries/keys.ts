@@ -6,4 +6,7 @@ export const coachKeys = {
   student: (studentId: string) => [...coachKeys.all, "student", studentId] as const,
   programs: (coachId: string) => [...coachKeys.all, "programs", coachId] as const,
   program: (programId: string) => [...coachKeys.all, "program", programId] as const,
+  clinics: (coachId: string) => [...coachKeys.all, "clinics", coachId] as const,
+  clinic: (clinicId: string) => [...coachKeys.all, "clinic", clinicId] as const,
+  clinicSessions: (clinicId: string) => [...coachKeys.all, "clinic-sessions", clinicId] as const,
 };

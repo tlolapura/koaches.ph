@@ -320,13 +320,19 @@ export type SessionParticipantProgress = {
   ratingsAfter?: SkillRating[];
 };
 
+export type SessionAttendanceEntry = {
+  studentId: string;
+  present: boolean;
+};
+
 export type Session = {
   id: string;
   coachId: string;
-  /** Primary roster student (first participant when linked) */
+  /** Primary roster student (first participant when linked); null for empty clinic sessions */
   studentId: string;
-  type: "drop-in" | "program";
+  type: "drop-in" | "program" | "clinic";
   programId?: string;
+  clinicId?: string;
   sessionNumber?: number;
   /** Omitted when the session is booked but not yet placed on the calendar */
   date?: string;
@@ -345,11 +351,45 @@ export type Session = {
   /** All players in this session — each can get their own progress report */
   participants: SessionParticipant[];
   notes?: string;
+  /** Clinic day-of attendance (defaults present for enrolled players) */
+  attendance?: SessionAttendanceEntry[];
   /** Single-player sessions — use participantProgress when multiple players */
   ratingsBefore?: SkillRating[];
   ratingsAfter?: SkillRating[];
   /** Per-player ratings for group sessions */
   participantProgress?: SessionParticipantProgress[];
+};
+
+export type ClinicStatus = "draft" | "active" | "canceled" | "done";
+
+export type ClinicPricingMode = "per-player" | "flat";
+
+export type Clinic = {
+  id: string;
+  coachId: string;
+  name: string;
+  description: string;
+  focus: string;
+  courtId: string;
+  capacity: number;
+  /** Ticket price per player (PHP). Used when pricingMode is per-player. */
+  pricePerPlayer?: number;
+  /** Flat fee for the whole clinic (PHP). Used when pricingMode is flat. */
+  flatPrice?: number;
+  paymentStatus: SessionPaymentStatus;
+  status: ClinicStatus;
+  notes?: string;
+  enrolledStudentIds: string[];
+  createdAt: string;
+  updatedAt?: string;
+};
+
+/** One dated block belonging to a clinic (stored as Session with type clinic). */
+export type ClinicSessionDraft = {
+  date: string;
+  time: string;
+  endTime: string;
+  courtId?: string;
 };
 
 export type ProgressCard = {

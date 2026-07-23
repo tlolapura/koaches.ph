@@ -43,6 +43,8 @@ type CoachScheduleGridProps = {
   sessions: Session[];
   onDateChange: (date: string) => void;
   onBookSlot: (date: string, slot: AvailableSlot) => void;
+  /** Optional calendar label override (used for clinic blocks). */
+  labelForSession?: (session: Session) => string | undefined;
 };
 
 function parseDateKey(key: string) {
@@ -486,25 +488,43 @@ function BookedCell({
   const name = cell.bookedLabel ?? "Booked";
   const courtFull = courtLabel(courtLookup, cell.bookedCourtId);
   const title = `${name} · ${courtFull}`;
+  const isClinic = cell.bookedSessionType === "clinic";
 
   if (compact) {
     return (
       <Link
         href={cell.bookedSessionId ? `/coach/sessions/${cell.bookedSessionId}` : "#"}
         title={title}
-        className="flex min-h-[40px] w-full min-w-0 items-stretch overflow-hidden rounded-xl border border-[#BBF7D0] bg-[#F0FDF4] transition-colors active:bg-[#DCFCE7]"
+        className={cn(
+          "flex min-h-[40px] w-full min-w-0 items-stretch overflow-hidden rounded-xl border transition-colors",
+          isClinic
+            ? "border-[#DDD6FE] bg-[#F5F3FF] active:bg-[#EDE9FE]"
+            : "border-[#BBF7D0] bg-[#F0FDF4] active:bg-[#DCFCE7]"
+        )}
       >
-        <span className="w-1 shrink-0 bg-[#16A34A]" aria-hidden />
+        <span
+          className={cn("w-1 shrink-0", isClinic ? "bg-[#7C3AED]" : "bg-[#16A34A]")}
+          aria-hidden
+        />
         <div className="flex min-w-0 flex-1 items-center gap-2 px-3 py-1.5">
           <div className="min-w-0 flex-1">
-            <p className="font-heading truncate text-sm font-semibold leading-tight text-[#14532D]">
+            <p
+              className={cn(
+                "font-heading truncate text-sm font-semibold leading-tight",
+                isClinic ? "text-[#5B21B6]" : "text-[#14532D]"
+              )}
+            >
               {name}
             </p>
             <p className="mt-0.5 truncate text-[11px] font-medium leading-tight text-[#6B7280]">
               {courtFull}
             </p>
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} aria-hidden />
+          <ChevronRight
+            className={cn("h-4 w-4 shrink-0", isClinic ? "text-[#C4B5FD]" : "text-[#86EFAC]")}
+            strokeWidth={2.25}
+            aria-hidden
+          />
         </div>
       </Link>
     );
@@ -516,10 +536,18 @@ function BookedCell({
       title={title}
       className={cn(
         slotCellBase,
-        "flex-col items-center justify-center gap-0.5 border border-[#BBF7D0] bg-[#F0FDF4] px-1 py-1 transition-colors hover:bg-[#DCFCE7] sm:py-1.5"
+        "flex-col items-center justify-center gap-0.5 border px-1 py-1 transition-colors sm:py-1.5",
+        isClinic
+          ? "border-[#DDD6FE] bg-[#F5F3FF] hover:bg-[#EDE9FE]"
+          : "border-[#BBF7D0] bg-[#F0FDF4] hover:bg-[#DCFCE7]"
       )}
     >
-      <span className="line-clamp-1 w-full text-center text-[9px] font-bold leading-tight text-[#14532D] sm:text-[10px]">
+      <span
+        className={cn(
+          "line-clamp-1 w-full text-center text-[9px] font-bold leading-tight sm:text-[10px]",
+          isClinic ? "text-[#5B21B6]" : "text-[#14532D]"
+        )}
+      >
         {name}
       </span>
       <span className="line-clamp-1 w-full text-center text-[8px] font-medium leading-tight text-[#6B7280] lg:text-[9px]">
@@ -533,7 +561,8 @@ function BookedCell({
 function slotGridOptions(
   workingHours: CoachWorkingHours,
   blockedForDate: (date: string) => Array<{ id: string; startMin: number; endMin: number }>,
-  date: string
+  date: string,
+  labelForSession?: (session: Session) => string | undefined
 ): SlotGridOptions {
   return {
     availabilityWindows: workingHoursToIntervals(workingHours),
@@ -542,6 +571,7 @@ function slotGridOptions(
       startMin: s.startMin,
       endMin: s.endMin,
     })),
+    labelForSession,
   };
 }
 
@@ -606,6 +636,7 @@ function DesktopWeekGrid({
   blockedForDate,
   blockMode,
   courtLookup,
+  labelForSession,
   onDateChange,
   onBookSlot,
   onBlockSlot,
@@ -618,6 +649,7 @@ function DesktopWeekGrid({
   blockedForDate: (date: string) => Array<{ id: string; startMin: number; endMin: number }>;
   blockMode: boolean;
   courtLookup: Map<string, Court>;
+  labelForSession?: (session: Session) => string | undefined;
   onDateChange: (date: string) => void;
   onBookSlot: (date: string, slot: AvailableSlot) => void;
   onBlockSlot: (date: string, cell: HourlySlotRow) => void;
@@ -638,10 +670,10 @@ function DesktopWeekGrid({
           sessions,
           dateKey,
           HOURLY_SESSION_MINUTES,
-          slotGridOptions(workingHours, blockedForDate, dateKey)
+          slotGridOptions(workingHours, blockedForDate, dateKey, labelForSession)
         ),
       })),
-    [weekDates, sessions, workingHours, blockedForDate]
+    [weekDates, sessions, workingHours, blockedForDate, labelForSession]
   );
 
   return (
@@ -708,6 +740,7 @@ export function CoachScheduleGrid({
   sessions,
   onDateChange,
   onBookSlot,
+  labelForSession,
 }: CoachScheduleGridProps) {
   const coachId = usePortalCoachId();
   const { lookup } = useCourts();
@@ -717,8 +750,8 @@ export function CoachScheduleGrid({
   const { workingHours, blockSlot, unblockSlot, blockedForDate } = useCoachAvailability(coachId);
 
   const mobileSlotOptions = useMemo(
-    () => slotGridOptions(workingHours, blockedForDate, date),
-    [workingHours, blockedForDate, date]
+    () => slotGridOptions(workingHours, blockedForDate, date, labelForSession),
+    [workingHours, blockedForDate, date, labelForSession]
   );
 
   const shiftWeek = (delta: number) => {
@@ -769,6 +802,7 @@ export function CoachScheduleGrid({
           blockedForDate={blockedForDate}
           blockMode={blockMode}
           courtLookup={lookup}
+          labelForSession={labelForSession}
           onDateChange={onDateChange}
           onBookSlot={onBookSlot}
           onBlockSlot={handleBlockSlot}

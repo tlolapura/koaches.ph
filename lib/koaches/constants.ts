@@ -27,6 +27,7 @@ export const RESERVED_SLUGS = new Set([
   "settings",
   "login",
   "reports",
+  "clinics",
   "api",
   "_next",
 ]);

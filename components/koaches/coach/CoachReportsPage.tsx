@@ -6,6 +6,7 @@ import { ChevronRight, Users, Wallet } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachSessions } from "@/hooks/useCoachSessions";
 import { useCoachStudents } from "@/hooks/useCoachStudents";
+import { useCoachClinics } from "@/hooks/useCoachClinics";
 import {
   CoachPageHeader,
   CoachPageShell,
@@ -82,10 +83,11 @@ export function CoachReportsPage() {
   const [period, setPeriod] = useState<ReportPeriod>("month");
   const { sessions, loading: sessionsLoading } = useCoachSessions(coachId);
   const { students } = useCoachStudents(coachId, true);
+  const { clinics } = useCoachClinics(coachId);
 
   const report = useMemo(
-    () => buildCoachReport(sessions, students, period),
-    [sessions, students, period]
+    () => buildCoachReport(sessions, students, period, new Date(), clinics),
+    [sessions, students, period, clinics]
   );
 
   if (!coachId) {
@@ -185,6 +187,7 @@ export function CoachReportsPage() {
                 <CoachRevenueMixChart
                   programRevenue={report.programRevenue}
                   dropInRevenue={report.dropInRevenue}
+                  clinicRevenue={report.clinicRevenue}
                 />
               </div>
             </div>
@@ -209,6 +212,40 @@ export function CoachReportsPage() {
               ))}
             </div>
           </section>
+
+          {(report.clinicSessionsDone > 0 || report.clinicRevenue > 0) && (
+            <section className="mt-8">
+              <CoachSectionTitle>Clinics</CoachSectionTitle>
+              <div className="coach-card mt-3 grid grid-cols-2 divide-x divide-[#E5E7EB] p-0 sm:grid-cols-3">
+                <div className="px-3 py-3 text-center">
+                  <p className="font-heading text-lg font-bold text-[#5B21B6]">
+                    {formatCurrency(report.clinicRevenue)}
+                  </p>
+                  <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">
+                    Collected
+                  </p>
+                </div>
+                <div className="px-3 py-3 text-center">
+                  <p className="font-heading text-lg font-bold text-[#111827]">
+                    {report.clinicSessionsDone}
+                  </p>
+                  <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">
+                    Dates done
+                  </p>
+                </div>
+                <div className="col-span-2 px-3 py-3 text-center sm:col-span-1">
+                  <p className="font-heading text-lg font-bold text-[#111827]">
+                    {report.clinicAttendanceTotal > 0
+                      ? `${report.clinicAttendancePresent}/${report.clinicAttendanceTotal}`
+                      : "—"}
+                  </p>
+                  <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">
+                    Present
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
 
           <section className="mt-8">
             <CoachSectionTitle>Students</CoachSectionTitle>

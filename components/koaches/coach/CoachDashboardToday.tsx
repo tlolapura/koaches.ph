@@ -111,11 +111,16 @@ function TimeColumn({
 
 function SessionTags({ session }: { session: Session }) {
   const { paymentStatus } = useSessionPayment(session);
-  const isProgram = session.type === "program";
+  const tag =
+    session.type === "clinic"
+      ? { tone: "navy" as const, label: "Clinic" }
+      : session.type === "program"
+        ? { tone: "navy" as const, label: "Program" }
+        : { tone: "amber" as const, label: "Drop-in" };
 
   return (
     <div className="flex flex-wrap items-center gap-1">
-      <Tag tone={isProgram ? "navy" : "amber"}>{isProgram ? "Program" : "Drop-in"}</Tag>
+      <Tag tone={tag.tone}>{tag.label}</Tag>
       {paymentStatus !== "paid" && <Tag tone="amber">Unpaid</Tag>}
       {paymentStatus === "paid" && <Tag tone="sage">Paid</Tag>}
     </div>
@@ -131,6 +136,8 @@ function ProgressActionLink({
   displayStatus: SessionDisplayStatus;
   compact?: boolean;
 }) {
+  if (session.type === "clinic") return null;
+
   const studentId =
     session.studentId ?? session.participants.find((p) => p.studentId)?.studentId;
 
