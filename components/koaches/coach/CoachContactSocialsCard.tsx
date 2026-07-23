@@ -91,7 +91,7 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
         open={open}
         onClose={() => setOpen(false)}
         title="Contact & socials"
-        subtitle="These appear on your public coach page"
+        subtitle="Shown on your public coach page"
         footer={
           <CoachSheetFooter>
             <CoachButton type="submit" form={CONTACT_FORM_ID} loading={saving} loadingLabel="Saving…">

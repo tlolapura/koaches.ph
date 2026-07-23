@@ -144,7 +144,7 @@ export function CoachSchedulePage() {
     <CoachPageShell className={viewMode === "calendar" ? "max-md:px-3" : undefined}>
       <CoachPageHeader
         title="Schedule"
-        subtitle="Calendar and session list"
+        subtitle="See your week and book the next session"
         actions={
           <div className="flex w-full flex-1 gap-1 rounded-xl bg-[#F3F4F6] p-1 md:max-w-xs md:justify-end">
             {(

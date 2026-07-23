@@ -201,7 +201,7 @@ function buildProgressCardEmailBody(card: ProgressCard): string {
         <p style="margin:16px 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:11px;line-height:1.5;color:${BRAND.muted};text-align:center;">
           Rating scale: 0 = not introduced &middot; 5 = competition-ready
         </p>`
-      : `<p style="margin:16px 0 0;font-size:14px;line-height:1.5;color:${BRAND.gray};text-align:center;">Great effort today — keep building session by session.</p>`;
+      : `<p style="margin:16px 0 0;font-size:14px;line-height:1.5;color:${BRAND.gray};text-align:center;">Great effort today. Keep building session by session.</p>`;
 
   return `
     ${emailBrandHeader()}
@@ -319,7 +319,7 @@ export function buildProgressCardEmailText(card: ProgressCard): string {
 
   if (card.coachStrengths?.trim()) lines.push(`Strengths: ${card.coachStrengths.trim()}`, "");
   if (card.coachToImprove?.trim()) lines.push(`To improve: ${card.coachToImprove.trim()}`, "");
-  if (card.coachMessage.trim()) lines.push(`Coach note: "${card.coachMessage.trim()}" — ${card.coachName}`, "");
+  if (card.coachMessage.trim()) lines.push(`Coach note: "${card.coachMessage.trim()}" (${card.coachName})`, "");
 
   if (improved.length > 0) {
     lines.push("Leveled up:", ...improved.map(formatSkillChangeText), "");

@@ -66,7 +66,7 @@ export default function ProfilePage() {
       <CoachPageShell>
         <CoachPageHeader
           title="Profile"
-          subtitle="Public page, drop-in rates, and availability"
+          subtitle="How you look online, what you charge, and when you're free"
         />
         <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading profile">
           <div className="h-64 rounded-2xl bg-[#E5E7EB]" />
@@ -86,7 +86,7 @@ export default function ProfilePage() {
     <CoachPageShell>
       <CoachPageHeader
         title="Profile"
-        subtitle="Public page, drop-in rates, and availability"
+        subtitle="How you look online, what you charge, and when you're free"
       />
 
       <div className="coach-card mt-6 p-5 sm:p-6">
@@ -248,7 +248,7 @@ export default function ProfilePage() {
         open={pricingOpen}
         onClose={() => setPricingOpen(false)}
         title="Drop-in rates"
-        subtitle="Rates for drop-in sessions — programs have their own bundle price per person"
+        subtitle="What a walk-up session costs. Programs use their own package price."
         footer={
           <CoachSheetFooter>
             <CoachButton
@@ -282,7 +282,7 @@ export default function ProfilePage() {
         open={templateOpen}
         onClose={() => setTemplateOpen(false)}
         title="Player levels"
-        subtitle="Select all levels you coach"
+        subtitle="Who you love coaching most"
         footer={
           <CoachSheetFooter>
             <CoachButton

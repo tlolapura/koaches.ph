@@ -152,7 +152,7 @@ export function CoachDashboard() {
       key: "progress",
       href: "/coach/students",
       label: `${candidates.length} progress card${candidates.length === 1 ? "" : "s"}`,
-      detail: "Ready to share — open a student profile",
+      detail: "Ready to share. Open a student profile.",
       icon: TrendingUp,
       tone: "navy",
     });

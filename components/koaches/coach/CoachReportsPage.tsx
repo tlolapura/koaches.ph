@@ -98,7 +98,7 @@ export function CoachReportsPage() {
 
   return (
     <CoachPageShell>
-      <CoachPageHeader title="Reports" subtitle="Earnings, sessions, and student activity" />
+      <CoachPageHeader title="Reports" subtitle="What you earned and how busy the court was" />
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
         {REPORT_PERIODS.map((p) => (
@@ -237,7 +237,7 @@ export function CoachReportsPage() {
                   <p className="font-heading text-lg font-bold text-[#111827]">
                     {report.clinicAttendanceTotal > 0
                       ? `${report.clinicAttendancePresent}/${report.clinicAttendanceTotal}`
-                      : "—"}
+                      : "-"}
                   </p>
                   <p className="mt-1 text-[10px] font-medium uppercase tracking-wide text-[#9CA3AF]">
                     Present

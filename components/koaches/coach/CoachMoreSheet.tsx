@@ -12,31 +12,31 @@ const links = [
     href: "/coach/clinics",
     label: "Clinics",
     icon: Users,
-    desc: "Multi-hour and multi-day group clinics",
+    desc: "Group clinics with one roster across every day",
   },
   {
     href: "/coach/programs",
     label: "Programs",
     icon: FileText,
-    desc: "Coaching packages and skill rubrics",
+    desc: "Packages and skill lists you reuse with students",
   },
   {
     href: "/coach/social",
     label: "Social",
     icon: Share2,
-    desc: "Story images for open slots",
+    desc: "Share open court time on Instagram or Facebook",
   },
   {
     href: "/coach/profile",
     label: "Profile",
     icon: User,
-    desc: "Bio, rates, hours, public page",
+    desc: "Your public page, rates, and hours",
   },
   {
     href: "/coach/settings",
     label: "Settings",
     icon: Settings,
-    desc: "Billing, password, and legal",
+    desc: "Account, billing, and the fine print",
   },
 ] as const;
 
@@ -53,7 +53,7 @@ export function CoachMoreSheet({ open, onClose }: CoachMoreSheetProps) {
       open={open}
       onClose={onClose}
       title="More"
-      subtitle="Clinics, programs, social, profile, and settings"
+      subtitle="Clinics, programs, and the rest of your tools"
     >
       <div className="space-y-2">
         {links.map((l) => {

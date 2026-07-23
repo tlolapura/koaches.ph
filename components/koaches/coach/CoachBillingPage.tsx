@@ -128,7 +128,7 @@ export function CoachBillingPage() {
       setError(result.error);
       return;
     }
-    showToast("Receipt submitted — we'll confirm once reviewed.");
+    showToast("Receipt submitted. We'll confirm once reviewed.");
     setNotes("");
     setFileName(null);
     if (fileRef.current) fileRef.current.value = "";
@@ -160,7 +160,7 @@ export function CoachBillingPage() {
       <CoachPageShell className="pb-8">
         <CoachPageHeader
           title="Billing"
-          subtitle="Subscription and payment receipts"
+          subtitle="Your plan and payment history"
           actions={backToSettings}
         />
         <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading billing">
@@ -183,7 +183,7 @@ export function CoachBillingPage() {
     <CoachPageShell className="pb-8">
       <CoachPageHeader
         title="Billing"
-        subtitle="Subscription and payments"
+        subtitle="Your plan and payment history"
         actions={backToSettings}
       />
 

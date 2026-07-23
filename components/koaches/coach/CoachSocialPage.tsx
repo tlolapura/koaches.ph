@@ -113,15 +113,15 @@ export function CoachSocialPage() {
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: `${socialStoryCoachName(coach)} — PickleKoach story`,
+          title: `${socialStoryCoachName(coach)} · PickleKoach story`,
         });
         return;
       }
       await exportStoryAsPng(node, `koaches-${template}-${date}.png`);
-      showToast("Image saved — upload to your story");
+      showToast("Image saved. Upload to your story.");
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return;
-      showToast("Share not available — try Save image", "error");
+      showToast("Share not available. Try Save image.", "error");
     } finally {
       setSaving(false);
     }
@@ -134,7 +134,7 @@ export function CoachSocialPage() {
   if (loading || !coach) {
     return (
       <CoachPageShell>
-        <CoachPageHeader title="Social" />
+        <CoachPageHeader title="Social" subtitle="Post open court time to your stories" />
         <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading social tools">
           <div className="h-24 rounded-xl bg-[#E5E7EB]" />
           <div className="h-10 rounded-xl bg-[#E5E7EB]" />
@@ -149,7 +149,7 @@ export function CoachSocialPage() {
 
   return (
     <CoachPageShell>
-      <CoachPageHeader title="Social" />
+      <CoachPageHeader title="Social" subtitle="Post open court time to your stories" />
 
       <p className="mt-2 text-sm text-[#6B7280]">
         Create an IG or FB story from your schedule.
@@ -176,7 +176,7 @@ export function CoachSocialPage() {
             disabled={!template}
             onClick={() => setStep(2)}
           >
-            Next — choose date
+            Next: choose date
           </CoachButton>
         </div>
       ) : (

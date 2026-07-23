@@ -99,7 +99,7 @@ export function CoachAchievementsCard() {
         open={open}
         onClose={() => setOpen(false)}
         title="Achievements"
-        subtitle="Shown on your public coach profile"
+        subtitle="Shown on your public coach page"
         footer={
           <CoachSheetFooter>
             <CoachButton type="submit" form={ACHIEVEMENTS_FORM_ID} loading={saving} loadingLabel="Saving…">

@@ -195,7 +195,7 @@ export default function StudentsPage() {
 
   return (
     <CoachPageShell>
-      <CoachPageHeader title="Students" subtitle="Roster and session progress" />
+      <CoachPageHeader title="Students" subtitle="Everyone you're coaching right now" />
 
       <div className="mt-3 space-y-2">
         <CoachSearchInput value={search} onChange={setSearch} placeholder="Search students..." />
@@ -375,7 +375,7 @@ export default function StudentsPage() {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         title="Add New Student"
-        subtitle="Add a student to your roster"
+        subtitle="Bring someone new onto your roster"
         footer={
           <CoachSheetFooter>
             <CoachButton type="submit" form={ADD_STUDENT_FORM_ID} loading={savingStudent} loadingLabel="Saving…">
@@ -430,7 +430,7 @@ export default function StudentsPage() {
               name="programId"
               defaultValue=""
               options={[
-                { value: "", label: "None — Drop-in" },
+                { value: "", label: "None (drop-in)" },
                 ...programs.map((p) => ({ value: p.id, label: p.name })),
               ]}
             />

@@ -97,7 +97,7 @@ export function getSubscriptionBillingInfo(
     return {
       status: "send_invoice",
       label: "Invoice window",
-      adminNote: `Send invoice now — ${daysUntil} day${daysUntil === 1 ? "" : "s"} until renewal (${renewalDisplay}). Payment due on renewal date.`,
+      adminNote: `Send invoice now. ${daysUntil} day${daysUntil === 1 ? "" : "s"} until renewal (${renewalDisplay}). Payment due on renewal date.`,
       renewalDate,
       invoiceByDate: invoiceBy,
       daysUntilRenewal: daysUntil,
@@ -136,7 +136,7 @@ export function getSubscriptionBillingInfo(
   return {
     status: "lapsed",
     label: "Lapsed",
-    adminNote: `Subscription lapsed — payment overdue since ${renewalDisplay}. Deactivate or extend after confirming with the coach.`,
+    adminNote: `Subscription lapsed. Payment overdue since ${renewalDisplay}. Deactivate or extend after confirming with the coach.`,
     renewalDate,
     invoiceByDate: invoiceBy,
     daysUntilRenewal: daysUntil,

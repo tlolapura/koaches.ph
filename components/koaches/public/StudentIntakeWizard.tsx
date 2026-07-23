@@ -399,7 +399,7 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
                 </div>
 
                 <CoachSheetField
-                  label="Sign waiver — type your full name *"
+                  label="Sign waiver (type your full name) *"
                   htmlFor="intake-signed-name"
                   hint="Must match the name above"
                 >

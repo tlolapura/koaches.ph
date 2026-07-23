@@ -146,8 +146,8 @@ export function ProgramSessionComparison({
                 </p>
                 <p className="mt-0.5 text-xs text-[#6B7280]">
                   {isCompactGrid
-                    ? `Session 1 + last 5 of ${snapshots.length} — tap a column to open`
-                    : "Compare skills across program sessions — tap a column to open"}
+                    ? `Session 1 + last 5 of ${snapshots.length}. Tap a column to open.`
+                    : "Compare skills across program sessions. Tap a column to open."}
                 </p>
               </div>
               {snapshots.length > COMPACT_GRID_THRESHOLD && (
@@ -229,7 +229,7 @@ export function ProgramSessionComparison({
                               {score}
                             </span>
                           ) : (
-                            <span className="text-[#D1D5DB]">—</span>
+                            <span className="text-[#D1D5DB]">-</span>
                           )}
                         </td>
                       ))}

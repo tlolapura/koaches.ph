@@ -161,10 +161,10 @@ export function summarizeSkillChanges(changes: SkillChange[]) {
 export function sessionProgressHeadline(changes: SkillChange[]): string {
   const { improvedCount, slipped } = summarizeSkillChanges(changes);
   if (improvedCount === 0 && slipped.length === 0) {
-    return "Held steady — good consistency";
+    return "Held steady. Good consistency.";
   }
   if (improvedCount === 0) {
-    return "Tough session — keep building";
+    return "Tough session. Keep building.";
   }
   if (improvedCount === 1) {
     return "1 skill leveled up";
@@ -180,7 +180,7 @@ export function journeyHeadline(
   const changes = buildSkillChanges(overallBefore, overallAfter);
   const { improvedCount } = summarizeSkillChanges(changes);
   if (improvedCount === 0) {
-    return `${sessionCount} sessions — building a solid base`;
+    return `${sessionCount} sessions. Building a solid base.`;
   }
   return `${improvedCount} skill${improvedCount !== 1 ? "s" : ""} stronger since day one`;
 }

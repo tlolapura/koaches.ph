@@ -14,7 +14,7 @@ export const SKILL_RUBRICS: Record<Exclude<SkillRubricId, "custom">, SkillRubric
     subtitle: "2.0 – 2.5 DUPR",
     duprRange: "2.0 – 2.5",
     description:
-      "Foundation rubric for new players. Covers grip, rules, serve & return basics, and court movement — the essentials before open play.",
+      "Foundation rubric for new players. Covers grip, rules, serve & return basics, and court movement: the essentials before open play.",
     categories: ["fundamentals", "serve-return", "movement"],
   },
   intermediate: {
@@ -23,7 +23,7 @@ export const SKILL_RUBRICS: Record<Exclude<SkillRubricId, "custom">, SkillRubric
     subtitle: "3.0 – 3.5 DUPR",
     duprRange: "3.0 – 3.5",
     description:
-      "Core competitive skills rubric. Third shot, kitchen game, volleys, and athletic movement — the shots that separate recreational from solid intermediate play.",
+      "Core competitive skills rubric. Third shot, kitchen game, volleys, and athletic movement: the shots that separate recreational from solid intermediate play.",
     categories: ["third-shot", "kitchen", "volleys", "movement"],
   },
   advanced: {
@@ -32,7 +32,7 @@ export const SKILL_RUBRICS: Record<Exclude<SkillRubricId, "custom">, SkillRubric
     subtitle: "3.5+ DUPR",
     duprRange: "3.5+",
     description:
-      "Full assessment across all 8 PCI / USA Pickleball categories including game IQ and mental game — for tournament-ready and competitive players.",
+      "Full assessment across all 8 PCI / USA Pickleball categories including game IQ and mental game, for tournament-ready and competitive players.",
     categories: ALL_SKILL_CATEGORIES,
   },
 };

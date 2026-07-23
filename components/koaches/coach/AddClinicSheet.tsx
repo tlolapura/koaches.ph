@@ -122,7 +122,7 @@ export function AddClinicSheet({ open, onClose }: AddClinicSheetProps) {
       open={open}
       onClose={handleClose}
       title="New clinic"
-      subtitle="Multi-hour or multi-day group clinic"
+      subtitle="Plan a group clinic. Pick dates, set the roster, show up."
       wide
       footer={
         <CoachSheetFooter>
@@ -294,7 +294,7 @@ export function AddClinicSheet({ open, onClose }: AddClinicSheetProps) {
           <p className="coach-label mb-2">
             Roster ({selectedStudentIds.length}/{capacity})
           </p>
-          <p className="mb-2 text-xs text-[#6B7280]">Optional — search and add from your roster.</p>
+          <p className="mb-2 text-xs text-[#6B7280]">Optional. Search and add from your roster.</p>
           <CoachStudentSearchSelect
             students={students}
             value={selectedStudentIds}

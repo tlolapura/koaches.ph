@@ -10,7 +10,7 @@ export function getPaymentStatusLabel(status: SessionPaymentStatus): string {
 export function getPaymentStatusHint(status: SessionPaymentStatus): string {
   return status === "paid"
     ? "Payment collected."
-    : "Not yet collected — mark paid once you receive it.";
+    : "Not yet collected. Mark paid once you receive it.";
 }
 
 export function resolveSessionPaymentStatus(

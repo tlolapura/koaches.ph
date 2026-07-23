@@ -6,7 +6,7 @@ export default function SettingsTermsPage() {
     <CoachPageShell>
       <CoachPageHeader
         title="Terms of Service"
-        subtitle="How PickleKoach can be used"
+        subtitle="The ground rules for using PickleKoach"
         actions={
           <Link
             href="/coach/settings"

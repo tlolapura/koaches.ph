@@ -26,7 +26,7 @@ type CoachFinderProps = {
 const STEP_PROMPTS = [
   "Let's find someone great!",
   "Almost there...",
-  "Last one — budget lang!",
+  "Last one: budget lang!",
   "Here's who I'd pick:",
 ];
 

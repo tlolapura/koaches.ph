@@ -108,7 +108,7 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
             name="programId"
             defaultValue={student.programId ?? ""}
             options={[
-              { value: "", label: "None — Drop-in" },
+              { value: "", label: "None (drop-in)" },
               ...programs.map((p) => ({ value: p.id, label: p.name })),
             ]}
           />

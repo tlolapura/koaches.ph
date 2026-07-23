@@ -116,7 +116,7 @@ export function resolveCoachCoachingLevels(
 }
 
 export function formatCoachingLevelsLabel(levels: CoachingLevelId[]): string {
-  if (levels.length === 0) return "—";
+  if (levels.length === 0) return "-";
   return levels
     .map((id) => COACHING_LEVEL_OPTIONS.find((o) => o.id === id)?.label ?? id)
     .join(", ");

@@ -6,7 +6,7 @@ export default function SettingsRefundPolicyPage() {
     <CoachPageShell>
       <CoachPageHeader
         title="Refund Policy"
-        subtitle="How billing support and refunds are handled"
+        subtitle="What happens if you need a refund"
         actions={
           <Link
             href="/coach/settings"

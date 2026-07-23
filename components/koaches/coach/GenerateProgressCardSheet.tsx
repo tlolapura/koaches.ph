@@ -292,7 +292,7 @@ export function GenerateProgressCardSheet({
           </div>
           <p className="font-heading text-lg font-semibold">Progress card generated</p>
           <p className="text-sm text-[#6B7280]">
-            Share the link with {participant.name} — they can view it without logging in.
+            Share the link with {participant.name}. They can view it without logging in.
           </p>
         </div>
       )}

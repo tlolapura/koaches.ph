@@ -47,7 +47,7 @@ export function SessionParticipantsFields({
     return (
       <CoachSheetField
         label="Who's playing?"
-        hint="Pick from your roster — new players join via your intake link first"
+        hint="Pick from your roster. New players join via your intake link first."
       >
         <CoachStudentSearchSelect
           students={roster}

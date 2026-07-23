@@ -258,7 +258,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
     setMarkingDone(true);
     try {
       await markDone();
-      showToast("Session marked done — mark skill coverage");
+      showToast("Session marked done. Mark skill coverage next.");
       setStep("coverage");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Could not update session", "error");

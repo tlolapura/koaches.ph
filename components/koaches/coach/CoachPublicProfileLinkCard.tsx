@@ -98,7 +98,7 @@ export function CoachPublicProfileLinkCard({ coach, className }: CoachPublicProf
                 label="Save profile QR"
                 filename={`${coach.slug}-profile-qr.png`}
                 className="mt-3 w-full sm:w-auto"
-                onSaved={() => showToast("Profile QR saved — print or share at court")}
+                onSaved={() => showToast("Profile QR saved. Print or share at court.")}
                 onError={() => showToast("Could not save image", "error")}
               />
             </div>

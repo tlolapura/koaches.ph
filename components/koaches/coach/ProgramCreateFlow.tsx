@@ -201,7 +201,7 @@ export function ProgramCreateFlow({
               <div className="flex-1">
                 <p className="font-heading font-semibold">Use a Program Template</p>
                 <p className="text-xs text-[#6B7280]">
-                  Open Play Ready, Tournament Ready, and more — customize to fit
+                  Open Play Ready, Tournament Ready, and more. Customize to fit.
                 </p>
               </div>
               <ChevronRight className="h-5 w-5 text-[#6B7280]" />
@@ -449,7 +449,7 @@ function TemplateCustomizeForm({
       <div className="border-t border-[#E5E7EB] pt-4">
         <p className="font-heading text-sm font-semibold text-[#111827]">Skills</p>
         <p className="mt-0.5 text-xs text-[#6B7280]">
-          Starts from the template rubric — adjust, rename, or add your own.
+          Starts from the template rubric. Adjust, rename, or add your own.
         </p>
         <div className="mt-3">
           <SkillRubricPicker

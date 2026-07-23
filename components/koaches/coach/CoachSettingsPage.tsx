@@ -13,7 +13,7 @@ export function CoachSettingsPage() {
 
   return (
     <CoachPageShell>
-      <CoachPageHeader title="Settings" subtitle="Billing, account security, and legal" />
+      <CoachPageHeader title="Settings" subtitle="Account, billing, and the fine print" />
 
       {email ? (
         <div className="coach-card mt-6 p-4">

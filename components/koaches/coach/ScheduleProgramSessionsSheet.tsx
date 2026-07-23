@@ -169,7 +169,7 @@ export function ScheduleProgramSessionsSheet({
             showToast(
               date
                 ? `Session ${nextSessionNumber} scheduled for ${student.name}`
-                : `Session ${nextSessionNumber} saved — add a date when ready`
+                : `Session ${nextSessionNumber} saved. Add a date when ready.`
             );
             onClose();
             } catch (e) {
@@ -237,7 +237,7 @@ export function ScheduleProgramSessionsSheet({
                       className="text-xs font-semibold text-[#4F8FF7]"
                       onClick={() => setDate("")}
                     >
-                      Clear date — schedule later
+                      Clear date (schedule later)
                     </button>
                   )}
                 </div>

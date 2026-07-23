@@ -72,7 +72,7 @@ export function AdminAddCoachSheet({ open, onClose, onCreated }: AdminAddCoachSh
       open={open}
       onClose={onClose}
       title="Add coach"
-      subtitle="Create a coach account directly — no application required."
+      subtitle="Create a coach account directly. No application required."
       footer={
         <CoachSheetFooter>
           <CoachButton
@@ -151,7 +151,7 @@ export function AdminAddCoachSheet({ open, onClose, onCreated }: AdminAddCoachSh
         <CoachSheetField
           label="Temporary password"
           htmlFor="add-coach-password"
-          hint="Share with the coach — they can change it after first sign-in."
+          hint="Share with the coach. They can change it after first sign-in."
         >
           <input
             id="add-coach-password"
@@ -189,7 +189,7 @@ export function AdminAddCoachSheet({ open, onClose, onCreated }: AdminAddCoachSh
             id="add-coach-specialization"
             value={form.specialization}
             onChange={(specialization) => patch({ specialization })}
-            hint="Optional when creating an account — coach can set this later."
+            hint="Optional when creating an account. Coach can set this later."
           />
         </CoachSheetField>
 

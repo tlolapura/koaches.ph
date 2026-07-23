@@ -25,7 +25,7 @@ export function ClinicsPageClient() {
     <CoachPageShell>
       <CoachPageHeader
         title="Clinics"
-        subtitle="Multi-hour and multi-day group clinics"
+        subtitle="Group clinics with one roster across every day"
       />
 
       {active.length === 0 ? (
@@ -33,7 +33,7 @@ export function ClinicsPageClient() {
           <EmptyState
             icon={Users}
             title="No clinics yet"
-            description="Create a group clinic with one or more dates, then add players from your roster."
+            description="Set the dates, add your players once, and run the clinic."
             action={
               <button
                 type="button"

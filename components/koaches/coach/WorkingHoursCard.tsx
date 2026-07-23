@@ -78,7 +78,7 @@ export function WorkingHoursCard() {
         open={open}
         onClose={() => setOpen(false)}
         title="Working hours"
-        subtitle="When you're available for sessions — add as many windows as you need"
+        subtitle="When students can usually book you. Add as many windows as you need."
         footer={
           <CoachSheetFooter>
             <CoachButton type="submit" form={WORKING_HOURS_FORM_ID} loading={saving} loadingLabel="Saving…">

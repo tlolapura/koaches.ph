@@ -92,7 +92,7 @@ export function SkillComparisonTable({
               <tr key={b.skillId} className="border-b border-[#E5E7EB]/60">
                 <td className="py-2 pr-2 font-medium text-[#111827]">{b.skillName}</td>
                 <td className="py-2 text-[#6B7280]">{b.score}</td>
-                <td className="py-2 font-semibold text-[#111827]">{a?.score ?? "—"}</td>
+                <td className="py-2 font-semibold text-[#111827]">{a?.score ?? "-"}</td>
                 <td className="py-2">
                   {diff > 0 && <span className="text-[#22C55E]">↑ {diff}</span>}
                   {diff < 0 && <span className="text-[#EF4444]">↓ {Math.abs(diff)}</span>}

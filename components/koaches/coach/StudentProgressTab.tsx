@@ -198,7 +198,7 @@ export function StudentProgressTab({
           <div className="mb-3">
             <h3 className="font-heading text-sm font-semibold text-[#111827]">Drop-ins</h3>
             <p className="mt-0.5 text-xs text-[#6B7280]">
-              One-off visits — compared within each session, not vs your program
+              One-off visits. Compared within each session, not vs your program.
             </p>
           </div>
           <div className="space-y-2">

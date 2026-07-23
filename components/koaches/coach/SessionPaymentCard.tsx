@@ -83,7 +83,7 @@ export function SessionPaymentCard({ session }: SessionPaymentCardProps) {
         <CoachSheetField
           label="Tip (optional)"
           htmlFor="session-tip"
-          hint="Extra on top of the session fee — counts in reports when paid"
+          hint="Extra on top of the session fee. Counts in reports when paid."
         >
           <div className="relative">
             <span

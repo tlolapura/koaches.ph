@@ -50,7 +50,7 @@ export default function ProgramsPage() {
     <CoachPageShell>
       <CoachPageHeader
         title="Programs"
-        subtitle="Skill rubrics for drop-ins and structured coaching packages"
+        subtitle="Packages and skill lists you reuse with students"
       />
 
       {coach && (

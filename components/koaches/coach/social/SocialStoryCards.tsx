@@ -64,12 +64,12 @@ export function SocialStoryDailyCard({
           <div className="flex shrink-0 gap-3">
             <SocialStoryStatBadge
               label="Open"
-              value={openCount > 0 ? String(openCount) : "—"}
+              value={openCount > 0 ? String(openCount) : "-"}
               className="!px-4 !py-3"
             />
             <SocialStoryStatBadge
               label="Booked"
-              value={bookedCount > 0 ? String(bookedCount) : "—"}
+              value={bookedCount > 0 ? String(bookedCount) : "-"}
               className="!px-4 !py-3"
             />
           </div>
@@ -161,7 +161,7 @@ export function SocialStoryCalendarCard({
         {!hasGrid ? (
           <div className="flex flex-1 items-center justify-center rounded-3xl border-2 border-dashed border-[#D1D5DB] bg-white px-8 py-12 text-center">
             <p className="text-[28px] leading-relaxed text-[#6B7280]">
-              No hours set this week — update your availability in Schedule.
+              No hours set this week. Update your availability in Schedule.
             </p>
           </div>
         ) : (

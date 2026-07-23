@@ -6,7 +6,7 @@ export default function SettingsPrivacyPage() {
     <CoachPageShell>
       <CoachPageHeader
         title="Privacy Policy"
-        subtitle="How data is collected and used"
+        subtitle="How we use your data, in plain words"
         actions={
           <Link
             href="/coach/settings"

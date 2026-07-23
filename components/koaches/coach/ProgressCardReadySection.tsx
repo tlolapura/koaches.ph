@@ -36,7 +36,7 @@ export function ProgressCardReadySection({
       </div>
       <p className="mb-3 text-xs text-[#6B7280]">
         {studentId
-          ? "Ratings saved — generate a progress card for your student."
+          ? "Ratings saved. Generate a progress card for your student."
           : "Sessions with ratings that haven't been shared yet."}
       </p>
       <div className="space-y-2">

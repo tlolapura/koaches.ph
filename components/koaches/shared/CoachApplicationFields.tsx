@@ -161,7 +161,7 @@ export function CoachApplicationFields({ step, draft, onDraftChange }: CoachAppl
       <CoachSheetField
         label="Preferred profile URL"
         htmlFor="apply-slug"
-        hint="Optional — your public page on PickleKoach (e.g. picklekoach.com/coach/your-name)."
+        hint="Optional. Your public page on PickleKoach (e.g. picklekoach.com/coach/your-name)."
       >
         <div className="flex items-center gap-2">
           <span className="shrink-0 text-sm text-[#6B7280]">/coaches/</span>
