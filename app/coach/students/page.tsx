@@ -22,7 +22,6 @@ import {
   EmptyState,
   InitialsAvatar,
   ProgressBar,
-  SessionTypeBadge,
   useCoachToast,
 } from "@/components/koaches/coach/CoachUi";
 import { CoachBottomSheet, ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
@@ -342,15 +341,15 @@ export default function StudentsPage() {
                           <span className="shrink-0 tabular-nums">
                             {s.sessionsCompleted}/{prog.sessionCount}
                           </span>
+                          {lastLabel && (
+                            <>
+                              <span className="text-[#D1D5DB]">·</span>
+                              <span className="shrink-0">{lastLabel}</span>
+                            </>
+                          )}
                         </>
                       ) : (
-                        <SessionTypeBadge type="drop-in" />
-                      )}
-                      {lastLabel && (
-                        <>
-                          <span className="text-[#D1D5DB]">·</span>
-                          <span className="shrink-0">{lastLabel}</span>
-                        </>
+                        <span className="shrink-0">{lastLabel ?? "No sessions yet"}</span>
                       )}
                     </div>
 
@@ -399,7 +398,6 @@ export default function StudentsPage() {
                 mobile: String(fd.get("mobile") ?? ""),
                 email: String(fd.get("email") ?? ""),
                 skillLevel: defaultDuprForCoachingLevel(coachingLevel),
-                programId: String(fd.get("programId") ?? "") || undefined,
               });
               notifyRosterUpdated(coachId);
               showToast(crudToast.created("Student"));
@@ -424,16 +422,6 @@ export default function StudentsPage() {
           </CoachSheetField>
           <CoachSheetField label="Email">
             <input className="coach-input" name="email" type="email" placeholder="juan@email.com" />
-          </CoachSheetField>
-          <CoachSheetField label="Assign to program (optional)">
-            <CoachSelect
-              name="programId"
-              defaultValue=""
-              options={[
-                { value: "", label: "None (drop-in)" },
-                ...programs.map((p) => ({ value: p.id, label: p.name })),
-              ]}
-            />
           </CoachSheetField>
           <CoachSheetField label="Player level">
             <CoachSelect

@@ -89,7 +89,6 @@ export type UpdateStudentProfileInput = {
   mobile: string;
   email: string;
   skillLevel: DuprLevel;
-  programId?: string;
 };
 
 export async function updateStudentProfileAction(studentId: string, input: UpdateStudentProfileInput) {
@@ -100,16 +99,6 @@ export async function updateStudentProfileAction(studentId: string, input: Updat
   if (!displayName) throw new Error("Student name is required.");
 
   const supabase = createServiceClient();
-  const { data: row, error: fetchError } = await supabase
-    .from("students")
-    .select("program_id")
-    .eq("id", studentId)
-    .single();
-  if (fetchError) throw fetchError;
-
-  const oldProgramId = row.program_id ?? null;
-  const newProgramId = input.programId?.trim() || null;
-
   const { error } = await supabase
     .from("students")
     .update({
@@ -125,30 +114,8 @@ export async function updateStudentProfileAction(studentId: string, input: Updat
     .eq("coach_id", coachId);
   if (error) throw error;
 
-  if (newProgramId !== oldProgramId) {
-    if (oldProgramId) {
-      await supabase
-        .from("program_enrollments")
-        .delete()
-        .eq("student_id", studentId)
-        .eq("program_id", oldProgramId);
-    }
-    if (newProgramId) {
-      const { enrollStudentInProgramAction } = await import("@/lib/koaches/actions/programs");
-      await enrollStudentInProgramAction(newProgramId, studentId);
-    } else {
-      await supabase
-        .from("students")
-        .update({ program_id: null, updated_at: new Date().toISOString() })
-        .eq("id", studentId)
-        .eq("coach_id", coachId);
-    }
-  }
-
   revalidatePath("/coach/students");
   revalidatePath(`/coach/students/${studentId}`);
-  if (oldProgramId) revalidatePath(`/coach/programs/${oldProgramId}`);
-  if (newProgramId) revalidatePath(`/coach/programs/${newProgramId}`);
 }
 
 export async function updateStudentNotesAction(studentId: string, notes: string) {

@@ -9,10 +9,8 @@ import {
   STUDENT_COACHING_LEVEL_SELECT_OPTIONS,
   type CoachingLevelId,
 } from "@/lib/koaches/application-form";
-import { useCoachPrograms } from "@/hooks/useCoachPrograms";
 import { updateStudentProfileAction } from "@/lib/koaches/actions/students";
 import { notifyRosterUpdated } from "@/hooks/useCoachStudents";
-import { invalidateCoachPrograms } from "@/lib/koaches/queries/invalidate";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
@@ -30,7 +28,6 @@ type EditStudentSheetProps = {
 
 export function EditStudentSheet({ open, onClose, student }: EditStudentSheetProps) {
   const coachId = usePortalCoachId();
-  const { programs } = useCoachPrograms(coachId);
   const { showToast } = useCoachToast();
   const [saving, setSaving] = useState(false);
 
@@ -39,7 +36,7 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
       open={open}
       onClose={onClose}
       title="Edit student"
-      subtitle="Update contact info and program"
+      subtitle="Update contact info and level"
       footer={
         <CoachSheetFooter>
           <CoachButton type="submit" form={FORM_ID} loading={saving} loadingLabel="Saving…">
@@ -64,10 +61,8 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
               mobile: String(fd.get("mobile") ?? ""),
               email: String(fd.get("email") ?? ""),
               skillLevel: defaultDuprForCoachingLevel(coachingLevel),
-              programId: String(fd.get("programId") ?? "") || undefined,
             });
             notifyRosterUpdated(coachId);
-            invalidateCoachPrograms(coachId);
             showToast(crudToast.updated("Student"));
             onClose();
           } catch (err) {
@@ -102,16 +97,6 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
         </CoachSheetField>
         <CoachSheetField label="Email">
           <input className="coach-input" name="email" type="email" defaultValue={student.email} />
-        </CoachSheetField>
-        <CoachSheetField label="Program">
-          <CoachSelect
-            name="programId"
-            defaultValue={student.programId ?? ""}
-            options={[
-              { value: "", label: "None (drop-in)" },
-              ...programs.map((p) => ({ value: p.id, label: p.name })),
-            ]}
-          />
         </CoachSheetField>
         <CoachSheetField label="Player level">
           <CoachSelect
