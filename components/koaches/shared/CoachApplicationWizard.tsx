@@ -36,7 +36,6 @@ import {
   validateIdentityStep,
 } from "@/lib/koaches/application-form";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
-import { LegalLinks } from "@/components/koaches/shared/LegalLinks";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { cn } from "@/lib/utils";
 
@@ -391,12 +390,12 @@ export function CoachApplicationWizard({
               <>
                 <Link
                   href={backHref}
-                  className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
+                  className="coach-btn-outline !w-auto shrink-0 whitespace-nowrap px-3"
                 >
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4 shrink-0" />
                   {backLabel}
                 </Link>
-                <CoachButton type="button" className="min-h-[48px] flex-[2]" onClick={goNext}>
+                <CoachButton type="button" className="min-h-[48px] flex-1 whitespace-nowrap" onClick={goNext}>
                   Let&apos;s go
                 </CoachButton>
               </>
@@ -404,23 +403,23 @@ export function CoachApplicationWizard({
               <>
                 <button
                   type="button"
-                  className="coach-btn-outline flex min-h-[48px] flex-1 items-center justify-center gap-1"
+                  className="coach-btn-outline !w-auto shrink-0 whitespace-nowrap px-3"
                   disabled={pending}
                   onClick={goBack}
                 >
-                  <ArrowLeft className="h-4 w-4" />
+                  <ArrowLeft className="h-4 w-4 shrink-0" />
                   Back
                 </button>
                 <CoachButton
                   type="button"
-                  className="min-h-[48px] flex-[2]"
+                  className="min-h-[48px] flex-1 whitespace-nowrap"
                   loading={pending}
                   loadingLabel="Sending…"
                   onClick={goNext}
                 >
                   {isReview ? (
                     <>
-                      <Send className="h-4 w-4" />
+                      <Send className="h-4 w-4 shrink-0" />
                       Submit application
                     </>
                   ) : (
@@ -430,13 +429,6 @@ export function CoachApplicationWizard({
               </>
             )}
           </div>
-
-          {!isSuccess && (
-            <p className="mt-2 text-center text-xs text-[#9CA3AF]">
-              Free to apply · We&apos;re grateful you&apos;re here · Usually hear back in 1 to 2 days
-            </p>
-          )}
-          <LegalLinks className="mt-2 justify-center" />
         </div>
       </footer>
     </div>
