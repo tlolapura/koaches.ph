@@ -1,5 +1,5 @@
 import { CoachDetailSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 
-export default function StudentDetailLoading() {
+export default function Loading() {
   return <CoachDetailSkeleton />;
 }

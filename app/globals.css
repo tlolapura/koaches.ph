@@ -1296,3 +1296,17 @@ body[data-coach-sheet-open] .coach-session-step-footer {
 .landing-cta:active {
   transform: scale(0.99);
 }
+
+@keyframes coach-nav-progress {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.coach-nav-progress {
+  animation: coach-nav-progress 1.1s ease-in-out infinite;
+}
+

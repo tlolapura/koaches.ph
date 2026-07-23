@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Home, Users, CalendarDays, BarChart3, Menu } from "lucide-react";
+import { useLinkStatus } from "next/link";
+import { Home, Users, CalendarDays, BarChart3, Menu, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { bottomNavActiveClass } from "@/lib/koaches/coach-colors";
 import { CoachMoreSheet } from "@/components/koaches/coach/CoachMoreSheet";
@@ -17,6 +18,20 @@ const tabs = [
 ] as const;
 
 const moreSectionPrefixes = ["/coach/profile", "/coach/social", "/coach/settings", "/coach/programs"];
+
+function BottomNavPendingIcon({
+  Icon,
+  active,
+}: {
+  Icon: (typeof tabs)[number]["icon"];
+  active: boolean;
+}) {
+  const { pending } = useLinkStatus();
+  if (pending) {
+    return <Loader2 className="h-5 w-5 animate-spin text-[#4F8FF7]" aria-hidden />;
+  }
+  return <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />;
+}
 
 export function CoachBottomNav() {
   const pathname = usePathname();
@@ -63,9 +78,9 @@ export function CoachBottomNav() {
             }
 
             return (
-              <Link key={tab.id} href={tab.href!} prefetch={false} className={className}>
+              <Link key={tab.id} href={tab.href!} prefetch className={className}>
                 <span className="relative">
-                  <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+                  <BottomNavPendingIcon Icon={Icon} active={active} />
                 </span>
                 {tab.label}
               </Link>

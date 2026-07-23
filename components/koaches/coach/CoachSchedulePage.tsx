@@ -124,10 +124,10 @@ export function CoachSchedulePage() {
     openAddSession({ date, startTime: slot.startValue, endTime: slot.endValue });
   };
 
-  if (!coachId) return <CoachScheduleSkeleton />;
+  if (!coachId || (loading && allSessions.length === 0)) return <CoachScheduleSkeleton />;
 
   return (
-    <CoachPageShell>
+    <CoachPageShell className={viewMode === "calendar" ? "max-md:px-3" : undefined}>
       <CoachPageHeader
         title="Schedule"
         subtitle="Calendar and session list"
@@ -157,7 +157,7 @@ export function CoachSchedulePage() {
       />
 
       {viewMode === "calendar" ? (
-        <div className="mt-6">
+        <div className="mt-3 md:mt-6">
           <CoachScheduleGrid
             date={selectedDate}
             sessions={allSessions}

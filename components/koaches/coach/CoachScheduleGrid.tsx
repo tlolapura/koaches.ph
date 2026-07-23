@@ -534,7 +534,7 @@ export function CoachScheduleGrid({
   };
 
   return (
-    <div className="coach-card space-y-3 p-3 sm:space-y-4 sm:p-4">
+    <div className="space-y-3 md:coach-card md:space-y-4 md:p-4">
       <DayNavigator date={date} onPrevDay={() => shiftDay(-1)} onNextDay={() => shiftDay(1)} />
       <WeekNavigator weekDates={weekDates} onPrevWeek={() => shiftWeek(-1)} onNextWeek={() => shiftWeek(1)} />
 

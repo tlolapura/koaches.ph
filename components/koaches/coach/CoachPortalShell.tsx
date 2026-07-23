@@ -12,6 +12,8 @@ import { CoachToastProvider } from "@/components/koaches/coach/CoachUi";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import { CoachOnboardingGuard } from "@/components/koaches/coach/CoachOnboardingGuard";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
+import { CoachNavProgress } from "@/components/koaches/coach/CoachNavProgress";
+import { Suspense } from "react";
 
 type CoachPortalShellProps = {
   children: React.ReactNode;
@@ -54,6 +56,9 @@ function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
 
   return (
     <CoachToastProvider>
+      <Suspense fallback={null}>
+        <CoachNavProgress />
+      </Suspense>
       <CoachOnboardingGuard />
       <div className="coach-portal relative flex min-h-screen bg-[#FAFAF8]">
         <CoachSidebar />

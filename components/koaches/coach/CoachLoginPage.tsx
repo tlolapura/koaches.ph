@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { LogIn } from "lucide-react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
@@ -18,13 +18,25 @@ import { SITE_DOMAIN } from "@/lib/koaches/constants";
 import { clearCoachPortalCache } from "@/lib/koaches/queries/invalidate";
 import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
 
+function isNextRedirectError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    String((error as { digest?: unknown }).digest).startsWith("NEXT_REDIRECT")
+  );
+}
+
 export function CoachLoginPage() {
   const searchParams = useSearchParams();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [pending, startTransition] = useTransition();
+  /** Stays true after successful auth until this page unmounts (redirect in flight). */
+  const [redirecting, setRedirecting] = useState(false);
+
+  const busy = pending || redirecting;
 
   useEffect(() => {
     clearCoachPortalCache();
@@ -48,17 +60,29 @@ export function CoachLoginPage() {
           onSubmit={(e) => {
             e.preventDefault();
             setError(null);
-            setPending(true);
-            void (async () => {
-              try {
-                const next = searchParams.get("next") ?? "/coach/dashboard";
-                clearCoachPortalCache();
-                const result = await coachSignInAction(email.trim(), password, next);
-                if (result && !result.ok) setError(result.error ?? "Sign in failed");
-              } finally {
-                setPending(false);
-              }
-            })();
+            startTransition(() => {
+              void (async () => {
+                try {
+                  const next = searchParams.get("next") ?? "/coach/dashboard";
+                  clearCoachPortalCache();
+                  const result = await coachSignInAction(email.trim(), password, next);
+                  if (result && !result.ok) {
+                    setError(result.error ?? "Sign in failed");
+                    setRedirecting(false);
+                    return;
+                  }
+                  // redirect() usually throws; if it resolves, keep spinner until navigation.
+                  setRedirecting(true);
+                } catch (err) {
+                  if (isNextRedirectError(err)) {
+                    setRedirecting(true);
+                    return;
+                  }
+                  setError("Sign in failed. Please try again.");
+                  setRedirecting(false);
+                }
+              })();
+            });
           }}
         >
           <AuthLoginCard>
@@ -75,6 +99,7 @@ export function CoachLoginPage() {
                   placeholder={`you@${SITE_DOMAIN}`}
                   autoComplete="email"
                   required
+                  disabled={busy}
                 />
               </AuthLoginField>
 
@@ -97,6 +122,7 @@ export function CoachLoginPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
+                  disabled={busy}
                 />
               </AuthLoginField>
             </div>
@@ -107,7 +133,7 @@ export function CoachLoginPage() {
               </div>
             ) : null}
 
-            <CoachButton type="submit" className="mt-6 w-full" loading={pending} loadingLabel="Signing in…">
+            <CoachButton type="submit" className="mt-6 w-full" loading={busy} loadingLabel="Signing in…">
               <LogIn className="h-4 w-4" strokeWidth={2.5} />
               Sign in
             </CoachButton>
