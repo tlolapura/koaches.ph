@@ -1,14 +1,13 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { AdminBottomNav } from "@/components/koaches/admin/AdminBottomNav";
 import { AdminHeader } from "@/components/koaches/admin/AdminHeader";
 import { AdminSidebar, AdminSidebarCompact } from "@/components/koaches/admin/AdminSidebar";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
 export function AdminPortalShell({ children }: { children: React.ReactNode }) {
   return (
@@ -29,13 +28,9 @@ function AdminPortalShellInner({ children }: { children: React.ReactNode }) {
     if (!authed) router.replace("/admin/login");
   }, [isLogin, router]);
 
+  // Login owns its own full-screen chrome (matches coach login).
   if (isLogin) {
-    return (
-      <div className="coach-portal relative flex h-dvh max-h-dvh w-full overflow-hidden bg-[#FAFAF8]">
-        <PickleballBallBackdrop variant="login" />
-        <div className="relative z-[1] h-full w-full">{children}</div>
-      </div>
-    );
+    return <Suspense fallback={null}>{children}</Suspense>;
   }
 
   return (
