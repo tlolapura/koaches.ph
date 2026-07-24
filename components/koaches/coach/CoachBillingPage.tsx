@@ -348,7 +348,7 @@ export function CoachBillingPage() {
               <button
                 type="button"
                 className="mt-2 text-sm font-semibold text-[#4F8FF7] hover:underline"
-                onClick={() => void viewReceipt(pendingSubmission.receiptPath)}
+                onClick={() => setPreviewPath(pendingSubmission.receiptPath)}
               >
                 View uploaded receipt
               </button>
