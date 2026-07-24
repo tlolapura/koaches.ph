@@ -14,6 +14,9 @@ import {
 } from "@/lib/koaches/email/progress-card-email";
 import { getResendClient, getResendFromAddress } from "@/lib/koaches/email/resend";
 
+/** Max times a progress card can be emailed to the player. */
+export const PROGRESS_CARD_EMAIL_MAX_SENDS = 2;
+
 async function resolveCoachNameForCard(
   supabase: ReturnType<typeof createServiceClient>,
   card: ProgressCard
@@ -121,8 +124,8 @@ export async function saveProgressCardAction(card: ProgressCard): Promise<SavePr
 }
 
 export type SendProgressCardEmailResult =
-  | { ok: true; to: string }
-  | { ok: false; error: string };
+  | { ok: true; to: string; emailSendCount: number; remaining: number }
+  | { ok: false; error: string; emailSendCount?: number; remaining?: number };
 
 export async function sendProgressCardEmailAction(
   cardId: string
@@ -138,6 +141,16 @@ export async function sendProgressCardEmailAction(
   if (error) throw error;
   if (!row || row.coach_id !== coachId) {
     return { ok: false, error: "Progress card not found." };
+  }
+
+  const currentSendCount = Number(row.email_send_count ?? 0);
+  if (currentSendCount >= PROGRESS_CARD_EMAIL_MAX_SENDS) {
+    return {
+      ok: false,
+      error: `Email limit reached (${PROGRESS_CARD_EMAIL_MAX_SENDS} max per progress card).`,
+      emailSendCount: currentSendCount,
+      remaining: 0,
+    };
   }
 
   let card = await resolveCoachNameForCard(supabase, mapProgressCard(row as DbProgressCard));
@@ -165,6 +178,8 @@ export async function sendProgressCardEmailAction(
     return {
       ok: false,
       error: "This player has no email on file. Add one on their student profile first.",
+      emailSendCount: currentSendCount,
+      remaining: PROGRESS_CARD_EMAIL_MAX_SENDS - currentSendCount,
     };
   }
 
@@ -181,5 +196,28 @@ export async function sendProgressCardEmailAction(
     return { ok: false, error: sendError.message || "Could not send email." };
   }
 
-  return { ok: true, to };
+  const nextCount = currentSendCount + 1;
+  const { error: countError } = await supabase
+    .from("progress_cards")
+    .update({ email_send_count: nextCount })
+    .eq("id", cardId)
+    .eq("coach_id", coachId)
+    .eq("email_send_count", currentSendCount);
+
+  if (countError) {
+    // Email already sent — surface success with best-effort count.
+    return {
+      ok: true,
+      to,
+      emailSendCount: nextCount,
+      remaining: Math.max(0, PROGRESS_CARD_EMAIL_MAX_SENDS - nextCount),
+    };
+  }
+
+  return {
+    ok: true,
+    to,
+    emailSendCount: nextCount,
+    remaining: Math.max(0, PROGRESS_CARD_EMAIL_MAX_SENDS - nextCount),
+  };
 }

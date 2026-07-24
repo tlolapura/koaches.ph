@@ -155,6 +155,7 @@ export type DbProgressCard = {
   coach_to_improve: string | null;
   coach_message: string;
   session_id: string | null;
+  email_send_count?: number | null;
 };
 
 export type DbApplication = {
@@ -365,6 +366,7 @@ export function mapProgressCard(row: DbProgressCard): ProgressCard {
     coachToImprove: row.coach_to_improve ?? undefined,
     coachMessage: row.coach_message,
     sessionId: row.session_id ?? undefined,
+    emailSendCount: row.email_send_count ?? 0,
   };
 }
 

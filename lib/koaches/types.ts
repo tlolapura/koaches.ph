@@ -409,6 +409,8 @@ export type ProgressCard = {
   coachMessage: string;
   /** Source session when generated from the coach portal */
   sessionId?: string;
+  /** Times this progress card was emailed to the player (max 2). */
+  emailSendCount?: number;
 };
 
 export type Certificate = {

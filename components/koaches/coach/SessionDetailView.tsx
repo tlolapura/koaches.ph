@@ -466,7 +466,11 @@ function StandardSessionDetail({ session }: { session: Session }) {
                       >
                         Copy share link
                       </button>
-                      <SendProgressCardEmailButton cardId={card.id} className="w-full" />
+                      <SendProgressCardEmailButton
+                        cardId={card.id}
+                        emailSendCount={card.emailSendCount ?? 0}
+                        className="w-full"
+                      />
                     </div>
                   ) : null}
                 </div>
