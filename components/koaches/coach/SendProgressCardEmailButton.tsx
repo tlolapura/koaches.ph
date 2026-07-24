@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import {
-  PROGRESS_CARD_EMAIL_MAX_SENDS,
   sendProgressCardEmailAction,
 } from "@/lib/koaches/actions/progress-cards";
+import { PROGRESS_CARD_EMAIL_MAX_SENDS } from "@/lib/koaches/progress-card-email-limits";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 

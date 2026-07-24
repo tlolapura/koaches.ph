@@ -1,35 +1,28 @@
 import Link from "next/link";
-import { ChevronRight, CreditCard, FileText, MapPin, Users } from "lucide-react";
+import { ChevronRight, FileText, MapPin, TrendingUp } from "lucide-react";
 import { AdminSignOutButton } from "@/components/koaches/admin/AdminSignOutButton";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
 
 const links = [
   {
-    href: "/admin/courts",
-    label: "Courts",
-    icon: MapPin,
-    desc: "Platform court directory",
+    href: "/admin/analytics",
+    label: "Analytics",
+    icon: TrendingUp,
+    desc: "Validation metrics and trends",
     tone: "green" as const,
-  },
-  {
-    href: "/admin/coaches",
-    label: "Coaches",
-    icon: Users,
-    desc: "Manage coach accounts",
-    tone: "blue" as const,
   },
   {
     href: "/admin/applications",
     label: "Applications",
     icon: FileText,
     desc: "Review coach applications",
-    tone: "green" as const,
+    tone: "blue" as const,
   },
   {
-    href: "/admin/payments",
-    label: "Payments",
-    icon: CreditCard,
-    desc: "Confirm subscription receipts",
+    href: "/admin/courts",
+    label: "Courts",
+    icon: MapPin,
+    desc: "Platform court directory",
     tone: "blue" as const,
   },
 ];

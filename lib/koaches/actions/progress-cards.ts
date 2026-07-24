@@ -13,9 +13,7 @@ import {
   buildProgressCardEmailText,
 } from "@/lib/koaches/email/progress-card-email";
 import { getResendClient, getResendFromAddress } from "@/lib/koaches/email/resend";
-
-/** Max times a progress card can be emailed to the player. */
-export const PROGRESS_CARD_EMAIL_MAX_SENDS = 2;
+import { PROGRESS_CARD_EMAIL_MAX_SENDS } from "@/lib/koaches/progress-card-email-limits";
 
 async function resolveCoachNameForCard(
   supabase: ReturnType<typeof createServiceClient>,

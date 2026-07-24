@@ -37,6 +37,8 @@ export function adminBadgeForNavHref(href: string, counts: AdminNavBadgeCounts):
       return counts.pendingApplications;
     case "/admin/payments":
       return counts.pendingPaymentReceipts;
+    case "/admin/more":
+      return counts.pendingApplications;
     default:
       return 0;
   }

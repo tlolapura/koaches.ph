@@ -94,7 +94,7 @@ function coachInitials(name: string) {
 
 export function AdminDashboard({ data }: AdminDashboardProps) {
   return (
-    <AdminPageShell wide>
+    <AdminPageShell>
       <AdminPageHeader title="Dashboard" subtitle="Platform overview" className="mb-6" />
 
       <div className={cn(cardClass, "relative overflow-hidden p-5 sm:p-6")}>
@@ -148,6 +148,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
           label="Sessions this month"
           value={data.sessionsThisMonth}
           sub={`${data.stats.totalSessions} all-time`}
+          href="/admin/sessions"
           tone="blue"
         />
         <StatCard
@@ -180,6 +181,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
           label="Progress cards"
           value={data.stats.progressCardsGenerated}
           sub={`${data.stats.certificatesGenerated} certificates`}
+          href="/admin/sessions"
           tone="blue"
         />
         <StatCard
@@ -236,17 +238,19 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             <h2 className="font-heading font-semibold text-[#111827]">Quick actions</h2>
             <div className="mt-3 space-y-2">
               {[
-                { href: "/admin/applications", label: "Review applications", tone: "green" as const },
-                { href: "/admin/coaches", label: "Manage coaches", tone: "blue" as const },
+                { href: "/admin/sessions", label: "Review sessions", tone: "green" as const },
+                { href: "/admin/analytics", label: "View analytics", tone: "green" as const },
+                { href: "/admin/applications", label: "Review applications", tone: "blue" as const },
+                { href: "/admin/coaches", label: "Manage coaches", tone: "green" as const },
                 {
                   href: "/admin/payments",
                   label:
                     data.pendingPaymentCount > 0
                       ? `Review ${data.pendingPaymentCount} payment receipt${data.pendingPaymentCount === 1 ? "" : "s"}`
                       : "Review payments",
-                  tone: "green" as const,
+                  tone: "blue" as const,
                 },
-                { href: "/admin/courts", label: "Add a court", tone: "blue" as const },
+                { href: "/admin/courts", label: "Add a court", tone: "green" as const },
               ].map((a) => (
                 <Link
                   key={`${a.href}-${a.label}`}

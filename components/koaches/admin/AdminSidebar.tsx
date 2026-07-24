@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CalendarCheck2,
   CreditCard,
   FileText,
   LayoutDashboard,
   MapPin,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { KoachesMark, KoachesWordmark } from "@/components/koaches/KoachesLogo";
@@ -20,6 +22,8 @@ import { adminBadgeForNavHref } from "@/lib/koaches/nav-badge-utils";
 
 export const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/admin/sessions", label: "Sessions", icon: CalendarCheck2 },
   { href: "/admin/coaches", label: "Coaches", icon: Users },
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
   { href: "/admin/courts", label: "Courts", icon: MapPin },

@@ -13,7 +13,7 @@ function Bone({ className }: { className?: string }) {
 
 export function AdminDashboardSkeleton() {
   return (
-    <AdminPageShell wide>
+    <AdminPageShell>
       <CoachPageHeaderSkeleton className="mb-6" />
       <Bone className="h-28 w-full rounded-2xl" />
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

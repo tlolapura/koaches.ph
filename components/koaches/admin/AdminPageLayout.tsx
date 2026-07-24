@@ -9,14 +9,11 @@ export { CoachPageHeader as AdminPageHeader };
 type AdminPageShellProps = {
   children: React.ReactNode;
   className?: string;
-  /** Dashboard and wide tables use max-w-6xl; most admin pages use max-w-4xl */
-  wide?: boolean;
 };
 
-export function AdminPageShell({ children, className, wide }: AdminPageShellProps) {
+/** Shared content width for every admin page (sidebar layout). */
+export function AdminPageShell({ children, className }: AdminPageShellProps) {
   return (
-    <CoachPageShell className={cn(wide ? "max-w-6xl" : "max-w-4xl", className)}>
-      {children}
-    </CoachPageShell>
+    <CoachPageShell className={cn("max-w-6xl", className)}>{children}</CoachPageShell>
   );
 }
