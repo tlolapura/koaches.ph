@@ -69,12 +69,25 @@ function clearCoachCtx(response: NextResponse) {
   });
 }
 
+type AuthCookieToSet = {
+  name: string;
+  value: string;
+  options?: Parameters<NextResponse["cookies"]["set"]>[2];
+};
+
+function applyAuthCookies(response: NextResponse, cookiesToSet: AuthCookieToSet[]) {
+  cookiesToSet.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options);
+  });
+}
+
 export async function updateSession(request: NextRequest) {
   if (!isSupabaseConfigured()) {
     return NextResponse.next({ request });
   }
 
   let supabaseResponse = NextResponse.next({ request });
+  let authCookiesToSet: AuthCookieToSet[] = [];
 
   const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
     cookies: {
@@ -82,6 +95,7 @@ export async function updateSession(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
+        authCookiesToSet = cookiesToSet;
         cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
@@ -99,12 +113,39 @@ export async function updateSession(request: NextRequest) {
   let coachPortalContext: { coachId: string; email: string } | null = null;
   let coachCtxToStore: CoachPortalCookie | null = null;
 
+  // Already signed in → skip the login form (common when reopening the site on phone).
+  if (pathname === "/coach/login" && user) {
+    const cached = readCoachCtx(request, user.id);
+    let isCoach = Boolean(cached?.coachId);
+    if (!cached) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, coach_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      isCoach = profile?.role === "coach" && Boolean(profile.coach_id);
+    }
+    if (isCoach) {
+      const next = request.nextUrl.searchParams.get("next");
+      const url = request.nextUrl.clone();
+      url.pathname =
+        next && next.startsWith("/coach") && !next.startsWith("/coach/login")
+          ? next
+          : "/coach/dashboard";
+      url.search = "";
+      const redirect = NextResponse.redirect(url);
+      applyAuthCookies(redirect, authCookiesToSet);
+      return redirect;
+    }
+  }
+
   if (pathname.startsWith("/coach") && !isCoachPublicRoute(pathname)) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/coach/login";
       url.searchParams.set("next", pathname);
       const redirect = NextResponse.redirect(url);
+      applyAuthCookies(redirect, authCookiesToSet);
       clearCoachCtx(redirect);
       return redirect;
     }
@@ -130,6 +171,7 @@ export async function updateSession(request: NextRequest) {
         url.pathname = "/coach/login";
         url.searchParams.set("error", "unauthorized");
         const redirect = NextResponse.redirect(url);
+        applyAuthCookies(redirect, authCookiesToSet);
         clearCoachCtx(redirect);
         return redirect;
       }
@@ -177,6 +219,7 @@ export async function updateSession(request: NextRequest) {
       url.pathname = "/coach/settings/billing";
       url.searchParams.set("restricted", "1");
       const redirect = NextResponse.redirect(url);
+      applyAuthCookies(redirect, authCookiesToSet);
       if (coachCtxToStore) writeCoachCtx(redirect, coachCtxToStore);
       return redirect;
     }
@@ -188,7 +231,9 @@ export async function updateSession(request: NextRequest) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
-      return NextResponse.redirect(url);
+      const redirect = NextResponse.redirect(url);
+      applyAuthCookies(redirect, authCookiesToSet);
+      return redirect;
     }
 
     const { data: profile } = await supabase
@@ -200,7 +245,9 @@ export async function updateSession(request: NextRequest) {
     if (profile?.role !== "admin" && profile?.role !== "super_admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
-      return NextResponse.redirect(url);
+      const redirect = NextResponse.redirect(url);
+      applyAuthCookies(redirect, authCookiesToSet);
+      return redirect;
     }
   }
 
@@ -213,9 +260,7 @@ export async function updateSession(request: NextRequest) {
     const response = NextResponse.next({
       request: { headers: requestHeaders },
     });
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      response.cookies.set(cookie);
-    });
+    applyAuthCookies(response, authCookiesToSet);
     if (coachCtxToStore) writeCoachCtx(response, coachCtxToStore);
     return response;
   }

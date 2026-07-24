@@ -42,38 +42,38 @@ import { cn } from "@/lib/utils";
 const STEPS = [
   {
     id: "welcome",
-    title: "We're so glad you're here",
-    subtitle: "Thank you for trying PickleKoach",
+    title: "Apply to coach",
+    subtitle: "Takes about 5 minutes",
     icon: Sparkles,
   },
   {
     id: "identity",
-    title: "Let's start with you",
-    subtitle: "So we can set up your account and stay in touch",
+    title: "Your details",
+    subtitle: "Name, email, and phone",
     icon: User,
   },
   {
     id: "coaching",
     title: "Your coaching story",
-    subtitle: "This is what players will see on your public page",
+    subtitle: "What players see on your page",
     icon: Sparkles,
   },
   {
     id: "business",
-    title: "Almost there",
-    subtitle: "Your profile link and the player levels you coach",
+    title: "Profile setup",
+    subtitle: "Your link and player levels",
     icon: Link2,
   },
   {
     id: "review",
-    title: "One last look",
-    subtitle: "Take a moment to review, then send when you're ready",
+    title: "Review",
+    subtitle: "Check everything, then submit",
     icon: ClipboardCheck,
   },
   {
     id: "success",
-    title: "Thank you!",
-    subtitle: "We're grateful you applied",
+    title: "Submitted",
+    subtitle: "We'll be in touch soon",
     icon: CheckCircle2,
   },
 ] as const;
@@ -237,16 +237,14 @@ export function CoachApplicationWizard({
             {current.id === "welcome" && (
               <div className="space-y-4">
                 <p className="text-sm leading-relaxed text-[#6B7280]">
-                  Seriously, thank you for giving PickleKoach a try. A few quick steps, about 5
-                  minutes, and you&apos;ll be in the queue for your coach portal. We built this for
-                  coaches like you, and it means a lot that you&apos;re here.
+                  Fill this out and we&apos;ll review your application.
                 </p>
                 <ul className="space-y-3">
                   {[
-                    "Your details and how we can reach you",
-                    "Your coaching story for your public page",
-                    "Your profile link and player levels",
-                    "A quick review, then we take it from there",
+                    "Contact details",
+                    "Coaching bio",
+                    "Profile link and levels",
+                    "Review and submit",
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-3 text-sm text-[#374151]">
                       <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">

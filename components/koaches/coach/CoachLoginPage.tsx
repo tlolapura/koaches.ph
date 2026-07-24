@@ -13,19 +13,13 @@ import {
   AuthLoginIntro,
   AuthLoginScreen,
 } from "@/components/koaches/shared/AuthLoginLayout";
-import { coachSignInAction } from "@/lib/koaches/actions/auth";
+import { isCoachRole } from "@/lib/koaches/auth/profile";
 import { SITE_DOMAIN } from "@/lib/koaches/constants";
 import { clearCoachPortalCache } from "@/lib/koaches/queries/invalidate";
 import { PasswordInput } from "@/components/koaches/shared/PasswordInput";
+import { createClient } from "@/lib/supabase/client";
 
-function isNextRedirectError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "digest" in error &&
-    String((error as { digest?: unknown }).digest).startsWith("NEXT_REDIRECT")
-  );
-}
+const REMEMBERED_EMAIL_KEY = "koach_coach_email";
 
 export function CoachLoginPage() {
   const searchParams = useSearchParams();
@@ -40,6 +34,12 @@ export function CoachLoginPage() {
 
   useEffect(() => {
     clearCoachPortalCache();
+    try {
+      const saved = window.localStorage.getItem(REMEMBERED_EMAIL_KEY);
+      if (saved) setEmail(saved);
+    } catch {
+      /* private mode / blocked storage */
+    }
   }, []);
 
   useEffect(() => {
@@ -57,6 +57,7 @@ export function CoachLoginPage() {
 
       <AuthLoginScreen>
         <form
+          method="post"
           onSubmit={(e) => {
             e.preventDefault();
             setError(null);
@@ -65,19 +66,54 @@ export function CoachLoginPage() {
                 try {
                   const next = searchParams.get("next") ?? "/coach/dashboard";
                   clearCoachPortalCache();
-                  const result = await coachSignInAction(email.trim(), password, next);
-                  if (result && !result.ok) {
-                    setError(result.error ?? "Sign in failed");
-                    setRedirecting(false);
+
+                  const supabase = createClient();
+                  const { data, error: signInError } = await supabase.auth.signInWithPassword({
+                    email: email.trim(),
+                    password,
+                  });
+                  if (signInError) {
+                    setError(signInError.message || "Sign in failed");
                     return;
                   }
-                  // redirect() usually throws; if it resolves, keep spinner until navigation.
+
+                  const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("role, coach_id")
+                    .eq("id", data.user.id)
+                    .maybeSingle();
+
+                  if (!isCoachRole(profile?.role) || !profile?.coach_id) {
+                    await supabase.auth.signOut();
+                    setError("This account is not authorized for the coach portal.");
+                    return;
+                  }
+
+                  const { data: coachRow } = await supabase
+                    .from("coaches")
+                    .select("onboarding_completed_at")
+                    .eq("id", profile.coach_id)
+                    .maybeSingle();
+
+                  const defaultPath =
+                    coachRow && !coachRow.onboarding_completed_at
+                      ? "/coach/onboarding"
+                      : "/coach/dashboard";
+                  const dest =
+                    next.startsWith("/coach") && !next.startsWith("/coach/login")
+                      ? next
+                      : defaultPath;
+
+                  try {
+                    window.localStorage.setItem(REMEMBERED_EMAIL_KEY, email.trim());
+                  } catch {
+                    /* ignore */
+                  }
+
                   setRedirecting(true);
-                } catch (err) {
-                  if (isNextRedirectError(err)) {
-                    setRedirecting(true);
-                    return;
-                  }
+                  // Full navigation so middleware sees the new session cookies.
+                  window.location.assign(dest);
+                } catch {
                   setError("Sign in failed. Please try again.");
                   setRedirecting(false);
                 }
@@ -92,12 +128,17 @@ export function CoachLoginPage() {
               <AuthLoginField label="Email" htmlFor="coach-email">
                 <input
                   id="coach-email"
+                  name="email"
                   type="email"
+                  inputMode="email"
                   className="coach-input"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={`you@${SITE_DOMAIN}`}
-                  autoComplete="email"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                   disabled={busy}
                 />
@@ -117,6 +158,7 @@ export function CoachLoginPage() {
               >
                 <PasswordInput
                   id="coach-password"
+                  name="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
