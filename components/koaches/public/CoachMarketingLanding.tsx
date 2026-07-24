@@ -6,12 +6,49 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  Check,
   UserPlus,
 } from "lucide-react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
+import { FacebookIcon, InstagramIcon } from "@/components/koaches/shared/SocialIcons";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 import { MarketingDemoVideo } from "@/components/koaches/public/MarketingDemoVideo";
-import { BRAND_NAME } from "@/lib/koaches/constants";
+import { KOACHES_PAYMENT_CHANNELS } from "@/lib/koaches/billing-constants";
+import { BRAND_NAME, BRAND_SOCIAL } from "@/lib/koaches/constants";
+import { SUBSCRIPTION_PRICES } from "@/lib/koaches/admin-data";
+import { EARLY_BIRD_SLOTS_TOTAL } from "@/lib/koaches/early-bird";
+import { formatCurrency } from "@/lib/utils";
+
+const PLANS = [
+  {
+    id: "early-bird",
+    name: "Early bird",
+    price: SUBSCRIPTION_PRICES["early-bird"],
+    badge: `First ${EARLY_BIRD_SLOTS_TOTAL} coaches`,
+    description: "Founding coach pricing while early bird slots last.",
+    featured: true,
+    perks: [
+      "Full coaching OS access",
+      "Students, sessions, and programs",
+      "Progress cards and reports",
+      "Public coach profile page",
+    ],
+  },
+  {
+    id: "regular",
+    name: "Regular",
+    price: SUBSCRIPTION_PRICES.regular,
+    badge: "Standard plan",
+    description: "Same full platform once early bird slots fill up.",
+    featured: false,
+    perks: [
+      "Full coaching OS access",
+      "Students, sessions, and programs",
+      "Progress cards and reports",
+      "Public coach profile page",
+    ],
+  },
+] as const;
 
 export function CoachMarketingLanding() {
   const [recordingView, setRecordingView] = useState<"mobile" | "desktop">("desktop");
@@ -138,6 +175,83 @@ export function CoachMarketingLanding() {
         </div>
       </section>
 
+      <section className="mx-auto w-full max-w-6xl px-4 pb-2 sm:px-6">
+        <div className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white">
+          <div className="border-b border-[#E5E7EB] bg-gradient-to-r from-[#F0FDF4] via-[#EFF6FF] to-[#F8FAFC] px-4 py-4 sm:px-6">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              Pricing
+            </p>
+            <h2 className="font-heading mt-1 text-2xl font-bold">Simple monthly plans</h2>
+            <p className="mt-1 max-w-xl text-sm text-[#4B5563]">
+              One subscription for the full coaching OS. Pay monthly via GCash, Maya, BPI, or UnionBank.
+            </p>
+          </div>
+
+          <div className="grid gap-0 md:grid-cols-2 md:divide-x md:divide-[#E5E7EB]">
+            {PLANS.map((plan) => (
+              <div
+                key={plan.id}
+                className={`relative px-5 py-6 sm:px-7 sm:py-8 ${
+                  plan.featured ? "bg-gradient-to-br from-[#F0FDF4]/80 to-white" : "bg-white"
+                }`}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-heading text-lg font-bold text-[#111827]">{plan.name}</h3>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                      plan.featured
+                        ? "bg-[#16A34A] text-white"
+                        : "bg-[#F3F4F6] text-[#6B7280]"
+                    }`}
+                  >
+                    {plan.badge}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-[#6B7280]">{plan.description}</p>
+                <p className="font-heading mt-5 text-4xl font-bold tracking-tight text-[#14532D]">
+                  {formatCurrency(plan.price)}
+                  <span className="text-base font-semibold text-[#6B7280]">/mo</span>
+                </p>
+                <ul className="mt-5 space-y-2.5">
+                  {plan.perks.map((perk) => (
+                    <li key={perk} className="flex items-start gap-2.5 text-sm text-[#374151]">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
+                        <Check className="h-3 w-3" strokeWidth={3} />
+                      </span>
+                      {perk}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-[#E5E7EB] px-4 py-5 sm:px-6">
+            <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">
+              Modes of payment
+            </p>
+            <p className="mt-1 text-center text-sm text-[#4B5563]">
+              Scan QR in your billing page, then upload your receipt for confirmation.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+              {KOACHES_PAYMENT_CHANNELS.map((channel) => (
+                <div
+                  key={channel.id}
+                  className="flex h-14 w-[7.5rem] items-center justify-center rounded-2xl bg-white px-3 ring-1 ring-[#E5E7EB] sm:h-16 sm:w-36"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- static brand logos */}
+                  <img
+                    src={channel.logoSrc}
+                    alt={channel.label}
+                    className="h-8 w-auto max-w-full object-contain sm:h-9"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto w-full max-w-6xl px-4 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-8 sm:px-6">
         <div className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white p-5 text-center sm:p-8">
           <UserPlus className="mx-auto h-8 w-8 text-[#16A34A]" />
@@ -179,6 +293,24 @@ export function CoachMarketingLanding() {
           <div className="mt-4 flex flex-col items-center justify-between gap-2 border-t border-[#F3F4F6] pt-3 sm:flex-row">
             <p className="text-xs text-[#9CA3AF]">© {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.</p>
             <div className="flex items-center gap-4 text-xs text-[#9CA3AF]">
+              <a
+                href={BRAND_SOCIAL.facebook.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-[#6B7280]"
+              >
+                <FacebookIcon className="h-3.5 w-3.5" />
+                Facebook
+              </a>
+              <a
+                href={BRAND_SOCIAL.instagram.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 hover:text-[#6B7280]"
+              >
+                <InstagramIcon className="h-3.5 w-3.5" />
+                @{BRAND_SOCIAL.instagram.handle}
+              </a>
               <Link href="/terms" className="hover:text-[#6B7280]">
                 Terms
               </Link>

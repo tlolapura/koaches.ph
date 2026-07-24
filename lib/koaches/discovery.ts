@@ -2,6 +2,8 @@ import type { CoachListing } from "./types";
 
 export type ExperienceLevel = "brand-new" | "beginner" | "intermediate" | "advanced";
 
+export type CoachSortId = "featured" | "price-asc" | "price-desc" | "name" | "students";
+
 export type DiscoveryFilters = {
   search?: string;
   region?: string;
@@ -31,6 +33,14 @@ export const EXPERIENCE_OPTIONS: { id: ExperienceLevel; label: string; hint: str
   { id: "advanced", label: "Advanced", hint: "Tournament or competitive play" },
 ];
 
+export const SORT_OPTIONS: { id: CoachSortId; label: string }[] = [
+  { id: "featured", label: "Featured" },
+  { id: "price-asc", label: "Price: low to high" },
+  { id: "price-desc", label: "Price: high to low" },
+  { id: "name", label: "Name A–Z" },
+  { id: "students", label: "Most students" },
+];
+
 export const BUDGET_OPTIONS = [
   { id: "any", label: "Any budget", maxRate: undefined },
   { id: "low", label: "Under ₱700", maxRate: 700 },
@@ -46,6 +56,13 @@ const LEVEL_KEYWORDS: Record<ExperienceLevel, string[]> = {
 };
 
 function coachMatchesLevel(coach: CoachListing, level: ExperienceLevel): boolean {
+  const levels = coach.coachingLevels ?? [];
+  if (levels.length > 0) {
+    if (level === "brand-new" || level === "beginner") return levels.includes("beginner");
+    if (level === "intermediate") return levels.includes("intermediate");
+    if (level === "advanced") return levels.includes("advanced");
+  }
+
   const text = `${coach.specialization} ${coach.bio}`.toLowerCase();
   const keywords = LEVEL_KEYWORDS[level];
   if (level === "brand-new" || level === "beginner") {
@@ -82,6 +99,53 @@ export function filterCoaches(coaches: CoachListing[], filters: DiscoveryFilters
 
     return true;
   });
+}
+
+export function sortCoaches(coaches: CoachListing[], sort: CoachSortId = "featured"): CoachListing[] {
+  const next = [...coaches];
+  switch (sort) {
+    case "price-asc":
+      return next.sort((a, b) => a.ratePerSession - b.ratePerSession || a.name.localeCompare(b.name));
+    case "price-desc":
+      return next.sort((a, b) => b.ratePerSession - a.ratePerSession || a.name.localeCompare(b.name));
+    case "name":
+      return next.sort((a, b) => a.name.localeCompare(b.name));
+    case "students":
+      return next.sort((a, b) => b.totalStudents - a.totalStudents || a.name.localeCompare(b.name));
+    case "featured":
+    default:
+      return next.sort((a, b) => {
+        const trial = Number(b.freeTrialEnabled) - Number(a.freeTrialEnabled);
+        if (trial !== 0) return trial;
+        return b.totalStudents - a.totalStudents || a.name.localeCompare(b.name);
+      });
+  }
+}
+
+export function collectCoachCities(coaches: CoachListing[]): string[] {
+  const set = new Set<string>();
+  for (const coach of coaches) {
+    for (const court of coach.courts) {
+      if (court.city?.trim()) set.add(court.city.trim());
+    }
+  }
+  return [...set].sort((a, b) => a.localeCompare(b));
+}
+
+export function collectCoachCourts(
+  coaches: CoachListing[],
+  city?: string
+): { id: string; name: string; city?: string }[] {
+  const map = new Map<string, { id: string; name: string; city?: string }>();
+  for (const coach of coaches) {
+    for (const court of coach.courts) {
+      if (city && court.city !== city) continue;
+      if (!map.has(court.id)) {
+        map.set(court.id, { id: court.id, name: court.name, city: court.city });
+      }
+    }
+  }
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function recommendCoaches(

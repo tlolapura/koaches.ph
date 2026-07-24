@@ -7,6 +7,20 @@ export const BRAND_NAME = "PickleKoach";
 export const SITE_DOMAIN = "picklekoach.com";
 export const SITE_TAGLINE = "Coach smarter.";
 
+/** Official PickleKoach social profiles (public site footers, etc.) */
+export const BRAND_SOCIAL = {
+  facebook: {
+    handle: "picklekoach",
+    href: "https://www.facebook.com/picklekoach",
+    label: "Facebook",
+  },
+  instagram: {
+    handle: "picklekoach",
+    href: "https://www.instagram.com/picklekoach",
+    label: "Instagram",
+  },
+} as const;
+
 export const RESERVED_SLUGS = new Set([
   "coach",
   "admin",

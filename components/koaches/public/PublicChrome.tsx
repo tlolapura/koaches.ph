@@ -6,7 +6,8 @@ import { Menu, X } from "lucide-react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
 import { PublicBrand } from "@/components/koaches/public/BrandMark";
-import { BRAND_NAME, SITE_DOMAIN, SITE_TAGLINE } from "@/lib/koaches/constants";
+import { FacebookIcon, InstagramIcon } from "@/components/koaches/shared/SocialIcons";
+import { BRAND_NAME, BRAND_SOCIAL, SITE_DOMAIN, SITE_TAGLINE } from "@/lib/koaches/constants";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -158,6 +159,27 @@ export function PublicFooter() {
             <p className="mt-3 max-w-xs text-sm text-white/65">
               Pickleball coaching in the Philippines. {SITE_TAGLINE}
             </p>
+            <div className="mt-4 flex items-center gap-2">
+              <a
+                href={BRAND_SOCIAL.facebook.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+                aria-label={`${BRAND_NAME} on Facebook`}
+              >
+                <FacebookIcon className="h-4 w-4" />
+              </a>
+              <a
+                href={BRAND_SOCIAL.instagram.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+                aria-label={`${BRAND_NAME} on Instagram`}
+              >
+                <InstagramIcon className="h-4 w-4" />
+              </a>
+              <span className="ml-1 text-xs text-white/55">@{BRAND_SOCIAL.instagram.handle}</span>
+            </div>
           </div>
           <div className="flex gap-10 text-sm">
             <ul className="space-y-2">
@@ -168,6 +190,26 @@ export function PublicFooter() {
             </ul>
             <ul className="space-y-2">
               <li><FooterLink href="/coach/login">Coach login</FooterLink></li>
+              <li>
+                <a
+                  href={BRAND_SOCIAL.facebook.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/70 transition-colors hover:text-[#FACC15]"
+                >
+                  Facebook
+                </a>
+              </li>
+              <li>
+                <a
+                  href={BRAND_SOCIAL.instagram.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/70 transition-colors hover:text-[#FACC15]"
+                >
+                  Instagram
+                </a>
+              </li>
               <li className="text-white/45">hello@{SITE_DOMAIN}</li>
             </ul>
           </div>
