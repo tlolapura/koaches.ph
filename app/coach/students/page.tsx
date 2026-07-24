@@ -6,6 +6,7 @@ import { Clock, UserCheck, Users, X } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachPrograms } from "@/hooks/useCoachPrograms";
 import { useCoachSessions } from "@/hooks/useCoachSessions";
+import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { approveIntakeAction, fetchIntakeSubmissionsAction, rejectIntakeAction } from "@/lib/koaches/actions/intake";
 import {
   coachingLevelFromDupr,
@@ -32,6 +33,7 @@ import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/Coac
 import { CoachStudentListSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { ProgressCardReadySection } from "@/components/koaches/coach/ProgressCardReadySection";
+import { CoachJoinLinkCard } from "@/components/koaches/coach/CoachJoinLinkCard";
 import { getStudentSessionRatings } from "@/lib/koaches/session-progress";
 import { GenerateProgressCardSheet } from "@/components/koaches/coach/GenerateProgressCardSheet";
 import { useProgressCards } from "@/hooks/useProgressCards";
@@ -67,6 +69,7 @@ function FilterChip({
 
 export default function StudentsPage() {
   const coachId = usePortalCoachId();
+  const { coach } = useCoachProfile(coachId);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -155,7 +158,7 @@ export default function StudentsPage() {
     }
     return {
       title: "No students yet",
-      description: "Add a student manually to get started.",
+      description: "Share your join link so players can sign up, or add someone manually.",
       action: (
         <button type="button" onClick={() => setAddOpen(true)} className="coach-btn-outline max-w-xs">
           Add manually
@@ -207,6 +210,8 @@ export default function StudentsPage() {
           </button>
         }
       />
+
+      {coach ? <CoachJoinLinkCard coach={coach} className="mt-3" /> : null}
 
       <div className="mt-3 space-y-2">
         <CoachSearchInput value={search} onChange={setSearch} placeholder="Search students..." />
