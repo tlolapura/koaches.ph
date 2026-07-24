@@ -312,7 +312,7 @@ export function CoachOnboardingPage() {
             {current.id === "rates" && (
               <div>
                 <p className="mb-3 text-sm text-[#6B7280]">
-                  Set your drop-in session rates. Programs have their own bundle pricing.
+                  Set per-person drop-in rates by group size. Programs have their own bundle pricing.
                 </p>
                 <PricingTiersEditor pricing={pricing} onChange={setPricing} />
               </div>

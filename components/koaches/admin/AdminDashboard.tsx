@@ -22,13 +22,16 @@ const AdminRevenueChart = dynamic(
     import("@/components/koaches/admin/AdminRevenueChart").then((m) => m.AdminRevenueChart),
   {
     ssr: false,
-    loading: () => <div className="h-48 animate-pulse rounded-xl bg-[#E5E7EB]/60" />,
+    loading: () => <div className="h-48 animate-pulse rounded-2xl bg-[#E5E7EB]/60" />,
   }
 );
 
 type AdminDashboardProps = {
   data: AdminDashboardData;
 };
+
+const cardClass =
+  "overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-[#E5E7EB]/80";
 
 function StatCard({
   label,
@@ -43,14 +46,23 @@ function StatCard({
   sub?: string;
   icon: React.ComponentType<{ className?: string }>;
   href?: string;
-  tone?: "green" | "blue";
+  tone?: "green" | "blue" | "amber";
 }) {
   const iconWrap =
-    tone === "blue" ? "bg-[#EFF6FF] text-[#1D4ED8]" : "bg-[#F0FDF4] text-[#166534]";
-  const valueColor = tone === "blue" ? "text-[#1D4ED8]" : "text-[#14532D]";
+    tone === "blue"
+      ? "bg-[#EFF6FF] text-[#1D4ED8]"
+      : tone === "amber"
+        ? "bg-[#FFF7ED] text-[#C2410C]"
+        : "bg-[#F0FDF4] text-[#166534]";
+  const valueColor =
+    tone === "blue"
+      ? "text-[#1D4ED8]"
+      : tone === "amber"
+        ? "text-[#9A3412]"
+        : "text-[#14532D]";
 
   const inner = (
-    <div className="coach-card flex h-full flex-col p-4">
+    <div className={cn(cardClass, "flex h-full flex-col p-4 transition-colors hover:bg-[#FAFBFC]")}>
       <div className="flex items-start justify-between gap-2">
         <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", iconWrap)}>
           <Icon className="h-5 w-5" />
@@ -73,32 +85,40 @@ function StatCard({
   return inner;
 }
 
+function coachInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+  return `${parts[0]![0] ?? ""}${parts[parts.length - 1]![0] ?? ""}`.toUpperCase();
+}
+
 export function AdminDashboard({ data }: AdminDashboardProps) {
   return (
     <AdminPageShell wide>
-      <AdminPageHeader
-        title="Dashboard"
-        subtitle="Platform overview"
-        className="mb-6"
-      />
+      <AdminPageHeader title="Dashboard" subtitle="Platform overview" className="mb-6" />
 
-      <div className="coach-card overflow-hidden p-5 sm:p-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="md:hidden">
+      <div className={cn(cardClass, "relative overflow-hidden p-5 sm:p-6")}>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#F0FDF4] via-transparent to-[#EFF6FF]" />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
+          <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+              PickleKoach Admin
+            </p>
+            <p className="font-heading mt-1 text-2xl font-bold text-[#111827] sm:text-3xl">
               Platform overview
             </p>
-            <p className="font-heading mt-1 text-2xl font-bold text-[#111827]">PickleKoach Admin</p>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              {data.stats.activeCoaches} active coaches · {data.courtCount} courts
+            </p>
           </div>
-          <div className="rounded-xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] px-4 py-3 text-right text-white md:ml-auto">
-            <p className="text-[10px] font-medium uppercase tracking-wide text-white/60">MRR</p>
-            <p className="font-heading text-2xl font-bold">{formatCurrency(data.mrr)}</p>
-            <p className="text-xs text-white/60">{data.stats.activeCoaches} active coaches</p>
+          <div className="rounded-2xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] px-5 py-4 text-right text-white shadow-lg shadow-[#16A34A]/20">
+            <p className="text-[10px] font-medium uppercase tracking-wide text-white/70">MRR</p>
+            <p className="font-heading text-2xl font-bold sm:text-3xl">{formatCurrency(data.mrr)}</p>
+            <p className="text-xs text-white/70">{data.stats.activeCoaches} active coaches</p>
           </div>
         </div>
       </div>
 
-      {/* KPI grid */}
       <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           icon={Users}
@@ -143,7 +163,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
           value={data.pendingApplications}
           sub="Awaiting review"
           href="/admin/applications"
-          tone="blue"
+          tone={data.pendingApplications > 0 ? "amber" : "blue"}
         />
         {data.pendingPaymentCount > 0 && (
           <StatCard
@@ -151,8 +171,8 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             label="Payment receipts"
             value={data.pendingPaymentCount}
             sub="Awaiting approval"
-            href="/admin/coaches"
-            tone="green"
+            href="/admin/payments"
+            tone="amber"
           />
         )}
         <StatCard
@@ -167,20 +187,22 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
           label="MRR"
           value={formatCurrency(data.mrr)}
           sub="Monthly recurring"
-          href="/admin/coaches"
+          href="/admin/payments"
           tone="green"
         />
       </div>
 
-      {/* Chart + sidebar panels */}
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
-        <div className="coach-card p-5 lg:col-span-2">
+        <div className={cn(cardClass, "p-5 lg:col-span-2")}>
           <div className="flex items-center justify-between gap-2">
             <div>
               <h2 className="font-heading font-semibold text-[#111827]">Session revenue</h2>
               <p className="text-sm text-[#6B7280]">Completed sessions — last 6 months</p>
             </div>
-            <Link href="/admin/coaches" className="text-sm font-semibold text-[#4F8FF7]">
+            <Link
+              href="/admin/coaches"
+              className="hidden text-sm font-semibold text-[#4F8FF7] hover:underline sm:inline"
+            >
               Manage coaches →
             </Link>
           </div>
@@ -190,7 +212,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
         </div>
 
         <div className="space-y-4">
-          <div className="coach-card p-5">
+          <div className={cn(cardClass, "p-5")}>
             <h2 className="font-heading font-semibold text-[#111827]">Early bird slots</h2>
             <p className="mt-1 text-sm text-[#6B7280]">₱299/mo founding coach pricing</p>
             <p className="font-heading mt-4 text-3xl font-bold text-[#1D4ED8]">
@@ -201,7 +223,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             </p>
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#F3F4F6]">
               <div
-                className="h-full rounded-full bg-[#4F8FF7] transition-all"
+                className="h-full rounded-full bg-gradient-to-r from-[#4F8FF7] to-[#16A34A] transition-all"
                 style={{ width: `${data.earlyBirdPercent}%` }}
               />
             </div>
@@ -210,23 +232,28 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             </p>
           </div>
 
-          <div className="coach-card p-5">
+          <div className={cn(cardClass, "p-5")}>
             <h2 className="font-heading font-semibold text-[#111827]">Quick actions</h2>
             <div className="mt-3 space-y-2">
               {[
-                { href: "/admin/applications", label: "Review applications" },
-                { href: "/admin/coaches", label: "Manage coaches & billing" },
-                ...(data.pendingPaymentCount > 0
-                  ? [{ href: "/admin/coaches", label: `Review ${data.pendingPaymentCount} payment receipt${data.pendingPaymentCount === 1 ? "" : "s"}` }]
-                  : []),
-                { href: "/admin/courts", label: "Add a court" },
-              ].map((a, i) => (
+                { href: "/admin/applications", label: "Review applications", tone: "green" as const },
+                { href: "/admin/coaches", label: "Manage coaches", tone: "blue" as const },
+                {
+                  href: "/admin/payments",
+                  label:
+                    data.pendingPaymentCount > 0
+                      ? `Review ${data.pendingPaymentCount} payment receipt${data.pendingPaymentCount === 1 ? "" : "s"}`
+                      : "Review payments",
+                  tone: "green" as const,
+                },
+                { href: "/admin/courts", label: "Add a court", tone: "blue" as const },
+              ].map((a) => (
                 <Link
                   key={`${a.href}-${a.label}`}
                   href={a.href}
                   className={cn(
-                    "flex min-h-[40px] items-center justify-between rounded-xl px-3 text-sm font-semibold transition-colors",
-                    i % 2 === 0
+                    "flex min-h-[44px] items-center justify-between rounded-xl px-3.5 text-sm font-semibold transition-colors",
+                    a.tone === "green"
                       ? "bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7]"
                       : "bg-[#EFF6FF] text-[#1D4ED8] hover:bg-[#DBEAFE]"
                   )}
@@ -240,25 +267,35 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
         </div>
       </div>
 
-      {/* Pending payments + applications */}
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         {data.pendingPaymentCount > 0 && (
-          <section className="coach-card border-[#16A34A]/30 p-5 lg:col-span-2">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="font-heading font-semibold text-[#111827]">Pending payment receipts</h2>
-                <p className="mt-1 text-sm text-[#6B7280]">
-                  {data.pendingPaymentCount} receipt{data.pendingPaymentCount === 1 ? "" : "s"} need review on the Coaches page.
-                </p>
+          <section className={cn(cardClass, "border-0 p-5 ring-[#86EFAC]/60 lg:col-span-2")}>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F0FDF4]">
+                  <CreditCard className="h-5 w-5 text-[#166534]" />
+                </div>
+                <div>
+                  <h2 className="font-heading font-semibold text-[#111827]">
+                    Pending payment receipts
+                  </h2>
+                  <p className="mt-1 text-sm text-[#6B7280]">
+                    {data.pendingPaymentCount} receipt
+                    {data.pendingPaymentCount === 1 ? " needs" : "s need"} review.
+                  </p>
+                </div>
               </div>
-              <Link href="/admin/coaches" className="coach-btn-primary w-auto shrink-0 px-4 py-2 text-sm">
+              <Link
+                href="/admin/payments"
+                className="inline-flex h-10 w-full shrink-0 items-center justify-center rounded-xl bg-[#16A34A] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#15803D] sm:w-auto"
+              >
                 Review now
               </Link>
             </div>
           </section>
         )}
 
-        <section className="coach-card p-5">
+        <section className={cn(cardClass, "p-5")}>
           <div className="flex items-center justify-between">
             <h2 className="font-heading font-semibold text-[#111827]">Pending applications</h2>
             <Link href="/admin/applications" className="text-sm font-semibold text-[#4F8FF7]">
@@ -266,30 +303,51 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             </Link>
           </div>
           {data.pendingApps.length === 0 ? (
-            <p className="mt-4 text-sm text-[#6B7280]">No pending applications.</p>
+            <p className="mt-6 text-sm text-[#6B7280]">No pending applications.</p>
           ) : (
-            <ul className="mt-4 space-y-3">
+            <ul className="mt-4 space-y-2.5">
               {data.pendingApps.map((a) => (
-                <li key={a.id} className="rounded-xl border border-[#E5E7EB] p-3">
-                  <p className="font-heading font-semibold">{a.fullName}</p>
-                  <p className="line-clamp-2 text-sm text-[#6B7280]">{a.bio}</p>
-                  <p className="mt-1 text-xs text-[#9CA3AF]">
-                    {a.currentStudentCount} students · applied {formatDisplayDate(a.appliedAt)}
-                  </p>
+                <li
+                  key={a.id}
+                  className="rounded-xl bg-[#F9FAFB] px-3.5 py-3 ring-1 ring-[#E5E7EB]/60"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] text-[11px] font-bold text-white">
+                      {coachInitials(a.fullName)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-heading truncate font-semibold text-[#111827]">
+                        {a.fullName}
+                      </p>
+                      <p className="line-clamp-2 text-sm text-[#6B7280]">{a.bio}</p>
+                      <p className="mt-1 text-xs text-[#9CA3AF]">
+                        {a.currentStudentCount} students · applied{" "}
+                        {formatDisplayDate(a.appliedAt)}
+                      </p>
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </section>
 
-        <section className="coach-card p-5">
+        <section className={cn(cardClass, "p-5")}>
           <h2 className="font-heading font-semibold text-[#111827]">Recent activity</h2>
           {data.recentActivity.length === 0 ? (
-            <p className="mt-4 text-sm text-[#6B7280]">Activity will appear as coaches run sessions.</p>
+            <p className="mt-6 text-sm text-[#6B7280]">
+              Activity will appear as coaches run sessions.
+            </p>
           ) : (
-            <ul className="mt-4 space-y-4">
-              {data.recentActivity.map((a) => (
-                <li key={a.id} className="activity-item">
+            <ul className="mt-4 space-y-0">
+              {data.recentActivity.map((a, i) => (
+                <li
+                  key={a.id}
+                  className={cn(
+                    "py-3",
+                    i > 0 && "border-t border-[#F3F4F6]"
+                  )}
+                >
                   <p className="text-sm font-medium text-[#111827]">{a.label}</p>
                   <p className="mt-0.5 text-xs text-[#6B7280]">{a.time}</p>
                 </li>
@@ -299,21 +357,23 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
         </section>
       </div>
 
-      {/* Coaches table */}
-      <section className="coach-card mt-4 overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E7EB] p-5">
+      <section className={cn(cardClass, "mt-4")}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#F3F4F6] p-5">
           <div>
             <h2 className="font-heading font-semibold text-[#111827]">All coaches</h2>
             <p className="text-sm text-[#6B7280]">Revenue and activity this month</p>
           </div>
-          <Link href="/admin/coaches" className="coach-btn-primary w-auto px-5 py-2.5 text-sm">
+          <Link
+            href="/admin/coaches"
+            className="inline-flex h-10 items-center justify-center rounded-xl bg-[#16A34A] px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#15803D]"
+          >
             Manage coaches
           </Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
-              <tr className="bg-[#F9FAFB] text-left text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+              <tr className="bg-[#FAFBFC] text-left text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
                 <th className="px-5 py-3">Coach</th>
                 <th className="px-5 py-3">Students</th>
                 <th className="px-5 py-3">Sessions</th>
@@ -325,21 +385,28 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             </thead>
             <tbody>
               {data.coachSummaries.map((c) => (
-                <tr key={c.id} className="border-t border-[#E5E7EB] hover:bg-[#FAFAF8]">
+                <tr key={c.id} className="border-t border-[#F3F4F6] hover:bg-[#FAFBFC]">
                   <td className="px-5 py-3">
-                    <p className="font-heading font-semibold">
-                      <Link href="/admin/coaches" className="hover:text-[#4F8FF7]">
-                        {c.name}
-                      </Link>
-                    </p>
-                    <Link
-                      href={`/coach/${c.slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[#6B7280] hover:text-[#4F8FF7]"
-                    >
-                      /coach/{c.slug}
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] text-[10px] font-bold text-white">
+                        {coachInitials(c.name)}
+                      </div>
+                      <div>
+                        <p className="font-heading font-semibold">
+                          <Link href="/admin/coaches" className="hover:text-[#4F8FF7]">
+                            {c.name}
+                          </Link>
+                        </p>
+                        <Link
+                          href={`/coach/${c.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#6B7280] hover:text-[#4F8FF7]"
+                        >
+                          /coach/{c.slug}
+                        </Link>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-5 py-3">{c.students}</td>
                   <td className="px-5 py-3">{c.sessionsThisMonth}</td>

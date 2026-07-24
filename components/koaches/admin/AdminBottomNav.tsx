@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutDashboard, MapPin, Users } from "lucide-react";
+import { CreditCard, FileText, LayoutDashboard, MapPin, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { bottomNavActiveClass } from "@/lib/koaches/coach-colors";
 import { NavCountBadge } from "@/components/koaches/coach/NavCountBadge";
@@ -12,6 +12,7 @@ import { adminBadgeForNavHref } from "@/lib/koaches/nav-badge-utils";
 const tabs = [
   { href: "/admin", label: "Home", icon: LayoutDashboard, exact: true },
   { href: "/admin/coaches", label: "Coaches", icon: Users },
+  { href: "/admin/payments", label: "Pay", icon: CreditCard },
   { href: "/admin/applications", label: "Apps", icon: FileText },
   { href: "/admin/courts", label: "Courts", icon: MapPin },
 ];

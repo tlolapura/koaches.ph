@@ -103,12 +103,12 @@ function buildAdminNotifications(counts: AdminNavBadgeCounts): PortalNotificatio
   if (counts.pendingPaymentReceipts > 0) {
     items.push({
       id: "payments-pending",
-      href: "/admin/coaches",
+      href: "/admin/payments",
       title:
         counts.pendingPaymentReceipts === 1
           ? "1 payment receipt"
           : `${counts.pendingPaymentReceipts} payment receipts`,
-      message: "Confirm coach subscription payments on the Coaches page.",
+      message: "Confirm coach subscription payments.",
       tone: "amber",
     });
   }

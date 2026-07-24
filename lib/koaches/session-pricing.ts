@@ -1,5 +1,5 @@
 import type { CoachSessionPricing, Program, Session } from "@/lib/koaches/types";
-import { getRateForPlayers } from "@/lib/koaches/pricing";
+import { getDropInSessionTotal } from "@/lib/koaches/pricing";
 import { getProgramPerSessionRevenue } from "@/lib/koaches/program-pricing";
 
 /** Suggested price when scheduling a session */
@@ -14,7 +14,10 @@ export function suggestSessionPrice(options: {
     return getProgramPerSessionRevenue(program);
   }
   if (pricing) {
-    return getRateForPlayers(pricing, playerCount) ?? pricing.tiers[0]?.rate ?? 0;
+    return (
+      getDropInSessionTotal(pricing, playerCount) ??
+      (pricing.tiers[0]?.rate ?? 0) * playerCount
+    );
   }
   return 0;
 }

@@ -155,7 +155,7 @@ export default function ProfilePage() {
           <div>
             <p className="font-heading font-semibold">Drop-in rates</p>
             <p className="text-sm text-[#6B7280]">
-              Per session, by group size · {pricing.defaultDurationMinutes} min · {pricing.minimumPlayers}–{pricing.maximumPlayers} pax
+              Per person, by group size · {pricing.defaultDurationMinutes} min · {pricing.minimumPlayers}–{pricing.maximumPlayers} pax
             </p>
           </div>
           <button type="button" className="text-sm font-semibold text-[#4F8FF7]" onClick={() => setPricingOpen(true)}>
@@ -248,7 +248,7 @@ export default function ProfilePage() {
         open={pricingOpen}
         onClose={() => setPricingOpen(false)}
         title="Drop-in rates"
-        subtitle="What a walk-up session costs. Programs use their own package price."
+        subtitle="Per person. Programs use their own package price."
         footer={
           <CoachSheetFooter>
             <CoachButton

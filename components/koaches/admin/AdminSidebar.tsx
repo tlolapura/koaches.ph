@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CreditCard,
   FileText,
   LayoutDashboard,
   MapPin,
@@ -20,6 +21,7 @@ import { adminBadgeForNavHref } from "@/lib/koaches/nav-badge-utils";
 export const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/coaches", label: "Coaches", icon: Users },
+  { href: "/admin/payments", label: "Payments", icon: CreditCard },
   { href: "/admin/courts", label: "Courts", icon: MapPin },
   { href: "/admin/applications", label: "Applications", icon: FileText },
 ] as const;

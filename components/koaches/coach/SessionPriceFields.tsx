@@ -53,14 +53,15 @@ export function SessionPriceFields({
     playerCount,
     pricing,
   });
+  const perPerson = suggested > 0 ? Math.round(suggested / playerCount) : 0;
 
   return (
     <CoachSheetField
-      label="Drop-in rate (₱)"
+      label="Session total (₱)"
       hint={
         suggested !== price
-          ? `Suggested for ${playerCount} player${playerCount === 1 ? "" : "s"}: ${formatCurrency(suggested)}`
-          : `${playerCount} player${playerCount === 1 ? "" : "s"} · from your rate card`
+          ? `Suggested: ${formatCurrency(perPerson)}/person × ${playerCount} = ${formatCurrency(suggested)}`
+          : `${formatCurrency(perPerson)}/person × ${playerCount} players`
       }
     >
       <input

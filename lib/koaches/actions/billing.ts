@@ -5,6 +5,7 @@ import { getAuthenticatedCoachIdAction } from "@/lib/koaches/actions/auth";
 import { fetchCoachProfileAction } from "@/lib/koaches/actions/coach-profile";
 import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import {
+  isPaymentChannelId,
   RECEIPT_ALLOWED_TYPES,
   RECEIPT_BUCKET,
   RECEIPT_MAX_BYTES,
@@ -15,7 +16,7 @@ import {
   mapPaymentRow,
 } from "@/lib/koaches/billing-invoices";
 import { getSubscriptionBillingInfo } from "@/lib/koaches/subscription-billing";
-import type { CoachBillingDashboard, CoachPaymentMethod } from "@/lib/koaches/types";
+import type { CoachBillingDashboard } from "@/lib/koaches/types";
 import { createServiceClient } from "@/lib/supabase/server";
 
 export async function fetchCoachBillingDashboardAction(
@@ -23,8 +24,19 @@ export async function fetchCoachBillingDashboardAction(
 ): Promise<CoachBillingDashboard> {
   await assertCoachAccess(coachId);
   const supabase = createServiceClient();
-  const coach = await fetchCoachProfileAction(coachId);
-  const billing = getSubscriptionBillingInfo(coach);
+  let coach = await fetchCoachProfileAction(coachId);
+  let billing = getSubscriptionBillingInfo(coach);
+
+  // After grace: soft-lock already applies; also flip is_active so public profile goes offline.
+  if (billing.status === "lapsed" && coach.isActive) {
+    await supabase
+      .from("coaches")
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq("id", coachId);
+    coach = { ...coach, isActive: false };
+    billing = getSubscriptionBillingInfo(coach);
+  }
+
   const currentInvoice = await ensureCurrentCoachInvoice(supabase, coach);
 
   const [{ data: invoiceRows }, { data: paymentRows }] = await Promise.all([
@@ -72,10 +84,11 @@ export async function submitCoachPaymentReceiptAction(
     return { ok: false, error: e instanceof Error ? e.message : "Not authorized." };
   }
 
-  const method = formData.get("method") as CoachPaymentMethod;
-  if (method !== "gcash" && method !== "bank_transfer") {
+  const methodRaw = String(formData.get("method") ?? "");
+  if (!isPaymentChannelId(methodRaw)) {
     return { ok: false, error: "Select a payment method." };
   }
+  const method = methodRaw;
 
   const notes = String(formData.get("notes") ?? "").trim();
   const file = formData.get("receipt");

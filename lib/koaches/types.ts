@@ -117,7 +117,7 @@ export type SessionRateTier = {
   id: string;
   minPlayers: number;
   maxPlayers: number;
-  /** Total drop-in price for this group size */
+  /** Per-person drop-in rate for this group size (PHP) */
   rate: number;
 };
 
@@ -197,7 +197,7 @@ export type CoachSubscriptionInvoice = {
   paidAt?: string;
 };
 
-export type CoachPaymentMethod = "gcash" | "bank_transfer";
+export type CoachPaymentMethod = "gcash" | "maya" | "bpi" | "unionbank" | "bank_transfer";
 
 export type CoachPaymentSubmissionStatus = "pending" | "approved" | "rejected";
 

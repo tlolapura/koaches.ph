@@ -7,7 +7,7 @@ import type {
   CoachProfile,
   CoachSubscriptionInvoice,
 } from "@/lib/koaches/types";
-import { getSubscriptionBillingInfo, subscriptionAmount } from "@/lib/koaches/subscription-billing";
+import { billingNeedsPayment, getSubscriptionBillingInfo, subscriptionAmount } from "@/lib/koaches/subscription-billing";
 import { parseDateValue } from "@/lib/utils";
 
 export function invoiceNumberForCoach(coachId: string, periodEnd: string): string {
@@ -47,6 +47,9 @@ export async function ensureCurrentCoachInvoice(
   if (existing) {
     return mapInvoiceRow(existing);
   }
+
+  const billing = getSubscriptionBillingInfo(coach);
+  if (!billingNeedsPayment(billing.status)) return null;
 
   const endDate = parseDateValue(periodEnd);
   const periodStart = format(subMonths(endDate, 1), "yyyy-MM-dd");
@@ -145,13 +148,13 @@ export function getCoachBillingMessage(
     case "active":
       return "You're all set for this billing period. We'll issue your next invoice about a week before renewal.";
     case "send_invoice":
-      return `Your subscription renews soon. Please pay ${amount} via GCash or bank transfer, then upload your receipt.`;
+      return `Your subscription renews soon. Pay ${amount} via GCash, Maya, BPI, or UnionBank QR, then upload your receipt.`;
     case "payment_due":
-      return "Payment is due today. Upload your receipt after paying so we can confirm your subscription.";
+      return "Payment is due today. Scan a QR below, then upload your receipt so we can confirm.";
     case "overdue":
-      return "Payment is overdue. Please pay and upload your receipt as soon as possible to avoid interruption.";
+      return "Payment is overdue. Pay via QR and upload your receipt to keep access after the grace period.";
     case "lapsed":
-      return "Your subscription has lapsed. Pay and upload a receipt, then contact us to restore your account.";
+      return "Your subscription lapsed. Pay via QR, upload your receipt, and we'll restore access after confirmation.";
     default:
       return "";
   }

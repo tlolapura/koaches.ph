@@ -111,15 +111,15 @@ export function PricingTiersEditor({
       {(mode === "full" || mode === "tiers" || mode === "primary-rate") && (
       <div>
         {mode === "primary-rate" ? (
-          <CoachSheetField label="1-on-1 rate (₱ per session)" htmlFor="pricing-primary-rate">
+          <CoachSheetField label="1-on-1 rate (₱ per person)" htmlFor="pricing-primary-rate">
             <input
               id="pricing-primary-rate"
               type="number"
               min={0}
               step={50}
               className="coach-input"
-              placeholder="800"
-              value={pricing.tiers[0]?.rate ?? 800}
+              placeholder="1000"
+              value={pricing.tiers[0]?.rate ?? 1000}
               onChange={(e) => {
                 const rate = Math.max(0, Number(e.target.value));
                 const [first, ...rest] = pricing.tiers;
@@ -144,7 +144,7 @@ export function PricingTiersEditor({
           </button>
         </div>
         <p className="coach-field-hint">
-          Set different drop-in prices for 1-on-1, pairs, small groups, etc.
+          Per person. Example: 1 player ₱1,000 · 2–4 players ₱800 each.
         </p>
 
         <div className="mt-2 space-y-2">
@@ -195,7 +195,7 @@ export function PricingTiersEditor({
                     }
                   />
                 </CoachSheetField>
-                <CoachSheetField label="Rate (₱)" htmlFor={`tier-${tier.id}-rate`}>
+                <CoachSheetField label="₱ / person" htmlFor={`tier-${tier.id}-rate`}>
                   <input
                     id={`tier-${tier.id}-rate`}
                     type="number"

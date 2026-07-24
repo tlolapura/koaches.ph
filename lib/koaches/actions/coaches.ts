@@ -14,6 +14,8 @@ import { isValidCoachSlug } from "@/lib/koaches/coach-slug";
 import type { CoachingLevelId } from "@/lib/koaches/application-form";
 import { primarySkillTemplateFromLevels } from "@/lib/koaches/application-form";
 import { joinPersonName } from "@/lib/koaches/person-name";
+import { RECEIPT_BUCKET } from "@/lib/koaches/billing-constants";
+import { COACH_PHOTO_BUCKET } from "@/lib/koaches/coach-photo";
 import type { CoachSessionPricing } from "@/lib/koaches/types";
 
 export async function fetchCoachBySlugAction(slug: string): Promise<CoachProfile | null> {
@@ -307,4 +309,80 @@ export async function adminUpdateCoachAction(
   if (slug !== existing.slug) revalidatePath(buildPublicCoachPath(slug));
 
   return { ok: true, subscriptionExpiry: input.subscriptionExpiry };
+}
+
+/** Permanently delete a coach and all attached data (students, sessions, programs, etc.). */
+export async function deleteCoachAction(coachId: string): Promise<CoachMutationResult> {
+  try {
+    await requireAdmin();
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Not authorized." };
+  }
+
+  const supabase = createServiceClient();
+  const { data: coach, error: fetchError } = await supabase
+    .from("coaches")
+    .select("id, slug, user_id, name")
+    .eq("id", coachId)
+    .maybeSingle();
+  if (fetchError) return { ok: false, error: fetchError.message };
+  if (!coach) return { ok: false, error: "Coach not found." };
+
+  // Best-effort storage cleanup before DB cascade.
+  try {
+    const [{ data: receiptEntries }, { data: photoEntries }] = await Promise.all([
+      supabase.storage.from(RECEIPT_BUCKET).list(coachId, { limit: 1000 }),
+      supabase.storage.from(COACH_PHOTO_BUCKET).list(coachId, { limit: 1000 }),
+    ]);
+
+    const receiptPaths: string[] = [];
+    for (const entry of receiptEntries ?? []) {
+      if (!entry.name) continue;
+      // Files at coachId/… or nested coachId/invoiceId/file
+      if (entry.id) {
+        receiptPaths.push(`${coachId}/${entry.name}`);
+        continue;
+      }
+      const { data: nested } = await supabase.storage
+        .from(RECEIPT_BUCKET)
+        .list(`${coachId}/${entry.name}`, { limit: 1000 });
+      for (const file of nested ?? []) {
+        if (file.name) receiptPaths.push(`${coachId}/${entry.name}/${file.name}`);
+      }
+    }
+
+    const photoPaths = (photoEntries ?? [])
+      .filter((f) => f.name)
+      .map((f) => `${coachId}/${f.name}`);
+
+    if (receiptPaths.length > 0) {
+      await supabase.storage.from(RECEIPT_BUCKET).remove(receiptPaths);
+    }
+    if (photoPaths.length > 0) {
+      await supabase.storage.from(COACH_PHOTO_BUCKET).remove(photoPaths);
+    }
+  } catch {
+    // Continue — relational delete is the critical path.
+  }
+
+  await supabase.from("profiles").delete().eq("coach_id", coachId);
+
+  const { error: deleteError } = await supabase.from("coaches").delete().eq("id", coachId);
+  if (deleteError) return { ok: false, error: deleteError.message };
+
+  if (coach.user_id) {
+    const { error: authError } = await supabase.auth.admin.deleteUser(coach.user_id);
+    if (authError) {
+      return {
+        ok: false,
+        error: `Coach data deleted, but login cleanup failed: ${authError.message}`,
+      };
+    }
+  }
+
+  revalidatePath("/admin/coaches");
+  revalidatePath("/admin/payments");
+  revalidatePath("/admin");
+  if (coach.slug) revalidatePath(buildPublicCoachPath(coach.slug));
+  return { ok: true };
 }

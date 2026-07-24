@@ -5,17 +5,15 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   AlertTriangle,
-  Building2,
   Calendar,
   CheckCircle2,
   Clock,
-  Copy,
   CreditCard,
   FileText,
-  Smartphone,
   Upload,
 } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
+import { ReceiptPreviewModal } from "@/components/koaches/admin/ReceiptPreviewModal";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
@@ -27,27 +25,18 @@ import {
   submitCoachPaymentReceiptAction,
 } from "@/lib/koaches/actions/billing";
 import { getCoachBillingMessage } from "@/lib/koaches/billing-invoices";
-import { KOACHES_PAYMENT_DETAILS } from "@/lib/koaches/billing-constants";
-import { BILLING_STATUS_STYLES } from "@/lib/koaches/subscription-billing";
-import type { CoachBillingDashboard, CoachPaymentMethod } from "@/lib/koaches/types";
+import {
+  KOACHES_PAYMENT_CHANNELS,
+  paymentMethodLabel,
+  type PaymentChannelId,
+} from "@/lib/koaches/billing-constants";
+import {
+  billingNeedsPayment,
+  BILLING_STATUS_STYLES,
+  SUBSCRIPTION_PAYMENT_GRACE_DAYS,
+} from "@/lib/koaches/subscription-billing";
+import type { CoachBillingDashboard } from "@/lib/koaches/types";
 import { cn, formatCurrency, formatDisplayDate } from "@/lib/utils";
-
-function CopyButton({ value, label }: { value: string; label: string }) {
-  const { showToast } = useCoachToast();
-  return (
-    <button
-      type="button"
-      className="inline-flex items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
-      onClick={() => {
-        void navigator.clipboard.writeText(value);
-        showToast(`${label} copied`);
-      }}
-    >
-      <Copy className="h-3.5 w-3.5" />
-      Copy
-    </button>
-  );
-}
 
 function invoiceStatusLabel(status: string) {
   switch (status) {
@@ -85,11 +74,11 @@ export function CoachBillingPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [data, setData] = useState<CoachBillingDashboard | null>(null);
   const [loading, setLoading] = useState(true);
-  const [method, setMethod] = useState<CoachPaymentMethod>("gcash");
-  const [notes, setNotes] = useState("");
+  const [method, setMethod] = useState<PaymentChannelId>("gcash");
   const [fileName, setFileName] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewPath, setPreviewPath] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!coachId) return;
@@ -116,7 +105,6 @@ export function CoachBillingPage() {
     setError(null);
     const formData = new FormData();
     formData.set("method", method);
-    formData.set("notes", notes);
     formData.set("receipt", fileRef.current.files[0]);
     const result = await submitCoachPaymentReceiptAction(
       coachId,
@@ -129,18 +117,15 @@ export function CoachBillingPage() {
       return;
     }
     showToast("Receipt submitted. We'll confirm once reviewed.");
-    setNotes("");
     setFileName(null);
     if (fileRef.current) fileRef.current.value = "";
     void load();
   };
 
-  const viewReceipt = async (path: string) => {
-    if (!coachId) return;
-    const url = await getCoachReceiptSignedUrlAction(coachId, path);
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
-    else showToast("Could not open receipt", "error");
-  };
+  const fetchPreviewUrl = useCallback(async () => {
+    if (!coachId || !previewPath) return null;
+    return getCoachReceiptSignedUrlAction(coachId, previewPath);
+  }, [coachId, previewPath]);
 
   if (!coachId) {
     return <CoachBillingSkeleton />;
@@ -173,28 +158,38 @@ export function CoachBillingPage() {
 
   const { billing, currentInvoice, pendingSubmission } = data;
   const styles = BILLING_STATUS_STYLES[billing.status];
+  const needsPayment = billingNeedsPayment(billing.status);
+  const selectedChannel =
+    KOACHES_PAYMENT_CHANNELS.find((c) => c.id === method) ?? KOACHES_PAYMENT_CHANNELS[0];
   const canUpload =
-    currentInvoice &&
-    currentInvoice.status !== "paid" &&
+    Boolean(currentInvoice) &&
+    currentInvoice?.status !== "paid" &&
     !pendingSubmission &&
-    ["send_invoice", "payment_due", "overdue", "lapsed"].includes(billing.status);
+    needsPayment;
+
+  // Show QR whenever payment is needed OR coach opened billing while restricted.
+  // Also show if there's an unpaid invoice (covers edge statuses).
+  const showPayUi =
+    needsPayment ||
+    isRestricted ||
+    (Boolean(currentInvoice) && currentInvoice?.status !== "paid");
 
   return (
     <CoachPageShell className="pb-8">
       <CoachPageHeader
         title="Billing"
-        subtitle="Your plan and payment history"
+        subtitle={showPayUi ? "Pay your invoice to keep coaching" : "Your plan and payment history"}
         actions={backToSettings}
       />
 
-      {isRestricted && (
+      {(isRestricted || billing.status === "lapsed") && (
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-sm text-[#991B1B]">
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
           <div>
             <p className="font-heading font-semibold">Account access limited</p>
             <p className="mt-1 leading-relaxed">
-              Your subscription is inactive or lapsed. Renew below to restore full access to sessions,
-              students, and other coach tools.
+              Pay the invoice below and upload your receipt. After we confirm, full access is restored.
+              Unpaid accounts lock {SUBSCRIPTION_PAYMENT_GRACE_DAYS} days after the due date.
             </p>
           </div>
         </div>
@@ -218,7 +213,7 @@ export function CoachBillingPage() {
             <div className="coach-card p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
                 <FileText className="h-4 w-4" />
-                Invoice date
+                Invoice opens
               </div>
               <p className="font-heading mt-2 font-semibold text-[#111827]">
                 {formatDisplayDate(billing.invoiceByDate)}
@@ -244,7 +239,7 @@ export function CoachBillingPage() {
         </div>
       )}
 
-      {currentInvoice && (
+      {showPayUi && currentInvoice && (
         <section className="coach-card mt-6 p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -271,66 +266,73 @@ export function CoachBillingPage() {
         </section>
       )}
 
-      <section className="mt-6">
-        <h2 className="font-heading text-sm font-semibold text-[#111827]">How to pay</h2>
-        <p className="mt-1 text-xs text-[#6B7280]">
-          Use your invoice number as the payment reference.
-        </p>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="coach-card p-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#14532D] text-white">
-                <Smartphone className="h-4 w-4" />
-              </div>
-              <p className="font-heading font-semibold">{KOACHES_PAYMENT_DETAILS.gcash.label}</p>
-            </div>
-            <dl className="mt-3 space-y-2 text-sm">
-              <div className="flex justify-between gap-2">
-                <dt className="text-[#6B7280]">Name</dt>
-                <dd className="font-medium">{KOACHES_PAYMENT_DETAILS.gcash.accountName}</dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-[#6B7280]">Number</dt>
-                <dd className="flex items-center gap-2 font-medium">
-                  {KOACHES_PAYMENT_DETAILS.gcash.number}
-                  <CopyButton value={KOACHES_PAYMENT_DETAILS.gcash.number} label="Number" />
-                </dd>
-              </div>
-            </dl>
-            <p className="mt-2 text-xs text-[#9CA3AF]">{KOACHES_PAYMENT_DETAILS.gcash.note}</p>
+      {showPayUi && (
+        <section className="mt-6">
+          <h2 className="font-heading text-sm font-semibold text-[#111827]">Pay with QR</h2>
+          <p className="mt-1 text-xs text-[#6B7280]">
+            Pick a channel, scan, pay{" "}
+            {currentInvoice ? (
+              <span className="font-semibold text-[#111827]">
+                {formatCurrency(currentInvoice.amount)}
+              </span>
+            ) : null}
+            , then upload your receipt below.
+          </p>
+
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {KOACHES_PAYMENT_CHANNELS.map((channel) => (
+              <button
+                key={channel.id}
+                type="button"
+                onClick={() => setMethod(channel.id)}
+                aria-pressed={method === channel.id}
+                className={cn(
+                  "flex min-h-[64px] items-center justify-center rounded-2xl bg-white px-3 py-3 transition-shadow",
+                  method === channel.id
+                    ? "ring-2 ring-[#16A34A] ring-offset-2"
+                    : "ring-1 ring-[#E5E7EB] hover:ring-[#9CA3AF]"
+                )}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element -- static logo from /public */}
+                <img
+                  src={channel.logoSrc}
+                  alt={channel.label}
+                  className="h-8 w-auto max-w-full object-contain"
+                />
+              </button>
+            ))}
           </div>
 
-          <div className="coach-card p-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#14532D] text-white">
-                <Building2 className="h-4 w-4" />
+          <div className="coach-card mt-3 p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 items-center justify-center rounded-xl bg-white px-3 ring-1 ring-[#E5E7EB]">
+                {/* eslint-disable-next-line @next/next/no-img-element -- static logo from /public */}
+                <img
+                  src={selectedChannel.logoSrc}
+                  alt={selectedChannel.label}
+                  className="h-6 w-auto object-contain"
+                />
               </div>
-              <p className="font-heading font-semibold">{KOACHES_PAYMENT_DETAILS.bank.label}</p>
+              <div className="min-w-0">
+                <p className="font-heading text-sm font-semibold text-[#111827]">
+                  {selectedChannel.label} QR
+                </p>
+                <p className="text-xs text-[#6B7280]">{selectedChannel.hint}</p>
+              </div>
             </div>
-            <dl className="mt-3 space-y-2 text-sm">
-              <div className="flex justify-between gap-2">
-                <dt className="text-[#6B7280]">Account name</dt>
-                <dd className="text-right font-medium">{KOACHES_PAYMENT_DETAILS.bank.accountName}</dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-[#6B7280]">Account no.</dt>
-                <dd className="flex items-center gap-2 font-medium">
-                  {KOACHES_PAYMENT_DETAILS.bank.accountNumber}
-                  <CopyButton
-                    value={KOACHES_PAYMENT_DETAILS.bank.accountNumber.replace(/\s/g, "")}
-                    label="Account number"
-                  />
-                </dd>
-              </div>
-              <div className="flex justify-between gap-2">
-                <dt className="text-[#6B7280]">Branch</dt>
-                <dd className="font-medium">{KOACHES_PAYMENT_DETAILS.bank.branch}</dd>
-              </div>
-            </dl>
-            <p className="mt-2 text-xs text-[#9CA3AF]">{KOACHES_PAYMENT_DETAILS.bank.note}</p>
+            <div className="mt-4 flex justify-center rounded-2xl bg-white p-4 ring-1 ring-[#E5E7EB]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- static QR from /public */}
+              <img
+                src={selectedChannel.qrSrc}
+                alt={`${selectedChannel.label} payment QR`}
+                width={280}
+                height={280}
+                className="h-auto w-full max-w-[280px]"
+              />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {pendingSubmission && (
         <section className="mt-6 rounded-xl border border-[#E5EFE8] bg-[#F5FAF6] p-4">
@@ -339,8 +341,9 @@ export function CoachBillingPage() {
             <div className="min-w-0 flex-1">
               <p className="font-heading font-semibold text-[#3D5C47]">Receipt submitted</p>
               <p className="mt-1 text-sm text-[#6B7280]">
-                {pendingSubmission.receiptFileName} · {submissionStatusLabel(pendingSubmission.status)}.
-                We'll confirm your payment within 1–2 business days.
+                {pendingSubmission.receiptFileName} · {paymentMethodLabel(pendingSubmission.method)} ·{" "}
+                {submissionStatusLabel(pendingSubmission.status)}. We&apos;ll confirm within 1–2
+                business days.
               </p>
               <button
                 type="button"
@@ -361,49 +364,25 @@ export function CoachBillingPage() {
             <h2 className="font-heading font-semibold text-[#111827]">Upload receipt</h2>
           </div>
           <p className="mt-1 text-sm text-[#6B7280]">
-            After paying, upload a screenshot or PDF of your GCash / bank transfer receipt.
+            After paying, upload a screenshot or PDF. Admin confirms it in the portal.
           </p>
 
           <form className="coach-form mt-4" onSubmit={(e) => void handleSubmit(e)}>
-            <CoachSheetField label="Payment method">
-              <div className="flex gap-2">
-                {(
-                  [
-                    { id: "gcash" as const, label: "GCash" },
-                    { id: "bank_transfer" as const, label: "Bank transfer" },
-                  ] as const
-                ).map((opt) => (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() => setMethod(opt.id)}
-                    className={cn(
-                      "rounded-full px-4 py-2 text-sm font-semibold transition-colors",
-                      method === opt.id
-                        ? "bg-[#14532D] text-white"
-                        : "border border-[#E5E7EB] bg-white text-[#6B7280]"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+            <CoachSheetField label="You paid with">
+              <div className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white px-3 py-2.5">
+                <div className="flex h-9 items-center justify-center rounded-lg bg-white px-2.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- static logo from /public */}
+                  <img
+                    src={selectedChannel.logoSrc}
+                    alt={selectedChannel.label}
+                    className="h-5 w-auto object-contain"
+                  />
+                </div>
+                <span className="text-sm font-semibold text-[#14532D]">{selectedChannel.label}</span>
               </div>
             </CoachSheetField>
 
-            <CoachSheetField
-              label="Reference / notes (optional)"
-              htmlFor="receipt-notes"
-            >
-              <input
-                id="receipt-notes"
-                className="coach-input"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. GCash ref no. 123456"
-              />
-            </CoachSheetField>
-
-            <CoachSheetField label="Receipt file" hint="JPEG, PNG, WebP, or PDF">
+            <CoachSheetField label="Receipt file" hint="JPEG, PNG, WebP, or PDF · max 5 MB">
               <input
                 ref={fileRef}
                 type="file"
@@ -434,6 +413,19 @@ export function CoachBillingPage() {
         </section>
       )}
 
+      {!showPayUi && (
+        <section className="mt-6 rounded-xl border border-[#E5EFE8] bg-[#F5FAF6] p-4 text-sm text-[#3D5C47]">
+          <p className="font-heading font-semibold">You&apos;re all set</p>
+          <p className="mt-1 text-[#6B7280]">
+            No payment due right now
+            {billing.renewalDate
+              ? ` · next renewal ${formatDisplayDate(billing.renewalDate)}`
+              : ""}
+            . We&apos;ll show the pay QR here when your invoice opens.
+          </p>
+        </section>
+      )}
+
       {data.submissionHistory.length > 0 && (
         <section className="mt-8">
           <h2 className="font-heading text-sm font-semibold text-[#111827]">Payment history</h2>
@@ -442,7 +434,7 @@ export function CoachBillingPage() {
               <li key={s.id} className="coach-card flex flex-wrap items-center justify-between gap-2 p-4">
                 <div>
                   <p className="text-sm font-medium text-[#111827]">
-                    {formatCurrency(s.amount)} · {s.method === "gcash" ? "GCash" : "Bank"}
+                    {formatCurrency(s.amount)} · {paymentMethodLabel(s.method)}
                   </p>
                   <p className="text-xs text-[#6B7280]">
                     {formatDisplayDate(s.submittedAt)} · {submissionStatusLabel(s.status)}
@@ -451,7 +443,7 @@ export function CoachBillingPage() {
                 <button
                   type="button"
                   className="text-sm font-semibold text-[#4F8FF7]"
-                  onClick={() => void viewReceipt(s.receiptPath)}
+                  onClick={() => setPreviewPath(s.receiptPath)}
                 >
                   View receipt
                 </button>
@@ -461,7 +453,15 @@ export function CoachBillingPage() {
         </section>
       )}
 
-      {data.invoiceHistory.length > 1 && (
+      <ReceiptPreviewModal
+        open={previewPath !== null}
+        onClose={() => setPreviewPath(null)}
+        title="Receipt"
+        fileName={previewPath}
+        fetchUrl={fetchPreviewUrl}
+      />
+
+      {data.invoiceHistory.length > 0 && (
         <section className="mt-8">
           <h2 className="font-heading text-sm font-semibold text-[#111827]">Invoice history</h2>
           <ul className="mt-3 space-y-2">
