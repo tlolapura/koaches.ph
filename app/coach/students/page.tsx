@@ -71,7 +71,7 @@ export default function StudentsPage() {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const { showToast } = useCoachToast();
-  const { students: rosterStudents } = useCoachStudents(coachId, true);
+  const { students: rosterStudents, loading: studentsLoading } = useCoachStudents(coachId, true);
   const [savingStudent, setSavingStudent] = useState(false);
   const [declineTarget, setDeclineTarget] = useState<{ id: string; name: string } | null>(null);
   const [processingIntakeId, setProcessingIntakeId] = useState<string | null>(null);
@@ -178,7 +178,7 @@ export default function StudentsPage() {
       c.participantId === generateTarget?.participantId
   );
 
-  if (!coachId) {
+  if (!coachId || studentsLoading) {
     return <CoachStudentListSkeleton />;
   }
 
@@ -194,7 +194,19 @@ export default function StudentsPage() {
 
   return (
     <CoachPageShell>
-      <CoachPageHeader title="Students" subtitle="Everyone you're coaching right now" />
+      <CoachPageHeader
+        title="Students"
+        subtitle="Everyone you're coaching right now"
+        actions={
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            className="coach-btn-primary hidden md:inline-flex"
+          >
+            Add student
+          </button>
+        }
+      />
 
       <div className="mt-3 space-y-2">
         <CoachSearchInput value={search} onChange={setSearch} placeholder="Search students..." />

@@ -317,28 +317,28 @@ export function SkillRatingPanel({
     }
   }, [after, before, feedback, onSave, onStepChange, saving]);
 
-  useEffect(() => {
-    if (step === "complete" || !onActionsChange) return;
-    onActionsChange({
-      canContinueFromRatings: ratedSkillsByCategory.length > 0,
-      saving,
-      continueToFeedback: goToFeedback,
-      saveSession,
-    });
-  }, [
-    goToFeedback,
-    onActionsChange,
-    ratedSkillsByCategory.length,
-    saveSession,
-    saving,
-    step,
-  ]);
+  const onActionsChangeRef = useRef(onActionsChange);
+  onActionsChangeRef.current = onActionsChange;
+  const goToFeedbackRef = useRef(goToFeedback);
+  goToFeedbackRef.current = goToFeedback;
+  const saveSessionRef = useRef(saveSession);
+  saveSessionRef.current = saveSession;
 
+  // Only re-publish when step / readiness / saving change. Callbacks stay in refs so an
+  // unstable onSave from the parent cannot retrigger setState → infinite depth.
   useEffect(() => {
     if (step === "complete") {
-      onActionsChange?.(null);
+      onActionsChangeRef.current?.(null);
+      return;
     }
-  }, [onActionsChange, step]);
+    if (!onActionsChangeRef.current) return;
+    onActionsChangeRef.current({
+      canContinueFromRatings: ratedSkillsByCategory.length > 0,
+      saving,
+      continueToFeedback: () => goToFeedbackRef.current(),
+      saveSession: () => saveSessionRef.current(),
+    });
+  }, [ratedSkillsByCategory.length, saving, step]);
 
   const updateFeedback = (key: keyof SessionFeedback, value: string) => {
     setFeedback((prev) => ({ ...prev, [key]: value }));

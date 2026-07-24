@@ -245,7 +245,7 @@ export function MilestoneBadges({ current, total }: { current: number; total: nu
 }
 
 const fabClassName =
-  "coach-portal-fab fixed right-4 bottom-[calc(var(--portal-bottom-nav-offset)+0.75rem)] z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#16A34A] text-white shadow-lg transition-colors hover:bg-[#15803D] md:bottom-8";
+  "coach-portal-fab fixed right-4 bottom-[calc(var(--portal-bottom-nav-offset)+0.75rem)] z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#16A34A] text-white shadow-lg transition-colors hover:bg-[#15803D] md:hidden";
 
 export function CoachFab({
   onClick,

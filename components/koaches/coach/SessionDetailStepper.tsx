@@ -8,11 +8,10 @@ import {
 
 type SessionDetailStepperProps = {
   step: SessionDetailStep;
-  onStep: (step: SessionDetailStep) => void;
   ratingsUnlocked: boolean;
 };
 
-export function SessionDetailStepper({ step, onStep, ratingsUnlocked }: SessionDetailStepperProps) {
+export function SessionDetailStepper({ step, ratingsUnlocked }: SessionDetailStepperProps) {
   const steps = SESSION_DETAIL_STEPS.map((s) =>
     s.id !== "session" ? { ...s, disabled: !ratingsUnlocked } : s
   );
@@ -20,10 +19,8 @@ export function SessionDetailStepper({ step, onStep, ratingsUnlocked }: SessionD
   return (
     <CoachStepper
       className="mt-4"
-      variant="compact"
       steps={steps}
       currentStepId={step === "complete" ? "feedback" : step}
-      onStepChange={(id) => onStep(id as SessionDetailStep)}
       hint={!ratingsUnlocked ? "Mark the session done to unlock skill ratings" : undefined}
     />
   );

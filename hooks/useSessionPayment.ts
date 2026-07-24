@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Session, SessionPaymentStatus } from "@/lib/koaches/types";
 import { resolveSessionPaymentStatus } from "@/lib/koaches/session-payment";
 import { updateSessionPaymentAction, updateSessionTipAction } from "@/lib/koaches/actions/sessions";
-import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
+import { invalidateCoachSessions, patchCachedSession } from "@/lib/koaches/queries/invalidate";
 
 export function useSessionPayment(
   session: Pick<Session, "id" | "coachId" | "paymentStatus" | "tip">
@@ -14,43 +14,46 @@ export function useSessionPayment(
   );
   const [tip, setTipState] = useState(() => session.tip ?? 0);
 
-  const sync = useCallback(() => {
+  // Sync from server/cache props only — do not listen to sessions-updated events,
+  // or a stale prop will overwrite an optimistic update before the detail query refreshes.
+  useEffect(() => {
     setPaymentStatusState(resolveSessionPaymentStatus(session));
     setTipState(session.tip ?? 0);
-  }, [session]);
-
-  useEffect(() => {
-    sync();
-  }, [sync]);
-
-  useEffect(() => {
-    window.addEventListener("koaches-session-payment-updated", sync);
-    window.addEventListener("koaches-sessions-updated", sync);
-    return () => {
-      window.removeEventListener("koaches-session-payment-updated", sync);
-      window.removeEventListener("koaches-sessions-updated", sync);
-    };
-  }, [sync]);
+  }, [session.id, session.paymentStatus, session.tip]);
 
   const setPaymentStatus = useCallback(
     async (next: SessionPaymentStatus) => {
-      await updateSessionPaymentAction(session.id, next);
+      const prev = paymentStatus;
       setPaymentStatusState(next);
-      invalidateCoachSessions(session.coachId);
-      window.dispatchEvent(new Event("koaches-session-payment-updated"));
+      patchCachedSession(session.coachId, session.id, { paymentStatus: next });
+      try {
+        await updateSessionPaymentAction(session.id, next);
+        invalidateCoachSessions(session.coachId);
+      } catch (err) {
+        setPaymentStatusState(prev);
+        patchCachedSession(session.coachId, session.id, { paymentStatus: prev });
+        throw err;
+      }
     },
-    [session.id, session.coachId]
+    [session.id, session.coachId, paymentStatus]
   );
 
   const setTip = useCallback(
     async (next: number) => {
       const amount = Math.max(0, Math.round(next));
-      await updateSessionTipAction(session.id, amount);
+      const prev = tip;
       setTipState(amount);
-      invalidateCoachSessions(session.coachId);
-      window.dispatchEvent(new Event("koaches-session-payment-updated"));
+      patchCachedSession(session.coachId, session.id, { tip: amount });
+      try {
+        await updateSessionTipAction(session.id, amount);
+        invalidateCoachSessions(session.coachId);
+      } catch (err) {
+        setTipState(prev);
+        patchCachedSession(session.coachId, session.id, { tip: prev });
+        throw err;
+      }
     },
-    [session.id, session.coachId]
+    [session.id, session.coachId, tip]
   );
 
   return { paymentStatus, setPaymentStatus, tip, setTip };

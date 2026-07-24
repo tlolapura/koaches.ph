@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowLeft,
-  ChevronRight,
-  Layers,
-  PenLine,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { ProgramDraft } from "@/lib/koaches/program-templates";
 import {
   PROGRAM_PRESETS,
@@ -26,10 +21,9 @@ import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import { CoachSheetField, CoachSheetStickyActions } from "@/components/koaches/coach/CoachSheet";
 import { SessionCountField } from "@/components/koaches/coach/SessionCountField";
-import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
 
-type FlowMode = "home" | "templates" | "custom";
+type FlowMode = "templates" | "custom";
 type CustomStep = "details" | "rubric" | "review";
 type TemplateStep = "pick" | "customize";
 
@@ -37,7 +31,7 @@ type ProgramCreateFlowProps = {
   open: boolean;
   onClose: () => void;
   onSave: (draft: ProgramDraft) => void | Promise<void>;
-  /** Open directly into custom wizard */
+  /** Open into template picker or custom wizard */
   initialMode?: FlowMode;
 };
 
@@ -86,7 +80,7 @@ export function ProgramCreateFlow({
   open,
   onClose,
   onSave,
-  initialMode = "home",
+  initialMode = "templates",
 }: ProgramCreateFlowProps) {
   const [mode, setMode] = useState<FlowMode>(initialMode);
   const [customStep, setCustomStep] = useState<CustomStep>("details");
@@ -111,8 +105,10 @@ export function ProgramCreateFlow({
       setDraft(draftCustom());
       setMode("custom");
       setCustomStep("details");
+      setTemplateStep("pick");
     } else {
-      setMode("home");
+      setMode("templates");
+      setTemplateStep("pick");
       setDraft(null);
     }
   }, [open, initialMode]);
@@ -129,12 +125,6 @@ export function ProgramCreateFlow({
     onClose();
   };
 
-  const startCustom = () => {
-    setDraft(draftCustom());
-    setMode("custom");
-    setCustomStep("details");
-  };
-
   const pickPreset = (id: ProgramPresetId) => {
     const d = draftFromPreset(id);
     setDraft(d);
@@ -146,7 +136,6 @@ export function ProgramCreateFlow({
   const canSaveCustom = draft?.name.trim() && skillCount > 0;
 
   const title = useMemo(() => {
-    if (mode === "home") return "New Program";
     if (mode === "templates" && templateStep === "pick") return "Choose a Template";
     if (mode === "templates") return "Customize Template";
     if (mode === "custom") {
@@ -165,57 +154,9 @@ export function ProgramCreateFlow({
 
   return (
     <CoachBottomSheet open={open} onClose={handleClose} title={title}>
-      {/* ── HOME: 3 clear paths ── */}
-      {mode === "home" && (
-        <div className="space-y-3">
-          <p className="text-sm text-[#6B7280]">How would you like to create this program?</p>
-
-          <button
-            type="button"
-            onClick={startCustom}
-            className="w-full rounded-2xl border-2 border-[#16A34A] bg-[#F0FDF4]/40 p-4 text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#16A34A] text-white">
-                <PenLine className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <p className="font-heading font-semibold text-[#111827]">Create Your Own</p>
-                <p className="text-xs text-[#6B7280]">
-                  Name it, set your price, pick your sessions, and build a custom skill rubric
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-[#4F8FF7]" />
-            </div>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setMode("templates"); setTemplateStep("pick"); }}
-            className="coach-card w-full p-4 text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#14532D] text-white">
-                <Layers className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <p className="font-heading font-semibold">Use a Program Template</p>
-                <p className="text-xs text-[#6B7280]">
-                  Open Play Ready, Tournament Ready, and more. Customize to fit.
-                </p>
-              </div>
-              <ChevronRight className="h-5 w-5 text-[#6B7280]" />
-            </div>
-          </button>
-        </div>
-      )}
-
       {/* ── TEMPLATES: pick preset ── */}
       {mode === "templates" && templateStep === "pick" && (
         <div className="space-y-3">
-          <button type="button" onClick={() => setMode("home")} className="inline-flex items-center gap-1 text-sm text-[#6B7280]">
-            <ArrowLeft className="h-4 w-4" /> Back
-          </button>
           {PROGRAM_PRESETS.map((preset) => (
             <button
               key={preset.id}
@@ -258,7 +199,7 @@ export function ProgramCreateFlow({
           <button
             type="button"
             onClick={() => {
-              if (customStep === "details") setMode("home");
+              if (customStep === "details") handleClose();
               else if (customStep === "rubric") setCustomStep("details");
               else setCustomStep("rubric");
             }}

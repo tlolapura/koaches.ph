@@ -7,7 +7,7 @@ import { ClipboardList, PenLine, Plus, Zap } from "lucide-react";
 import { getProgramPreset } from "@/lib/koaches/program-templates";
 import type { ProgramDraft } from "@/lib/koaches/program-templates";
 import { resolveSkills } from "@/lib/koaches/constants";
-import { CoachFab, EmptyState } from "@/components/koaches/coach/CoachUi";
+import { EmptyState } from "@/components/koaches/coach/CoachUi";
 import { ProgramListIcon } from "@/components/koaches/coach/CoachIcons";
 import { ProgramCreateFlow } from "@/components/koaches/coach/ProgramCreateFlow";
 import { DropInSkillsSheet } from "@/components/koaches/coach/DropInSkillsSheet";
@@ -21,7 +21,7 @@ export default function ProgramsPage() {
   const coachId = usePortalCoachId();
   const [createOpen, setCreateOpen] = useState(false);
   const [dropInOpen, setDropInOpen] = useState(false);
-  const [createMode, setCreateMode] = useState<"home" | "custom">("home");
+  const [createMode, setCreateMode] = useState<"templates" | "custom">("templates");
   const { programs, loading } = useCoachPrograms(coachId);
   const { coach, refresh: refreshCoach } = useCoachProfile(coachId);
   const createProgram = useCreateProgram(coachId);
@@ -35,7 +35,7 @@ export default function ProgramsPage() {
       }).length
     : 0;
 
-  const openCreate = (mode: "home" | "custom" = "home") => {
+  const openCreate = (mode: "templates" | "custom" = "templates") => {
     setCreateMode(mode);
     setCreateOpen(true);
   };
@@ -44,7 +44,7 @@ export default function ProgramsPage() {
     await createProgram.mutateAsync(draft);
   };
 
-  if (!coachId) return <CoachProgramListSkeleton />;
+  if (!coachId || loading) return <CoachProgramListSkeleton />;
 
   return (
     <CoachPageShell>
@@ -88,7 +88,7 @@ export default function ProgramsPage() {
         </button>
         <button
           type="button"
-          onClick={() => openCreate("home")}
+          onClick={() => openCreate("templates")}
           className="coach-card flex min-h-[72px] items-center gap-3 p-4 text-left"
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#14532D] text-white">
@@ -150,8 +150,6 @@ export default function ProgramsPage() {
           </div>
         )}
       </section>
-
-      <CoachFab onClick={() => openCreate("home")} label="Create program" />
 
       <ProgramCreateFlow
         open={createOpen}

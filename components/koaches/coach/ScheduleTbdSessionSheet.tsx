@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { Session } from "@/lib/koaches/types";
 import { updateSessionScheduleAction } from "@/lib/koaches/actions/sessions";
-import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
+import { invalidateCoachSessions, patchCachedSession } from "@/lib/koaches/queries/invalidate";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
 import { CoachTimePicker } from "@/components/koaches/coach/CoachTimePicker";
@@ -69,6 +69,12 @@ export function ScheduleTbdSessionSheet({
           const courtId = String(fd.get("courtId") ?? session.courtId);
           const endTime = endTimeOneHourAfter(time);
           await updateSessionScheduleAction(session.id, { date, time, endTime, courtId });
+          patchCachedSession(session.coachId, session.id, {
+            date,
+            time,
+            endTime,
+            courtId,
+          });
           invalidateCoachSessions(session.coachId);
           showToast("Session scheduled");
           onScheduled();

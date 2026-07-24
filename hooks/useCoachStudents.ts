@@ -32,7 +32,8 @@ export function useCoachStudents(coachId: string, includeArchived = false) {
 
   return {
     students,
-    loading: !!coachId && query.isPending,
+    // Treat “no cached data yet” as loading so pages don’t flash empty states.
+    loading: !!coachId && query.data === undefined && (query.isPending || query.isFetching),
     error: query.error ?? null,
     refresh,
   };

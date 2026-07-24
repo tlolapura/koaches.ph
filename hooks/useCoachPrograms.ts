@@ -29,7 +29,7 @@ export function useCoachPrograms(coachId: string) {
 
   return {
     programs,
-    loading: !!coachId && query.isPending && programs.length === 0,
+    loading: !!coachId && query.data === undefined && (query.isPending || query.isFetching),
     refresh,
   };
 }

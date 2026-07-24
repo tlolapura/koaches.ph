@@ -26,6 +26,15 @@ export function ClinicsPageClient() {
       <CoachPageHeader
         title="Clinics"
         subtitle="Group clinics with one roster across every day"
+        actions={
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="coach-btn-primary hidden md:inline-flex"
+          >
+            New clinic
+          </button>
+        }
       />
 
       {active.length === 0 ? (

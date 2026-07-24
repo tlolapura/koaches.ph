@@ -32,7 +32,7 @@ export function useCoachClinics(coachId: string) {
 
   return {
     clinics,
-    loading: !!coachId && query.isPending && clinics.length === 0,
+    loading: !!coachId && query.data === undefined && (query.isPending || query.isFetching),
     refresh: () => query.refetch(),
   };
 }

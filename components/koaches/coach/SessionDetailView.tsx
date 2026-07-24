@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, CircleCheck } from "lucide-react";
+import { CalendarDays, Check, CircleCheck, MapPin, Trash2, Users } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
 import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
 import { formatParticipantProgramLabel, resolveParticipantProgramContext } from "@/lib/koaches/participant-program";
@@ -29,7 +29,6 @@ import {
 import { formatCurrency, formatDisplayDate } from "@/lib/utils";
 import {
   CoachBackLink,
-  CoachEntityTitle,
   CoachPageShell,
 } from "@/components/koaches/coach/CoachPageLayout";
 import { isSessionRatingStep, type SessionDetailStep } from "@/lib/koaches/session-detail-steps";
@@ -44,70 +43,110 @@ function SessionInfoCard({
   courtName,
   participants,
   displayStatus,
+  onDelete,
 }: {
   session: Session;
   primaryName: string;
   courtName: string;
   participants: ReturnType<typeof getSessionParticipants>;
   displayStatus: ReturnType<typeof useSessionStatus>["displayStatus"];
+  onDelete?: () => void;
 }) {
   const isClinic = session.type === "clinic";
+  const scheduleLabel = isSessionDateScheduled(session)
+    ? `${formatDisplayDate(session.date!)} · ${formatSessionTimeRange(session.time, session.endTime)}`
+    : `Session ${session.sessionNumber ?? ""} · Date TBD`;
+  const otherPlayers =
+    participants.length > 1
+      ? participants.filter((p) => p.name !== primaryName)
+      : [];
+  const playerLabel = `${session.playerCount} player${session.playerCount !== 1 ? "s" : ""}`;
 
   return (
-    <div className="coach-card p-4">
+    <div className="rounded-3xl bg-[#14532D] px-5 py-5 text-white sm:px-6 sm:py-6">
       <div className="flex items-start justify-between gap-3">
-        <CoachEntityTitle>{primaryName}</CoachEntityTitle>
-        {!isClinic ? (
-          <span className="shrink-0 rounded-full bg-[#14532D] px-3 py-1 text-sm font-semibold text-white">
-            {formatCurrency(session.price)}
-          </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <SessionTypeBadge type={session.type} />
+            <SessionDisplayStatusBadge status={displayStatus} />
+            {session.sessionNumber ? (
+              <span className="text-xs font-medium text-white/65">Session {session.sessionNumber}</span>
+            ) : null}
+          </div>
+          <h2 className="font-heading mt-3 text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">
+            {primaryName}
+          </h2>
+          {!isClinic ? (
+            <p className="mt-1 font-heading text-lg font-semibold text-[#86EFAC]">
+              {formatCurrency(session.price)}
+            </p>
+          ) : null}
+        </div>
+
+        {onDelete ? (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+            aria-label="Delete session"
+          >
+            <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+          </button>
         ) : null}
       </div>
-      <p className="mt-1 text-sm text-[#6B7280]">
-        {isSessionDateScheduled(session)
-          ? `${formatDisplayDate(session.date!)} · ${formatSessionTimeRange(session.time, session.endTime)}`
-          : `Session ${session.sessionNumber ?? ""} · Date TBD`}
-      </p>
-      <p className="text-sm text-[#6B7280]">{courtName}</p>
-      <p className="text-xs text-[#6B7280]">
-        {session.playerCount} player{session.playerCount !== 1 ? "s" : ""}
-        {session.playerCount > 1 && !isClinic && ` · ${formatSessionParticipantList(session)}`}
-      </p>
-      {participants.length > 0 && !isClinic ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {participants.map((p) => {
+
+      <div className="mt-5 space-y-3 pt-1">
+        <p className="flex items-center gap-3 text-sm text-white/90">
+          <CalendarDays className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
+          <span>{scheduleLabel}</span>
+        </p>
+        <p className="flex items-center gap-3 text-sm text-white/90">
+          <MapPin className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
+          <span>{courtName}</span>
+        </p>
+        <p className="flex items-center gap-3 text-sm text-white/90">
+          <Users className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
+          <span>
+            {playerLabel}
+            {session.playerCount > 1 && !isClinic && otherPlayers.length === 0
+              ? ` · ${formatSessionParticipantList(session)}`
+              : null}
+          </span>
+        </p>
+      </div>
+
+      {otherPlayers.length > 0 && !isClinic ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {otherPlayers.map((p) => {
             const programLabel = formatParticipantProgramLabel(
               resolveParticipantProgramContext(p, session)
             );
             return (
               <span
                 key={p.id}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-xs font-medium text-[#166534]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-white/90"
               >
                 {p.name}
-                <span className="text-[10px] opacity-75">· {programLabel}</span>
+                <span className="text-[10px] text-white/55">· {programLabel}</span>
               </span>
             );
           })}
         </div>
       ) : null}
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <SessionTypeBadge type={session.type} />
-        <SessionDisplayStatusBadge status={displayStatus} />
-        {session.sessionNumber ? (
-          <span className="text-sm text-[#6B7280]">Session {session.sessionNumber}</span>
-        ) : null}
-      </div>
+
       {isClinic && session.clinicId ? (
         <Link
           href={`/coach/clinics/${session.clinicId}`}
-          className="mt-3 inline-block text-sm font-semibold text-[#7C3AED] hover:underline"
+          className="mt-4 inline-block text-sm font-semibold text-[#86EFAC] hover:text-white"
         >
           View clinic →
         </Link>
       ) : null}
+
       {session.notes ? (
-        <p className="mt-3 rounded-xl bg-[#F9FAFB] px-3 py-2 text-sm text-[#4B5563]">{session.notes}</p>
+        <p className="mt-4 rounded-2xl bg-white/10 px-3.5 py-2.5 text-sm text-white/80">
+          {session.notes}
+        </p>
       ) : null}
     </div>
   );
@@ -150,13 +189,14 @@ function ClinicSessionDetail({ session }: { session: Session }) {
         className="hidden md:inline-flex"
       />
 
-      <div className="mt-4 space-y-4 coach-portal-fixed-cta-pad lg:pb-4">
+      <div className="mt-4 space-y-4 coach-portal-fixed-cta-pad">
         <SessionInfoCard
           session={session}
           primaryName={primaryName}
           courtName={courtName}
           participants={participants}
           displayStatus={displayStatus}
+          onDelete={() => setDeleteOpen(true)}
         />
 
         <ClinicSessionAttendance session={session} />
@@ -174,14 +214,6 @@ function ClinicSessionDetail({ session }: { session: Session }) {
             </Link>
           </div>
         ) : null}
-
-        <button
-          type="button"
-          className="coach-btn-ghost-danger w-full"
-          onClick={() => setDeleteOpen(true)}
-        >
-          Delete session
-        </button>
       </div>
 
       {status === "upcoming" ? (
@@ -333,19 +365,19 @@ function StandardSessionDetail({ session }: { session: Session }) {
       {status !== "canceled" && step !== "complete" && (
         <SessionDetailStepper
           step={step}
-          onStep={setStep}
           ratingsUnlocked={ratingsUnlocked}
         />
       )}
 
       {step === "session" && (
-        <div className="mt-4 space-y-4 coach-portal-fixed-cta-pad lg:pb-4">
+        <div className="mt-4 space-y-4 coach-portal-fixed-cta-pad">
           <SessionInfoCard
             session={session}
             primaryName={primaryName}
             courtName={courtName}
             participants={participants}
             displayStatus={displayStatus}
+            onDelete={() => setDeleteOpen(true)}
           />
 
           {!isSessionDateScheduled(session) && status === "upcoming" && (
@@ -359,14 +391,6 @@ function StandardSessionDetail({ session }: { session: Session }) {
           )}
 
           <SessionPaymentCard session={session} />
-
-          <button
-            type="button"
-            className="coach-btn-ghost-danger w-full"
-            onClick={() => setDeleteOpen(true)}
-          >
-            Delete session
-          </button>
         </div>
       )}
 

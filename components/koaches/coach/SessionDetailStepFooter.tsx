@@ -14,11 +14,11 @@ type SessionDetailStepFooterProps = {
   nextIcon?: ReactNode;
 };
 
-export function SessionDetailStepFooter({
+function FooterButtons({
   onBack,
-  backLabel = "Back",
+  backLabel,
   onNext,
-  nextLabel = "Continue",
+  nextLabel,
   nextDisabled,
   nextLoading,
   nextLoadingLabel,
@@ -26,40 +26,44 @@ export function SessionDetailStepFooter({
 }: SessionDetailStepFooterProps) {
   if (onBack) {
     return (
-      <div className="coach-session-step-footer">
-        <div className="flex gap-3">
-          <CoachButton type="button" variant="outline" className="flex-1" onClick={onBack}>
-            {backLabel}
-          </CoachButton>
-          <CoachButton
-            type="button"
-            className="flex-[2]"
-            disabled={nextDisabled}
-            loading={nextLoading}
-            loadingLabel={nextLoadingLabel}
-            onClick={onNext}
-          >
-            {nextIcon}
-            {nextLabel}
-          </CoachButton>
-        </div>
+      <div className="flex gap-3">
+        <CoachButton type="button" variant="outline" className="flex-1" onClick={onBack}>
+          {backLabel}
+        </CoachButton>
+        <CoachButton
+          type="button"
+          className="flex-[2]"
+          disabled={nextDisabled}
+          loading={nextLoading}
+          loadingLabel={nextLoadingLabel}
+          onClick={onNext}
+        >
+          {nextIcon}
+          {nextLabel}
+        </CoachButton>
       </div>
     );
   }
 
   return (
+    <CoachButton
+      type="button"
+      className="w-full"
+      disabled={nextDisabled}
+      loading={nextLoading}
+      loadingLabel={nextLoadingLabel}
+      onClick={onNext}
+    >
+      {nextIcon}
+      {nextLabel}
+    </CoachButton>
+  );
+}
+
+export function SessionDetailStepFooter(props: SessionDetailStepFooterProps) {
+  return (
     <div className="coach-session-step-footer">
-      <CoachButton
-        type="button"
-        className="w-full"
-        disabled={nextDisabled}
-        loading={nextLoading}
-        loadingLabel={nextLoadingLabel}
-        onClick={onNext}
-      >
-        {nextIcon}
-        {nextLabel}
-      </CoachButton>
+      <FooterButtons {...props} backLabel={props.backLabel ?? "Back"} nextLabel={props.nextLabel ?? "Continue"} />
     </div>
   );
 }

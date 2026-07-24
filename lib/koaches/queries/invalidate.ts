@@ -1,9 +1,47 @@
 import { getQueryClient } from "@/lib/koaches/queries/client";
 import { coachKeys } from "@/lib/koaches/queries/keys";
-import type { CoachProfile } from "@/lib/koaches/types";
+import type { CoachProfile, Session } from "@/lib/koaches/types";
+
+function sessionDetailKey(sessionId: string) {
+  return [...coachKeys.all, "session", sessionId] as const;
+}
+
+/** Patch a session in list + detail caches so UI updates immediately. */
+export function patchCachedSession(
+  coachId: string,
+  sessionId: string,
+  patch: Partial<Session>
+) {
+  const qc = getQueryClient();
+  qc.setQueryData<Session | null>(sessionDetailKey(sessionId), (old) =>
+    old ? { ...old, ...patch } : old
+  );
+  qc.setQueryData<Session[]>(coachKeys.sessions(coachId), (old) =>
+    old?.map((s) => (s.id === sessionId ? { ...s, ...patch } : s))
+  );
+}
+
+/** Insert or replace a session in caches (e.g. after create). */
+export function upsertCachedSession(session: Session) {
+  const qc = getQueryClient();
+  qc.setQueryData(sessionDetailKey(session.id), session);
+  qc.setQueryData<Session[]>(coachKeys.sessions(session.coachId), (old) => {
+    if (!old) return [session];
+    const idx = old.findIndex((s) => s.id === session.id);
+    if (idx >= 0) {
+      const next = old.slice();
+      next[idx] = session;
+      return next;
+    }
+    return [...old, session];
+  });
+}
 
 export function invalidateCoachSessions(coachId: string) {
-  void getQueryClient().invalidateQueries({ queryKey: coachKeys.sessions(coachId) });
+  const qc = getQueryClient();
+  void qc.invalidateQueries({ queryKey: coachKeys.sessions(coachId) });
+  // Detail pages use a separate key — keep them in sync too.
+  void qc.invalidateQueries({ queryKey: [...coachKeys.all, "session"] });
   window.dispatchEvent(new Event("koaches-sessions-updated"));
 }
 

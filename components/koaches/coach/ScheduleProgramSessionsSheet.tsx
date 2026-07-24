@@ -8,6 +8,7 @@ import { useCoachCourts } from "@/hooks/useCourts";
 import { useCoachStudents } from "@/hooks/useCoachStudents";
 import { notifySessionsUpdated, useCoachSessions } from "@/hooks/useCoachSessions";
 import { createSessionsAction } from "@/lib/koaches/actions/sessions";
+import { upsertCachedSession } from "@/lib/koaches/queries/invalidate";
 import {
   blockedSlotsToBusyIntervals,
   workingHoursToIntervals,
@@ -165,6 +166,7 @@ export function ScheduleProgramSessionsSheet({
             });
 
             await createSessionsAction([session]);
+            upsertCachedSession(session);
             notifySessionsUpdated(coachId);
             showToast(
               date

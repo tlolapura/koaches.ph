@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   fetchSessionByIdAction,
   fetchSessionsAction,
@@ -12,8 +12,6 @@ import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
 import type { Session } from "@/lib/koaches/types";
 
 export function useCoachSessions(coachId: string) {
-  const queryClient = useQueryClient();
-
   const query = useQuery({
     queryKey: coachKeys.sessions(coachId),
     queryFn: () => fetchSessionsAction(coachId),
@@ -25,19 +23,11 @@ export function useCoachSessions(coachId: string) {
     invalidateCoachSessions(coachId);
   }, [coachId]);
 
-  useEffect(() => {
-    const bump = () => {
-      void queryClient.invalidateQueries({ queryKey: coachKeys.sessions(coachId) });
-    };
-    window.addEventListener("koaches-sessions-updated", bump);
-    return () => window.removeEventListener("koaches-sessions-updated", bump);
-  }, [coachId, queryClient]);
-
   const sessions: Session[] = query.data ?? [];
 
   return {
     sessions,
-    loading: !!coachId && query.isPending && sessions.length === 0,
+    loading: !!coachId && query.data === undefined && (query.isPending || query.isFetching),
     refresh,
   };
 }

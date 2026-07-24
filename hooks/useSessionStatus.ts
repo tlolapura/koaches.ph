@@ -5,13 +5,15 @@ import type { Session, SessionStatus } from "@/lib/koaches/types";
 import {
   getSessionDisplayStatus,
   getSessionDisplayStatusFromData,
-  SESSION_LIFECYCLE_UPDATED_EVENT,
   type SessionDisplayStatus,
 } from "@/lib/koaches/session-lifecycle";
-import { PROGRESS_CARDS_UPDATED_EVENT } from "@/lib/koaches/progress-cards";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { updateSessionStatusAction } from "@/lib/koaches/actions/sessions";
-import { invalidateCoachSessions, invalidateCoachStudents } from "@/lib/koaches/queries/invalidate";
+import {
+  invalidateCoachSessions,
+  invalidateCoachStudents,
+  patchCachedSession,
+} from "@/lib/koaches/queries/invalidate";
 
 export function useSessionStatus(session: Session) {
   const { cards } = useProgressCards(session.coachId);
@@ -20,44 +22,44 @@ export function useSessionStatus(session: Session) {
     getSessionDisplayStatusFromData(session)
   );
 
-  const sync = useCallback(() => {
+  useEffect(() => {
     setStatus(session.status);
     setDisplayStatus(getSessionDisplayStatus({ ...session, status: session.status }, cards));
   }, [session, cards]);
 
-  useEffect(() => {
-    sync();
-  }, [sync]);
-
-  useEffect(() => {
-    const onUpdate = () => sync();
-    window.addEventListener(SESSION_LIFECYCLE_UPDATED_EVENT, onUpdate);
-    window.addEventListener("koaches-session-progress-updated", onUpdate);
-    window.addEventListener(PROGRESS_CARDS_UPDATED_EVENT, onUpdate);
-    window.addEventListener("koaches-sessions-updated", onUpdate);
-    return () => {
-      window.removeEventListener(SESSION_LIFECYCLE_UPDATED_EVENT, onUpdate);
-      window.removeEventListener("koaches-session-progress-updated", onUpdate);
-      window.removeEventListener(PROGRESS_CARDS_UPDATED_EVENT, onUpdate);
-      window.removeEventListener("koaches-sessions-updated", onUpdate);
-    };
-  }, [sync]);
-
   const markDone = useCallback(async () => {
-    await updateSessionStatusAction(session.id, "done");
+    const prev = status;
     setStatus("done");
     setDisplayStatus(getSessionDisplayStatus({ ...session, status: "done" }, cards));
-    invalidateCoachSessions(session.coachId);
-    invalidateCoachStudents(session.coachId);
-  }, [session, cards]);
+    patchCachedSession(session.coachId, session.id, { status: "done" });
+    try {
+      await updateSessionStatusAction(session.id, "done");
+      invalidateCoachSessions(session.coachId);
+      invalidateCoachStudents(session.coachId);
+    } catch (err) {
+      setStatus(prev);
+      setDisplayStatus(getSessionDisplayStatus({ ...session, status: prev }, cards));
+      patchCachedSession(session.coachId, session.id, { status: prev });
+      throw err;
+    }
+  }, [session, cards, status]);
 
   const markCanceled = useCallback(async () => {
-    await updateSessionStatusAction(session.id, "canceled");
+    const prev = status;
     setStatus("canceled");
     setDisplayStatus("canceled");
-    invalidateCoachSessions(session.coachId);
-    invalidateCoachStudents(session.coachId);
-  }, [session.id, session.coachId]);
+    patchCachedSession(session.coachId, session.id, { status: "canceled" });
+    try {
+      await updateSessionStatusAction(session.id, "canceled");
+      invalidateCoachSessions(session.coachId);
+      invalidateCoachStudents(session.coachId);
+    } catch (err) {
+      setStatus(prev);
+      setDisplayStatus(getSessionDisplayStatus({ ...session, status: prev }, cards));
+      patchCachedSession(session.coachId, session.id, { status: prev });
+      throw err;
+    }
+  }, [session, cards, status]);
 
   return {
     status,

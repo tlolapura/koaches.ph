@@ -90,11 +90,9 @@ export function CoachReportsPage() {
     [sessions, students, period, clinics]
   );
 
-  if (!coachId) {
+  if (!coachId || sessionsLoading) {
     return <CoachReportsSkeleton />;
   }
-
-  const loading = sessionsLoading && sessions.length === 0;
 
   return (
     <CoachPageShell>
@@ -111,16 +109,7 @@ export function CoachReportsPage() {
         ))}
       </div>
 
-      {loading ? (
-        <div className="mt-4 animate-pulse space-y-3" aria-busy aria-label="Loading reports">
-          <div className="h-28 rounded-2xl bg-[#E5E7EB]" />
-          <div className="grid grid-cols-2 gap-3">
-            <div className="h-20 rounded-2xl bg-[#E5E7EB]/80" />
-            <div className="h-20 rounded-2xl bg-[#E5E7EB]/80" />
-          </div>
-        </div>
-      ) : (
-        <>
+      <>
           <section className="mt-4">
             <CoachSectionTitle>Earnings</CoachSectionTitle>
             <div className="coach-card mt-3 overflow-hidden p-0">
@@ -364,7 +353,6 @@ export function CoachReportsPage() {
             </section>
           )}
         </>
-      )}
     </CoachPageShell>
   );
 }

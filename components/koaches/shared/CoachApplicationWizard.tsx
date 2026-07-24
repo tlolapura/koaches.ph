@@ -14,8 +14,8 @@ import {
   Sparkles,
   User,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import {
   CoachApplicationFields,
   formatApplicationReview,
@@ -118,7 +118,6 @@ export function CoachApplicationWizard({
 
   const current = STEPS[step];
   const StepIcon = current.icon;
-  const progress = Math.round(((step + 1) / STEPS.length) * 100);
   const isFirst = step === 0;
   const isReview = current.id === "review";
   const isSuccess = current.id === "success";
@@ -208,26 +207,14 @@ export function CoachApplicationWizard({
               </h1>
               <p className="mt-0.5 text-sm text-[#6B7280]">{current.subtitle}</p>
             </div>
-            <div className="text-right">
-              <p className="font-heading text-2xl font-bold leading-none text-[#16A34A]">{progress}%</p>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                Step {step + 1}/{STEPS.length}
-              </p>
-            </div>
           </div>
 
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
-            <div
-              className="h-full rounded-full bg-[#16A34A] transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          <div className="mt-3 flex justify-between gap-1">
-            {STEPS.map((s, i) => (
-              <StepDot key={s.id} icon={s.icon} active={i === step} done={i < step} />
-            ))}
-          </div>
+          <CoachStepper
+            className="mt-4"
+            showCurrentLabel={false}
+            steps={STEPS.map((s) => ({ id: s.id, label: s.title }))}
+            currentStepId={current.id}
+          />
         </div>
       </header>
 
@@ -454,28 +441,5 @@ function ReviewRow({
         {value}
       </dd>
     </div>
-  );
-}
-
-function StepDot({
-  icon: Icon,
-  active,
-  done,
-}: {
-  icon: LucideIcon;
-  active: boolean;
-  done: boolean;
-}) {
-  return (
-    <span
-      className={cn(
-        "flex h-8 w-8 items-center justify-center rounded-full transition-all",
-        done && "bg-[#F0FDF4] text-[#16A34A]",
-        active && !done && "bg-[#EFF6FF] text-[#4F8FF7] ring-2 ring-[#BFDBFE] scale-110",
-        !active && !done && "bg-[#F3F4F6] text-[#9CA3AF]"
-      )}
-    >
-      {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Icon className="h-3.5 w-3.5" />}
-    </span>
   );
 }

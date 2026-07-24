@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import type { Session, SessionParticipant, SessionPaymentStatus } from "@/lib/koaches/types";
 import { notifySessionsUpdated, useCoachSessions } from "@/hooks/useCoachSessions";
+import { upsertCachedSession } from "@/lib/koaches/queries/invalidate";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { useCoachPrograms } from "@/hooks/useCoachPrograms";
 import { useCoachCourts } from "@/hooks/useCourts";
@@ -374,6 +375,7 @@ export function AddSessionSheet({
       };
 
       await createSessionsAction([session]);
+      upsertCachedSession(session);
       notifySessionsUpdated(coachId);
       showToast(
         scheduled

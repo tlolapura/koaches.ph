@@ -139,12 +139,11 @@ export function CoachDashboard() {
     );
   }, [allSessions]);
 
-  if (!coachId) {
+  if (!coachId || loading) {
     return <CoachDashboardSkeleton />;
   }
 
   const greetingName = coach ? coachGreetingLabel(coach) : "Coach";
-  const sessionsLoading = loading && allSessions.length === 0;
 
   const attentionItems: AttentionItem[] = [];
   if (candidates.length > 0) {
@@ -328,12 +327,7 @@ export function CoachDashboard() {
           </Link>
         </div>
 
-        {sessionsLoading ? (
-          <div className="coach-card animate-pulse p-8" aria-hidden>
-            <div className="h-4 w-32 rounded bg-[#E5E7EB]" />
-            <div className="mt-3 h-16 rounded-xl bg-[#E5E7EB]/80" />
-          </div>
-        ) : todaySessions.length === 0 ? (
+        {todaySessions.length === 0 ? (
           <DashboardEmptyDay />
         ) : (
           <DashboardMySessionsToday

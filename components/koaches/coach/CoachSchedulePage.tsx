@@ -138,7 +138,7 @@ export function CoachSchedulePage() {
     openAddSession({ date, startTime: slot.startValue, endTime: slot.endValue });
   };
 
-  if (!coachId || (loading && allSessions.length === 0)) return <CoachScheduleSkeleton />;
+  if (!coachId || loading) return <CoachScheduleSkeleton />;
 
   return (
     <CoachPageShell className={viewMode === "calendar" ? "max-md:px-3" : undefined}>

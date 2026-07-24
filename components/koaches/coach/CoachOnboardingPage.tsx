@@ -226,8 +226,8 @@ export function CoachOnboardingPage() {
 
           <CoachStepper
             card={false}
-            variant="header"
             className="mt-4"
+            showCurrentLabel={false}
             steps={STEPS.map((s) => ({ id: s.id, label: s.title, icon: s.icon }))}
             currentStepId={current.id}
           />
