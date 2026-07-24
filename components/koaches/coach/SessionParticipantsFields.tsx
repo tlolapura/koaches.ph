@@ -10,6 +10,8 @@ type SessionParticipantsFieldsProps = {
   participants: SessionParticipant[];
   roster: Student[];
   onChange: (participants: SessionParticipant[]) => void;
+  formatStudentLabel?: (student: Student) => string;
+  hint?: string;
 };
 
 function rosterForRow(roster: Student[], rows: SessionParticipant[], index: number) {
@@ -27,6 +29,8 @@ export function SessionParticipantsFields({
   participants,
   roster,
   onChange,
+  formatStudentLabel,
+  hint = "Pick from your roster. New players join via your intake link first.",
 }: SessionParticipantsFieldsProps) {
   const rows = resizeParticipants(participants, playerCount);
 
@@ -45,10 +49,7 @@ export function SessionParticipantsFields({
   if (playerCount <= 1) {
     const studentId = rows[0]?.studentId ?? "";
     return (
-      <CoachSheetField
-        label="Who's playing?"
-        hint="Pick from your roster. New players join via your intake link first."
-      >
+      <CoachSheetField label="Who's playing?" hint={hint}>
         <CoachStudentSearchSelect
           students={roster}
           value={studentId ? [studentId] : []}
@@ -63,6 +64,8 @@ export function SessionParticipantsFields({
           multiple={false}
           max={1}
           placeholder="Search students…"
+          formatOptionLabel={formatStudentLabel}
+          formatSelectedLabel={formatStudentLabel}
         />
       </CoachSheetField>
     );
@@ -105,6 +108,8 @@ export function SessionParticipantsFields({
               multiple={false}
               max={1}
               placeholder="Search students…"
+              formatOptionLabel={formatStudentLabel}
+              formatSelectedLabel={formatStudentLabel}
             />
           </div>
         );

@@ -59,6 +59,44 @@ export function StudentProfileView({ student }: { student: Student }) {
   const completed = sessions.filter((s) => s.status === "done");
   const upcoming = sessions.find((s) => s.status === "upcoming");
 
+  const sessionGroups = useMemo(() => {
+    const byRecency = (a: Session, b: Session) => {
+      const aKey = a.date ?? "";
+      const bKey = b.date ?? "";
+      if (aKey !== bKey) return bKey.localeCompare(aKey);
+      return b.id.localeCompare(a.id);
+    };
+
+    const programSessions = sessions
+      .filter((s) => s.type === "program")
+      .slice()
+      .sort(byRecency);
+    const dropIns = sessions
+      .filter((s) => s.type === "drop-in")
+      .slice()
+      .sort(byRecency);
+    const clinics = sessions
+      .filter((s) => s.type === "clinic")
+      .slice()
+      .sort(byRecency);
+
+    return [
+      { key: "program", title: "Program", items: programSessions },
+      { key: "drop-in", title: "Drop-in", items: dropIns },
+      { key: "clinic", title: "Clinic", items: clinics },
+    ].filter((group) => group.items.length > 0);
+  }, [sessions]);
+
+  const sessionTitle = (s: Session) => {
+    if (s.type === "program") {
+      const programName =
+        (s.programId ? programs.find((p) => p.id === s.programId)?.name : undefined) ?? "Program";
+      return s.sessionNumber ? `${programName} · Session ${s.sessionNumber}` : programName;
+    }
+    if (s.type === "clinic") return "Clinic";
+    return "Drop-in";
+  };
+
   return (
     <CoachPageShell>
       <div className="flex items-center justify-between">
@@ -147,26 +185,45 @@ export function StudentProfileView({ student }: { student: Student }) {
         )}
 
         {tab === "Sessions" && (
-          <div className="space-y-3">
+          <div className="space-y-6">
             {sessions.length === 0 ? (
               <p className="text-center text-sm text-[#6B7280]">No sessions yet.</p>
             ) : (
-              sessions.map((s) => (
-                <Link key={s.id} href={`/coach/sessions/${s.id}`} className="coach-card block p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-heading font-semibold">
-                        {s.sessionNumber ? `Session ${s.sessionNumber}` : "Drop-in"} ·{" "}
-                        {formatSessionDateLabel(s)}
-                      </p>
-                      <p className="text-sm text-[#6B7280]">
-                        {formatSessionTimeRange(s.time, s.endTime)} · {formatCurrency(s.price)}
-                      </p>
-                      <p className="text-xs text-[#9CA3AF]">{courtNameFromLookup(courtLookup, s.courtId)}</p>
-                    </div>
-                    <StudentSessionStatusBadge session={s} />
+              sessionGroups.map((group) => (
+                <section key={group.key}>
+                  <div className="mb-2 flex items-center gap-2">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">
+                      {group.title}
+                    </p>
+                    <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-semibold text-[#6B7280]">
+                      {group.items.length}
+                    </span>
                   </div>
-                </Link>
+                  <div className="space-y-3">
+                    {group.items.map((s) => (
+                      <Link
+                        key={s.id}
+                        href={`/coach/sessions/${s.id}`}
+                        className="coach-card block p-4"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-heading font-semibold text-[#111827]">
+                              {sessionTitle(s)}
+                            </p>
+                            <p className="mt-0.5 text-sm text-[#6B7280]">
+                              {formatSessionDateLabel(s)} · {formatSessionTimeRange(s.time, s.endTime)}
+                            </p>
+                            <p className="text-xs text-[#9CA3AF]">
+                              {courtNameFromLookup(courtLookup, s.courtId)} · {formatCurrency(s.price)}
+                            </p>
+                          </div>
+                          <StudentSessionStatusBadge session={s} />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
               ))
             )}
           </div>

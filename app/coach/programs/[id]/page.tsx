@@ -85,6 +85,7 @@ export default function ProgramDetailPage({
           customSkillIds={programSkills.customSkillIds}
           customSkills={programSkills.customSkills}
           skillLabelOverrides={programSkills.skillLabelOverrides}
+          compact
           className="mt-3"
         />
       </section>

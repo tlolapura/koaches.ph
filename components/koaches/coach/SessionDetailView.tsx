@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Check, CircleCheck, MapPin, Trash2, Users } from "lucide-react";
+import { CalendarDays, Check, CircleCheck, MapPin, Pencil, Trash2, Users } from "lucide-react";
 import type { Session } from "@/lib/koaches/types";
 import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
 import { formatParticipantProgramLabel, resolveParticipantProgramContext } from "@/lib/koaches/participant-program";
@@ -13,6 +13,7 @@ import { SessionDetailStepFooter } from "@/components/koaches/coach/SessionDetai
 import type { SkillRatingActions } from "@/components/koaches/coach/SkillRatingPanel";
 import { SessionTypeBadge, SessionDisplayStatusBadge, useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { SessionPaymentCard } from "@/components/koaches/coach/SessionPaymentCard";
+import { SessionNotesCard } from "@/components/koaches/coach/SessionNotesCard";
 import { ClinicSessionAttendance } from "@/components/koaches/coach/ClinicSessionAttendance";
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { ScheduleTbdSessionSheet } from "@/components/koaches/coach/ScheduleTbdSessionSheet";
@@ -32,6 +33,16 @@ import {
   CoachPageShell,
 } from "@/components/koaches/coach/CoachPageLayout";
 import { isSessionRatingStep, type SessionDetailStep } from "@/lib/koaches/session-detail-steps";
+import { sessionNeedsProgressReview } from "@/lib/koaches/session-lifecycle";
+import { isDoneStatus } from "@/lib/koaches/session-status";
+import { filterRatedSkills, resolveParticipantProgress } from "@/lib/koaches/session-progress";
+import { findProgressCardForSession, buildProgressCardUrl } from "@/lib/koaches/progress-cards";
+import { useProgressCards } from "@/hooks/useProgressCards";
+import {
+  SessionProgressSummary,
+  SkillProgressList,
+} from "@/components/koaches/SkillProgressDisplay";
+import { SendProgressCardEmailButton } from "@/components/koaches/coach/SendProgressCardEmailButton";
 
 type SessionDetailViewProps = {
   session: Session;
@@ -201,6 +212,8 @@ function ClinicSessionDetail({ session }: { session: Session }) {
 
         <ClinicSessionAttendance session={session} />
 
+        <SessionNotesCard session={session} />
+
         {session.clinicId ? (
           <div className="coach-card p-4">
             <p className="text-sm text-[#6B7280]">
@@ -265,6 +278,12 @@ function StandardSessionDetail({ session }: { session: Session }) {
   const [ratingActions, setRatingActions] = useState<SkillRatingActions | null>(null);
   const { showToast } = useCoachToast();
   const { status, displayStatus, markDone } = useSessionStatus(session);
+  const { cards } = useProgressCards(session.coachId);
+  const needsRatings = sessionNeedsProgressReview(session);
+  const wrapUpComplete = isDoneStatus(status) && !needsRatings;
+  const [mode, setMode] = useState<"view" | "edit">(() =>
+    isDoneStatus(session.status) && !sessionNeedsProgressReview(session) ? "view" : "edit"
+  );
   const ratingsUnlocked = status !== "upcoming" && status !== "canceled";
   const participants = getSessionParticipants(session);
   const primaryName = formatSessionParticipantNames(session);
@@ -274,6 +293,14 @@ function StandardSessionDetail({ session }: { session: Session }) {
     ? `${formatDisplayDate(session.date!)} · ${formatSessionTimeRange(session.time, session.endTime)}`
     : "Date & time not set yet";
   const deleteDescription = `You are deleting: ${primaryName}\n${deleteSessionDetails}\n${courtName} · ${formatCurrency(session.price)}\n\nThis permanently removes the record and cannot be undone.`;
+
+  // Stay in view once wrap-up is complete (unless coach chose Edit).
+  useEffect(() => {
+    if (wrapUpComplete && mode === "edit" && step === "complete") {
+      setMode("view");
+      setStep("session");
+    }
+  }, [wrapUpComplete, mode, step]);
 
   useEffect(() => {
     if (step === "session") return;
@@ -286,11 +313,17 @@ function StandardSessionDetail({ session }: { session: Session }) {
     }
   }, [step]);
 
+  const startEditRatings = () => {
+    setMode("edit");
+    setStep("coverage");
+  };
+
   const handleMarkDone = async () => {
     setMarkingDone(true);
     try {
       await markDone();
       showToast("Session marked done. Mark skill coverage next.");
+      setMode("edit");
       setStep("coverage");
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Could not update session", "error");
@@ -300,7 +333,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
   };
 
   const renderStepFooter = () => {
-    if (status === "canceled" || step === "complete") return null;
+    if (mode === "view" || status === "canceled" || step === "complete") return null;
 
     if (step === "session") {
       if (status === "upcoming") {
@@ -317,6 +350,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
 
       return (
         <SessionDetailStepFooter
+          nextLabel={needsRatings ? "Add ratings" : "Continue"}
           onNext={() => setStep("coverage")}
           nextDisabled={!ratingsUnlocked}
         />
@@ -326,7 +360,8 @@ function StandardSessionDetail({ session }: { session: Session }) {
     if (step === "coverage") {
       return (
         <SessionDetailStepFooter
-          onBack={() => setStep("session")}
+          onBack={() => (wrapUpComplete ? setMode("view") : setStep("session"))}
+          backLabel={wrapUpComplete ? "Cancel" : "Back"}
           onNext={() => setStep("ratings")}
         />
       );
@@ -346,7 +381,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
       return (
         <SessionDetailStepFooter
           onBack={() => setStep("ratings")}
-          nextLabel="Save session"
+          nextLabel={ratingActions?.saveLabel ?? "Save session"}
           nextIcon={<Check className="h-4 w-4" strokeWidth={2.5} />}
           onNext={() => void ratingActions?.saveSession()}
           nextLoading={ratingActions?.saving}
@@ -357,6 +392,110 @@ function StandardSessionDetail({ session }: { session: Session }) {
 
     return null;
   };
+
+  if (mode === "view" && wrapUpComplete) {
+    return (
+      <CoachPageShell>
+        <CoachBackLink href="/coach/sessions" label="Schedule" className="hidden md:inline-flex" />
+
+        <div className="mt-4 space-y-4">
+          <SessionInfoCard
+            session={session}
+            primaryName={primaryName}
+            courtName={courtName}
+            participants={participants}
+            displayStatus={displayStatus}
+            onDelete={() => setDeleteOpen(true)}
+          />
+
+          <SessionPaymentCard session={session} />
+
+          <SessionNotesCard session={session} />
+
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-heading text-sm font-semibold text-[#111827]">Session results</h3>
+              <button
+                type="button"
+                onClick={startEditRatings}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F8FF7] hover:underline"
+              >
+                <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
+                Edit ratings
+              </button>
+            </div>
+
+            {participants.map((p) => {
+              const ratings = resolveParticipantProgress(session, p.id);
+              const before = filterRatedSkills(ratings.ratingsBefore ?? []);
+              const after = filterRatedSkills(ratings.ratingsAfter ?? []);
+              const card = p.studentId
+                ? findProgressCardForSession(cards, session.id, p.studentId)
+                : undefined;
+
+              return (
+                <div key={p.id} className="rounded-2xl bg-[#F9FAFB] p-4">
+                  {participants.length > 1 ? (
+                    <p className="font-heading text-sm font-semibold text-[#111827]">{p.name}</p>
+                  ) : null}
+                  {before.length > 0 && after.length > 0 ? (
+                    <div className={participants.length > 1 ? "mt-3" : undefined}>
+                      <SessionProgressSummary before={before} after={after} />
+                      <div className="mt-3">
+                        <SkillProgressList before={before} after={after} compact maxItems={6} />
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-[#6B7280]">No skill ratings saved.</p>
+                  )}
+                  {card ? (
+                    <div className="mt-4 space-y-2">
+                      <a
+                        href={`/progress/${card.id}`}
+                        className="coach-btn-secondary block w-full text-center text-sm"
+                      >
+                        View progress card
+                      </a>
+                      <button
+                        type="button"
+                        className="coach-btn-outline w-full text-sm"
+                        onClick={() => {
+                          void navigator.clipboard.writeText(buildProgressCardUrl(card.id));
+                          showToast("Link copied");
+                        }}
+                      >
+                        Copy share link
+                      </button>
+                      <SendProgressCardEmailButton cardId={card.id} className="w-full" />
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </section>
+        </div>
+
+        <ConfirmSheet
+          open={deleteOpen}
+          onClose={() => setDeleteOpen(false)}
+          message="Delete this session permanently?"
+          description={deleteDescription}
+          confirmLabel="Delete Session"
+          onConfirm={async () => {
+            try {
+              await deleteSessionAction(session.id);
+              invalidateCoachSessions(session.coachId);
+              showToast("Session deleted");
+              router.push("/coach/sessions");
+              router.refresh();
+            } catch (e) {
+              showToast(e instanceof Error ? e.message : "Could not delete session", "error");
+            }
+          }}
+        />
+      </CoachPageShell>
+    );
+  }
 
   return (
     <CoachPageShell>
@@ -391,6 +530,8 @@ function StandardSessionDetail({ session }: { session: Session }) {
           )}
 
           <SessionPaymentCard session={session} />
+
+          <SessionNotesCard session={session} />
         </div>
       )}
 
@@ -399,7 +540,14 @@ function StandardSessionDetail({ session }: { session: Session }) {
           <SessionSkillRatingsSection
             session={session}
             step={step}
-            onStepChange={setStep}
+            onStepChange={(next) => {
+              if (next === "complete") {
+                setMode("view");
+                setStep("session");
+                return;
+              }
+              setStep(next);
+            }}
             onRatingActionsChange={setRatingActions}
           />
         </div>

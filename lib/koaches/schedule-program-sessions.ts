@@ -57,6 +57,69 @@ export function getNextProgramSessionNumber(
   return undefined;
 }
 
+export function formatSessionOrdinal(n: number): string {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
+}
+
+export type ProgramBookingAction = "enroll" | "book" | "complete";
+
+/** What the coach should do next for this student in the program. */
+export function getProgramBookingAction(
+  program: Program,
+  student: Student,
+  sessions: Session[]
+): { action: ProgramBookingAction; nextNumber?: number } {
+  const nextNumber = getNextProgramSessionNumber(program, student, sessions);
+  if (!nextNumber) return { action: "complete" };
+
+  const enrolled = program.enrolledStudentIds.includes(student.id);
+  if (!enrolled) return { action: "enroll", nextNumber };
+
+  return { action: "book", nextNumber };
+}
+
+/** Picker label: "Leigh · book for 3rd session" / "Juan · enroll for 1st session" */
+export function formatProgramStudentOptionLabel(
+  program: Program,
+  student: Student,
+  sessions: Session[]
+): string {
+  const { action, nextNumber } = getProgramBookingAction(program, student, sessions);
+  if (action === "complete") {
+    return `${student.name} · all ${program.sessionCount} sessions booked`;
+  }
+  const ordinal = formatSessionOrdinal(nextNumber!);
+  if (action === "enroll") {
+    return `${student.name} · enroll for ${ordinal} session`;
+  }
+  return `${student.name} · book for ${ordinal} session`;
+}
+
+/** Banner tied to the selected student — not a floating "next session" for the program. */
+export function formatProgramBookingBanner(options: {
+  studentName: string;
+  sessionNumber: number;
+  sessionCount: number;
+  isFirst: boolean;
+}): { eyebrow: string; title: string } {
+  const ordinal = formatSessionOrdinal(options.sessionNumber);
+  return {
+    eyebrow: options.isFirst ? `Starting ${options.studentName}` : `Booking for ${options.studentName}`,
+    title: `${ordinal} session of ${options.sessionCount}`,
+  };
+}
+
 export function hasProgramSessionConflict(options: {
   sessions: Session[];
   date?: string;

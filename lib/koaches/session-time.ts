@@ -112,9 +112,16 @@ export function minutesToHtmlValue(totalMinutes: number): string {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
-/** Mock/display format from HTML time input */
+/** Display format from HTML time ("08:00") or already-display ("8:00 AM"). */
 export function formatTimeDisplay(timeValue: string): string {
+  if (/AM|PM/i.test(timeValue)) {
+    const match = timeValue.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (match) {
+      return `${Number(match[1])}:${match[2].padStart(2, "0")} ${match[3].toUpperCase()}`;
+    }
+  }
   const [h, m] = timeValue.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return timeValue;
   const period = h >= 12 ? "PM" : "AM";
   const hour = h % 12 || 12;
   return `${hour}:${String(m).padStart(2, "0")} ${period}`;

@@ -15,7 +15,9 @@ import {
 } from "@/lib/koaches/coach-availability";
 import {
   buildProgramSession,
-  countProgramSessionsCompleted,
+  formatProgramBookingBanner,
+  formatProgramStudentOptionLabel,
+  formatSessionOrdinal,
   getNextProgramSessionNumber,
   hasProgramSessionConflict,
 } from "@/lib/koaches/schedule-program-sessions";
@@ -90,16 +92,13 @@ export function ScheduleProgramSessionsSheet({
   }, [program, student, allSessions]);
 
   const isFirstProgramSession = isFirstProgramSessionNumber(nextSessionNumber);
-  const dateRequired = isFirstProgramSession;
+  const dateRequired = true;
 
   useEffect(() => {
     if (!open || !nextSessionNumber) return;
-    if (isFirstProgramSession) {
-      setDate(format(new Date(), "yyyy-MM-dd"));
-    } else {
-      setDate("");
-    }
-  }, [open, nextSessionNumber, isFirstProgramSession, studentId]);
+    // Always keep a date when booking — default to today if empty.
+    setDate((prev) => prev || format(new Date(), "yyyy-MM-dd"));
+  }, [open, nextSessionNumber, studentId]);
 
   const hasConflict = useMemo(
     () =>
@@ -114,11 +113,10 @@ export function ScheduleProgramSessionsSheet({
   );
 
   const canSave = useMemo(() => {
-    if (!student || !nextSessionNumber) return false;
-    if (isFirstProgramSession && !date) return false;
-    if (date && hasConflict) return false;
+    if (!student || !nextSessionNumber || !date) return false;
+    if (hasConflict) return false;
     return true;
-  }, [student, nextSessionNumber, isFirstProgramSession, date, hasConflict]);
+  }, [student, nextSessionNumber, date, hasConflict]);
 
   return (
     <CoachBottomSheet
@@ -135,7 +133,9 @@ export function ScheduleProgramSessionsSheet({
             loadingLabel="Saving…"
             disabled={!canSave}
           >
-            {nextSessionNumber ? `Save session ${nextSessionNumber}` : "Nothing to schedule"}
+            {nextSessionNumber
+              ? `Save ${student ? `${student.name}'s ` : ""}${formatSessionOrdinal(nextSessionNumber)} session`
+              : "Nothing to schedule"}
           </CoachButton>
         </CoachSheetFooter>
       }
@@ -159,8 +159,8 @@ export function ScheduleProgramSessionsSheet({
               program,
               student,
               sessionNumber: nextSessionNumber,
-              date: date || undefined,
-              startTime: date ? startTime : undefined,
+              date,
+              startTime,
               courtId,
               paymentStatus,
             });
@@ -169,9 +169,7 @@ export function ScheduleProgramSessionsSheet({
             upsertCachedSession(session);
             notifySessionsUpdated(coachId);
             showToast(
-              date
-                ? `Session ${nextSessionNumber} scheduled for ${student.name}`
-                : `Session ${nextSessionNumber} saved. Add a date when ready.`
+              `${formatSessionOrdinal(nextSessionNumber)} session scheduled for ${student.name}`
             );
             onClose();
             } catch (e) {
@@ -187,7 +185,7 @@ export function ScheduleProgramSessionsSheet({
               onChange={setStudentId}
               options={enrolled.map((s) => ({
                 value: s.id,
-                label: `${s.name} · ${countProgramSessionsCompleted(s.id, program.id, allSessions)} of ${program.sessionCount} done`,
+                label: formatProgramStudentOptionLabel(program, s, allSessions),
               }))}
             />
           </CoachSheetField>
@@ -198,17 +196,26 @@ export function ScheduleProgramSessionsSheet({
             </div>
           ) : (
             <>
-              {nextSessionNumber && (
+              {nextSessionNumber && student && (
                 <div className="rounded-xl bg-[#F0FDF4] px-3 py-2.5">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#166534]">
-                    {isFirstProgramSession ? "First program session" : "Next session"}
-                  </p>
-                  <p className="font-heading mt-0.5 text-sm font-semibold text-[#111827]">
-                    Session {nextSessionNumber} of {program.sessionCount}
-                    {isFirstProgramSession
-                      ? " · first session date is required"
-                      : " · date is optional"}
-                  </p>
+                  {(() => {
+                    const banner = formatProgramBookingBanner({
+                      studentName: student.name,
+                      sessionNumber: nextSessionNumber,
+                      sessionCount: program.sessionCount,
+                      isFirst: isFirstProgramSession,
+                    });
+                    return (
+                      <>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-[#166534]">
+                          {banner.eyebrow}
+                        </p>
+                        <p className="font-heading mt-0.5 text-sm font-semibold text-[#111827]">
+                          {banner.title}
+                        </p>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -218,31 +225,13 @@ export function ScheduleProgramSessionsSheet({
                 </p>
               )}
 
-              <CoachSheetField
-                label={isFirstProgramSession ? "First session date" : "Date (optional)"}
-                hint={
-                  !isFirstProgramSession
-                    ? "Leave empty to save this session without a date"
-                    : undefined
-                }
-              >
-                <div className="space-y-2">
-                  <CoachDatePicker
-                    value={date}
-                    onChange={setDate}
-                    required={dateRequired}
-                    placeholder={isFirstProgramSession ? "Pick a date" : "Schedule later"}
-                  />
-                  {!isFirstProgramSession && date && (
-                    <button
-                      type="button"
-                      className="text-xs font-semibold text-[#4F8FF7]"
-                      onClick={() => setDate("")}
-                    >
-                      Clear date (schedule later)
-                    </button>
-                  )}
-                </div>
+              <CoachSheetField label={isFirstProgramSession ? "First session date" : "Date"}>
+                <CoachDatePicker
+                  value={date}
+                  onChange={setDate}
+                  required={dateRequired}
+                  placeholder="Pick a date"
+                />
               </CoachSheetField>
 
               {date && (
@@ -255,13 +244,14 @@ export function ScheduleProgramSessionsSheet({
                 />
               )}
 
-              {date && nextSessionNumber && (
+              {date && nextSessionNumber && student && (
                 <div className="rounded-xl bg-[#F9FAFB] px-3 py-2.5 ring-1 ring-[#E5E7EB]">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-[#6B7280]">
                     Schedule
                   </p>
                   <p className="font-heading mt-0.5 text-sm font-semibold text-[#111827]">
-                    Session {nextSessionNumber} · {formatDisplayDate(date)} · {formatTimeDisplay(startTime)} –{" "}
+                    {student.name}&apos;s {formatSessionOrdinal(nextSessionNumber)} ·{" "}
+                    {formatDisplayDate(date)} · {formatTimeDisplay(startTime)} –{" "}
                     {formatTimeDisplay(endTime)}
                   </p>
                 </div>

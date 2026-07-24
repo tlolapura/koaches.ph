@@ -32,7 +32,9 @@ import {
 } from "@/lib/koaches/session-time";
 import { blockedSlotsToBusyIntervals, workingHoursToIntervals } from "@/lib/koaches/coach-availability";
 import { participantFromStudent, resizeParticipants } from "@/lib/koaches/session-participants";
-import { getNextProgramSessionNumber } from "@/lib/koaches/schedule-program-sessions";
+import { getNextProgramSessionNumber, formatProgramStudentOptionLabel, formatProgramBookingBanner, formatSessionOrdinal } from "@/lib/koaches/schedule-program-sessions";
+import { enrollStudentInProgramAction } from "@/lib/koaches/actions/programs";
+import { invalidateCoachPrograms } from "@/lib/koaches/queries/invalidate";
 import { isFirstProgramSessionNumber } from "@/lib/koaches/session-schedule";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
@@ -116,6 +118,7 @@ export function AddSessionSheet({
   const [endTime, setEndTime] = useState(() => addMinutesToTimeValue("08:00", defaultDuration));
   const [courtId, setCourtId] = useState("");
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
+  const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
   const selectedProgram =
@@ -132,7 +135,7 @@ export function AddSessionSheet({
   }, [selectedProgram, primaryStudent, allSessions]);
 
   const isFirstProgramSession = isFirstProgramSessionNumber(nextSessionNumber);
-  const dateRequired = sessionType === "drop-in" || isFirstProgramSession;
+  const dateRequired = true;
   const showScheduleFields =
     sessionType === "drop-in" || (sessionType === "program" && Boolean(nextSessionNumber));
 
@@ -195,9 +198,8 @@ export function AddSessionSheet({
 
   const canSave = useMemo(() => {
     if (sessionType === "program") {
-      if (!nextSessionNumber || !primaryStudent) return false;
-      if (isFirstProgramSession && !date) return false;
-      if (date && (hasConflict || allowedDurations.length === 0)) return false;
+      if (!nextSessionNumber || !primaryStudent || !date) return false;
+      if (hasConflict || allowedDurations.length === 0) return false;
       return true;
     }
     return Boolean(date) && !hasConflict && allowedDurations.length > 0;
@@ -205,7 +207,6 @@ export function AddSessionSheet({
     sessionType,
     nextSessionNumber,
     primaryStudent,
-    isFirstProgramSession,
     date,
     hasConflict,
     allowedDurations.length,
@@ -276,12 +277,9 @@ export function AddSessionSheet({
 
   useEffect(() => {
     if (sessionType !== "program" || !nextSessionNumber) return;
-    if (isFirstProgramSession) {
-      if (!date) {
-        setDate(initialDate ?? format(new Date(), "yyyy-MM-dd"));
-      }
-    } else {
-      setDate("");
+    // Keep the calendar/schedule date (or today). Never clear it for later sessions.
+    if (!date) {
+      setDate(initialDate ?? format(new Date(), "yyyy-MM-dd"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionType, nextSessionNumber, isFirstProgramSession]);
@@ -355,6 +353,11 @@ export function AddSessionSheet({
       const sessionNumber = nextSessionNumber;
       const scheduled = Boolean(date);
 
+      if (!scheduled) {
+        showToast("Pick a date for this session", "error");
+        return;
+      }
+
       const session: Session = {
         id: `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         coachId: coachId,
@@ -362,9 +365,9 @@ export function AddSessionSheet({
         type: sessionType,
         programId: program?.id,
         sessionNumber,
-        date: scheduled ? date : undefined,
-        time: scheduled ? formatTimeDisplay(startTime) : "TBD",
-        endTime: scheduled ? formatTimeDisplay(endTime) : "TBD",
+        date,
+        time: formatTimeDisplay(startTime),
+        endTime: formatTimeDisplay(endTime),
         courtId,
         status: "upcoming",
         paymentStatus,
@@ -372,16 +375,23 @@ export function AddSessionSheet({
         tip,
         playerCount,
         participants,
+        notes: notes.trim() || undefined,
       };
+
+      if (
+        sessionType === "program" &&
+        program &&
+        primaryStudentId &&
+        !program.enrolledStudentIds.includes(primaryStudentId)
+      ) {
+        await enrollStudentInProgramAction(program.id, primaryStudentId);
+        invalidateCoachPrograms(coachId);
+      }
 
       await createSessionsAction([session]);
       upsertCachedSession(session);
       notifySessionsUpdated(coachId);
-      showToast(
-        scheduled
-          ? "Session scheduled!"
-          : `Session ${sessionNumber} saved. Add a date when ready.`
-      );
+      showToast("Session scheduled!");
       onClose();
     } catch (e) {
       showToast(e instanceof Error ? e.message : "Could not save session", "error");
@@ -452,11 +462,11 @@ export function AddSessionSheet({
                 <dd className="text-right font-medium text-[#111827]">{selectedProgram.name}</dd>
               </div>
             ) : null}
-            {sessionType === "program" && nextSessionNumber ? (
+            {sessionType === "program" && nextSessionNumber && primaryStudent ? (
               <div className="flex items-start justify-between gap-4">
-                <dt className="text-[#6B7280]">Session</dt>
+                <dt className="text-[#6B7280]">Booking</dt>
                 <dd className="text-right font-medium text-[#111827]">
-                  Session {nextSessionNumber}
+                  {primaryStudent.name}&apos;s {formatSessionOrdinal(nextSessionNumber)}
                   {selectedProgram ? ` of ${selectedProgram.sessionCount}` : ""}
                 </dd>
               </div>
@@ -493,10 +503,8 @@ export function AddSessionSheet({
                       </>
                     ) : null}
                   </>
-                ) : sessionType === "program" && nextSessionNumber ? (
-                  `Session ${nextSessionNumber} · Date TBD`
                 ) : (
-                  "Date TBD"
+                  "Pick a date"
                 )}
               </dd>
             </div>
@@ -506,6 +514,14 @@ export function AddSessionSheet({
                 {selectedCourt?.name ?? "Not selected"}
               </dd>
             </div>
+            {notes.trim() ? (
+              <div className="flex items-start justify-between gap-4">
+                <dt className="text-[#6B7280]">Notes</dt>
+                <dd className="max-w-[60%] whitespace-pre-wrap text-right font-medium text-[#111827]">
+                  {notes.trim()}
+                </dd>
+              </div>
+            ) : null}
           </dl>
         </div>
       ) : (
@@ -538,44 +554,23 @@ export function AddSessionSheet({
         </CoachSheetField>
 
         {sessionType === "program" && (
-          <>
-            <CoachSheetField label="Program">
-              <CoachSelect
-                value={selectedProgramId ?? programs[0]?.id ?? ""}
-                onChange={(id) => {
-                  setSelectedProgramId(id);
-                  const program = programs.find((p) => p.id === id);
-                  if (program) {
-                    setPrice(suggestSessionPrice({ type: "program", program }));
-                    const enrolled = roster.find((s) => program.enrolledStudentIds.includes(s.id));
-                    if (enrolled) {
-                      setParticipants([participantFromStudent(enrolled)]);
-                    }
+          <CoachSheetField label="Program">
+            <CoachSelect
+              value={selectedProgramId ?? programs[0]?.id ?? ""}
+              onChange={(id) => {
+                setSelectedProgramId(id);
+                const program = programs.find((p) => p.id === id);
+                if (program) {
+                  setPrice(suggestSessionPrice({ type: "program", program }));
+                  const enrolled = roster.find((s) => program.enrolledStudentIds.includes(s.id));
+                  if (enrolled) {
+                    setParticipants([participantFromStudent(enrolled)]);
                   }
-                }}
-                options={programs.map((p) => ({ value: p.id, label: p.name }))}
-              />
-            </CoachSheetField>
-
-            {nextSessionNumber ? (
-              <div className="rounded-xl bg-[#F0FDF4] px-3 py-2.5">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-[#166534]">
-                  {isFirstProgramSession ? "First program session" : "Next session"}
-                </p>
-                <p className="font-heading mt-0.5 text-sm font-semibold text-[#111827]">
-                  Session {nextSessionNumber}
-                  {selectedProgram ? ` of ${selectedProgram.sessionCount}` : ""}
-                  {isFirstProgramSession
-                    ? " · first session date is required"
-                    : " · date is optional"}
-                </p>
-              </div>
-            ) : (
-              <p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs font-medium text-[#B91C1C]">
-                This student already has every program session booked or completed.
-              </p>
-            )}
-          </>
+                }
+              }}
+              options={programs.map((p) => ({ value: p.id, label: p.name }))}
+            />
+          </CoachSheetField>
         )}
 
         {sessionType === "drop-in" ? (
@@ -592,7 +587,51 @@ export function AddSessionSheet({
           participants={participants}
           roster={roster}
           onChange={setParticipants}
+          hint={
+            sessionType === "program"
+              ? "Each student shows which program session you’d book next."
+              : undefined
+          }
+          formatStudentLabel={
+            sessionType === "program" && selectedProgram
+              ? (student) =>
+                  formatProgramStudentOptionLabel(selectedProgram, student, allSessions)
+              : undefined
+          }
         />
+
+        {sessionType === "program" && (
+          <>
+            {!primaryStudent ? (
+              <p className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-xs font-medium text-[#6B7280]">
+                Pick a student to see which session to book.
+              </p>
+            ) : nextSessionNumber && primaryStudent ? (
+              (() => {
+                const banner = formatProgramBookingBanner({
+                  studentName: primaryStudent.name,
+                  sessionNumber: nextSessionNumber,
+                  sessionCount: selectedProgram?.sessionCount ?? nextSessionNumber,
+                  isFirst: isFirstProgramSession,
+                });
+                return (
+                  <div className="rounded-xl bg-[#F0FDF4] px-3 py-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#166534]">
+                      {banner.eyebrow}
+                    </p>
+                    <p className="font-heading mt-0.5 text-sm font-semibold text-[#111827]">
+                      {banner.title}
+                    </p>
+                  </div>
+                );
+              })()
+            ) : (
+              <p className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-3 py-2 text-xs font-medium text-[#B91C1C]">
+                {primaryStudent.name} already has every program session booked or completed.
+              </p>
+            )}
+          </>
+        )}
 
         <SessionPriceFields
           sessionType={sessionType}
@@ -656,37 +695,15 @@ export function AddSessionSheet({
               label={
                 sessionType === "program" && isFirstProgramSession
                   ? "First session date"
-                  : sessionType === "program"
-                    ? "Date (optional)"
-                    : "Date"
-              }
-              hint={
-                sessionType === "program" && !isFirstProgramSession
-                  ? "Leave empty to save this session without a date"
-                  : undefined
+                  : "Date"
               }
             >
-              <div className="space-y-2">
-                <CoachDatePicker
-                  value={date}
-                  onChange={handleDateChange}
-                  required={dateRequired}
-                  placeholder={
-                    sessionType === "program" && !isFirstProgramSession
-                      ? "Schedule later"
-                      : "Pick a date"
-                  }
-                />
-                {sessionType === "program" && !isFirstProgramSession && date && (
-                  <button
-                    type="button"
-                    className="text-xs font-semibold text-[#4F8FF7]"
-                    onClick={() => setDate("")}
-                  >
-                    Clear date (schedule later)
-                  </button>
-                )}
-              </div>
+              <CoachDatePicker
+                value={date}
+                onChange={handleDateChange}
+                required={dateRequired}
+                placeholder="Pick a date"
+              />
             </CoachSheetField>
 
             {date && (
@@ -738,6 +755,20 @@ export function AddSessionSheet({
               value: c.id,
               label: c.name,
             }))}
+          />
+        </CoachSheetField>
+
+        <CoachSheetField
+          label="Notes (optional)"
+          htmlFor="session-notes"
+          hint="Court number, gate code, reminders…"
+        >
+          <textarea
+            id="session-notes"
+            className="coach-input min-h-[72px] resize-none"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="e.g. Court 3 · near the café"
           />
         </CoachSheetField>
 

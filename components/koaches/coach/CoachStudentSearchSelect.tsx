@@ -20,6 +20,10 @@ type CoachStudentSearchSelectProps = {
   multiple?: boolean;
   className?: string;
   emptyLabel?: string;
+  /** Optional label override in the dropdown list (defaults to student.name) */
+  formatOptionLabel?: (student: Student) => string;
+  /** Optional closed single-select display (defaults to student.name) */
+  formatSelectedLabel?: (student: Student) => string;
 };
 
 export function CoachStudentSearchSelect({
@@ -32,6 +36,8 @@ export function CoachStudentSearchSelect({
   multiple = true,
   className,
   emptyLabel = "No matching students",
+  formatOptionLabel,
+  formatSelectedLabel,
 }: CoachStudentSearchSelectProps) {
   const anchorRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -78,7 +84,9 @@ export function CoachStudentSearchSelect({
   }, [roster, query, selectedSet]);
 
   const atMax = max != null && value.length >= max;
-  const singleLabel = selectedStudents[0]?.name ?? "";
+  const singleLabel = selectedStudents[0]
+    ? (formatSelectedLabel?.(selectedStudents[0]) ?? selectedStudents[0].name)
+    : "";
 
   const toggle = (id: string) => {
     if (multiple) {
@@ -114,7 +122,7 @@ export function CoachStudentSearchSelect({
               key={s.id}
               className="inline-flex max-w-full items-center gap-1 rounded-full bg-[#EDE9FE] px-2.5 py-1 text-xs font-semibold text-[#5B21B6]"
             >
-              <span className="truncate">{s.name}</span>
+              <span className="truncate">{formatOptionLabel?.(s) ?? s.name}</span>
               <button
                 type="button"
                 onClick={() => remove(s.id)}
@@ -194,7 +202,7 @@ export function CoachStudentSearchSelect({
             ) : (
               filtered.map((s) => {
                 const active = selectedSet.has(s.id);
-                const disabled = !active && atMax;
+                const disabled = multiple && !active && atMax;
                 return (
                   <li key={s.id} role="option" aria-selected={active}>
                     <button
@@ -209,7 +217,9 @@ export function CoachStudentSearchSelect({
                           : "text-[#374151] hover:bg-[#F9FAFB]"
                       )}
                     >
-                      <span className="min-w-0 truncate">{s.name}</span>
+                      <span className="min-w-0 truncate">
+                        {formatOptionLabel?.(s) ?? s.name}
+                      </span>
                       {active ? <Check className="h-4 w-4 shrink-0 text-[#7C3AED]" /> : null}
                     </button>
                   </li>

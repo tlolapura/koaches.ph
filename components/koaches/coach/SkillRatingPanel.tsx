@@ -29,6 +29,8 @@ export type SkillRatingActions = {
   saving: boolean;
   continueToFeedback: () => void;
   saveSession: () => Promise<void>;
+  /** Footer CTA label; defaults to "Save session". */
+  saveLabel?: string;
 };
 
 type SkillRatingPanelProps = {

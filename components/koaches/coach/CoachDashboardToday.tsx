@@ -146,14 +146,14 @@ function ProgressActionLink({
       <Link
         href={`/coach/sessions/${session.id}`}
         className={cn(
-          "inline-flex items-center gap-1 font-semibold text-[#166534]",
+          "inline-flex shrink-0 items-center justify-center gap-1.5 font-semibold shadow-sm transition-colors",
           compact
-            ? "shrink-0 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-[10px] active:bg-[#DCFCE7]"
-            : "min-h-[40px] w-full justify-center gap-1.5 rounded-xl bg-[#16A34A] px-4 text-xs text-white active:bg-[#15803D]"
+            ? "min-h-[36px] rounded-full bg-[#16A34A] px-3.5 py-1.5 text-xs text-white hover:bg-[#15803D] active:bg-[#166534]"
+            : "min-h-[40px] w-full gap-1.5 rounded-xl bg-[#16A34A] px-4 text-xs text-white active:bg-[#15803D]"
         )}
       >
-        <ClipboardList className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} aria-hidden />
-        {compact ? "Rate" : "Add progress report"}
+        <ClipboardList className="h-3.5 w-3.5" aria-hidden />
+        {compact ? "Rate now" : "Add progress report"}
       </Link>
     );
   }
@@ -166,13 +166,13 @@ function ProgressActionLink({
       <Link
         href={href}
         className={cn(
-          "inline-flex items-center gap-1 font-semibold text-[#166534]",
+          "inline-flex shrink-0 items-center justify-center gap-1.5 font-semibold shadow-sm transition-colors",
           compact
-            ? "shrink-0 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-[10px] active:bg-[#DCFCE7]"
-            : "min-h-[40px] w-full justify-center gap-1.5 rounded-xl bg-[#14532D] px-4 text-xs text-white active:bg-[#166534]"
+            ? "min-h-[36px] rounded-full bg-[#14532D] px-3.5 py-1.5 text-xs text-white hover:bg-[#166534] active:bg-[#14532D]"
+            : "min-h-[40px] w-full gap-1.5 rounded-xl bg-[#14532D] px-4 text-xs text-white active:bg-[#166534]"
         )}
       >
-        <TrendingUp className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} aria-hidden />
+        <TrendingUp className="h-3.5 w-3.5" aria-hidden />
         {compact ? "Share" : "Share progress card"}
       </Link>
     );

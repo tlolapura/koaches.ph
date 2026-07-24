@@ -12,16 +12,7 @@ import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/Co
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { useCoachCourts } from "@/hooks/useCourts";
-import { parseDisplayTime } from "@/lib/koaches/session-time";
-
-function endTimeOneHourAfter(time: string): string {
-  const total = parseDisplayTime(time) + 60;
-  const h24 = Math.floor(total / 60) % 24;
-  const m = total % 60;
-  const period = h24 >= 12 ? "PM" : "AM";
-  const h12 = h24 % 12 || 12;
-  return `${h12}:${String(m).padStart(2, "0")} ${period}`;
-}
+import { addMinutesToTimeValue, formatTimeDisplay } from "@/lib/koaches/session-time";
 
 const FORM_ID = "schedule-tbd-form";
 
@@ -41,7 +32,7 @@ export function ScheduleTbdSessionSheet({
   const { courts } = useCoachCourts(session.coachId);
   const { showToast } = useCoachToast();
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("8:00 AM");
+  const [time, setTime] = useState("08:00");
   const [saving, setSaving] = useState(false);
 
   return (
@@ -67,11 +58,17 @@ export function ScheduleTbdSessionSheet({
           try {
           const fd = new FormData(e.currentTarget);
           const courtId = String(fd.get("courtId") ?? session.courtId);
-          const endTime = endTimeOneHourAfter(time);
-          await updateSessionScheduleAction(session.id, { date, time, endTime, courtId });
+          const displayTime = formatTimeDisplay(time);
+          const endTime = formatTimeDisplay(addMinutesToTimeValue(time, 60));
+          await updateSessionScheduleAction(session.id, {
+            date,
+            time: displayTime,
+            endTime,
+            courtId,
+          });
           patchCachedSession(session.coachId, session.id, {
             date,
-            time,
+            time: displayTime,
             endTime,
             courtId,
           });
