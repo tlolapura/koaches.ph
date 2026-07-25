@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   Check,
+  MessageCircle,
   UserPlus,
 } from "lucide-react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
@@ -28,10 +29,9 @@ const PLANS = [
     description: "Founding coach pricing while early bird slots last.",
     featured: true,
     perks: [
-      "Full coaching OS access",
-      "Students, sessions, and programs",
-      "Progress cards and reports",
-      "Public coach profile page",
+      "Save ₱200 every month",
+      "Founding coach rate while your plan stays active",
+      "Personal onboarding and setup help",
     ],
   },
   {
@@ -42,13 +42,21 @@ const PLANS = [
     description: "Same full platform once early bird slots fill up.",
     featured: false,
     perks: [
-      "Full coaching OS access",
-      "Students, sessions, and programs",
-      "Progress cards and reports",
-      "Public coach profile page",
+      "Simple month-to-month subscription",
+      "Cancel anytime",
+      "No feature limits or reduced access",
     ],
   },
 ] as const;
+
+const SHARED_PLAN_FEATURES = [
+  "Full coaching OS access",
+  "Students, sessions, and programs",
+  "Progress cards and reports",
+  "Public coach profile page",
+] as const;
+
+const VIBER_SUPPORT_NUMBER = "+639688546190";
 
 export function CoachMarketingLanding() {
   const [recordingView, setRecordingView] = useState<"mobile" | "desktop">("desktop");
@@ -224,6 +232,43 @@ export function CoachMarketingLanding() {
                 </ul>
               </div>
             ))}
+          </div>
+
+          <div className="grid border-t border-[#E5E7EB] lg:grid-cols-[1fr_0.75fr]">
+            <div className="px-5 py-6 sm:px-7">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#6B7280]">
+                Included in both plans
+              </p>
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                {SHARED_PLAN_FEATURES.map((feature) => (
+                  <li key={feature} className="flex items-start gap-2.5 text-sm text-[#374151]">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
+                      <Check className="h-3 w-3" strokeWidth={3} />
+                    </span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="border-t border-[#E5E7EB] bg-[#F0FDF4] px-5 py-6 sm:px-7 lg:border-l lg:border-t-0">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#16A34A] text-white">
+                <MessageCircle className="h-5 w-5" aria-hidden />
+              </div>
+              <h3 className="font-heading mt-3 text-lg font-bold text-[#14532D]">
+                24/7 Viber support
+              </h3>
+              <p className="mt-1 text-sm text-[#4B5563]">
+                Get help with setup, billing, or using PickleKoach whenever you need it.
+              </p>
+              <a
+                href={`viber://chat?number=${encodeURIComponent(VIBER_SUPPORT_NUMBER)}`}
+                className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#7360F2] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6553DC]"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden />
+                Chat on Viber
+              </a>
+            </div>
           </div>
 
           <div className="border-t border-[#E5E7EB] px-4 py-5 sm:px-6">
