@@ -136,14 +136,14 @@ export function ProgramCreateFlow({
   const canSaveCustom = draft?.name.trim() && skillCount > 0;
 
   const title = useMemo(() => {
-    if (mode === "templates" && templateStep === "pick") return "Choose a Template";
-    if (mode === "templates") return "Customize Template";
+    if (mode === "templates" && templateStep === "pick") return "Pick a starting point";
+    if (mode === "templates") return "Make it yours";
     if (mode === "custom") {
-      if (customStep === "details") return "Create Your Program";
-      if (customStep === "rubric") return "Build Your Skill Rubric";
-      return "Review & Save";
+      if (customStep === "details") return "Program basics";
+      if (customStep === "rubric") return "Pick the skills you'll track";
+      return "Check and save";
     }
-    return "New Program";
+    return "New program";
   }, [mode, templateStep, customStep]);
 
   const customSteps: { id: CustomStep; label: string }[] = [
@@ -203,7 +203,7 @@ export function ProgramCreateFlow({
               else if (customStep === "rubric") setCustomStep("details");
               else setCustomStep("rubric");
             }}
-            className="inline-flex items-center gap-1 text-sm text-[#6B7280]"
+            className="inline-flex min-h-[44px] items-center gap-1 text-sm text-[#6B7280]"
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
@@ -258,7 +258,7 @@ export function ProgramCreateFlow({
                   disabled={!draft.name.trim()}
                   onClick={() => setCustomStep("rubric")}
                 >
-                  Next: Build Skill Rubric
+                  Next: pick skills
                 </button>
               </CoachSheetStickyActions>
             </div>
@@ -269,7 +269,7 @@ export function ProgramCreateFlow({
               <SkillRubricPicker
                 value={draftToSkillRubric(draft)}
                 onChange={(value) => setDraft(applySkillRubricToDraft(draft, value))}
-                hint="Pick catalog skills, add your own per category, or rename anything."
+                hint="These are the skills you'll score after each session. Pick from the list, add your own, or rename anything."
                 defaultExpanded
               />
 
@@ -301,7 +301,7 @@ export function ProgramCreateFlow({
                     {draft.sessionCount} sessions
                   </span>
                   <span className="rounded-full border border-[#E5E7EB] px-2.5 py-0.5 text-xs text-[#6B7280]">
-                    Custom rubric · {skillCount} skills
+                    {skillCount} skills tracked
                   </span>
                 </div>
               </div>
@@ -349,7 +349,7 @@ function TemplateCustomizeForm({
 
   return (
     <div className="space-y-4">
-      <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm text-[#6B7280]">
+      <button type="button" onClick={onBack} className="inline-flex min-h-[44px] items-center gap-1 text-sm text-[#6B7280]">
         <ArrowLeft className="h-4 w-4" /> Back
       </button>
 
@@ -388,9 +388,9 @@ function TemplateCustomizeForm({
       />
 
       <div className="border-t border-[#E5E7EB] pt-4">
-        <p className="font-heading text-sm font-semibold text-[#111827]">Skills</p>
+        <p className="font-heading text-sm font-semibold text-[#111827]">Skills you&apos;ll track</p>
         <p className="mt-0.5 text-xs text-[#6B7280]">
-          Starts from the template rubric. Adjust, rename, or add your own.
+          Starts with the template&apos;s skill list. Adjust, rename, or add your own.
         </p>
         <div className="mt-3">
           <SkillRubricPicker

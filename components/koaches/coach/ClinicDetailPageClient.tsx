@@ -20,12 +20,13 @@ import {
   CoachSectionTitle,
 } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachDetailSkeleton } from "@/components/koaches/coach/CoachSkeletons";
+import { useSetCoachPageTitle } from "@/components/koaches/coach/CoachPageTitleContext";
 import {
   InitialsAvatar,
   SessionTypeBadge,
   useCoachToast,
 } from "@/components/koaches/coach/CoachUi";
-import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { CoachBottomSheet, ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { CoachStudentSearchSelect } from "@/components/koaches/coach/CoachStudentSearchSelect";
 import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
@@ -58,6 +59,7 @@ export function ClinicDetailPageClient() {
   const { students } = useCoachStudents(coachId);
   const { lookup } = useCourts();
   const { showToast } = useCoachToast();
+  useSetCoachPageTitle(clinic?.name);
 
   const [tab, setTab] = useState<"roster" | "sessions">("sessions");
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
@@ -67,6 +69,7 @@ export function ClinicDetailPageClient() {
   const [newStart, setNewStart] = useState("09:00");
   const [newEnd, setNewEnd] = useState("12:00");
   const [addingPlayer, setAddingPlayer] = useState(false);
+  const [cancelOpen, setCancelOpen] = useState(false);
 
   const enrolled = useMemo(() => {
     if (!clinic) return [];
@@ -80,8 +83,25 @@ export function ClinicDetailPageClient() {
     );
   }, [clinic, students]);
 
-  if (!coachId || loading || !clinic) {
+  if (!coachId || loading) {
     return <CoachDetailSkeleton />;
+  }
+
+  if (!clinic) {
+    return (
+      <CoachPageShell>
+        <CoachBackLink href="/coach/clinics" label="Clinics" className="hidden md:inline-flex" />
+        <div className="coach-card mt-4 p-6 text-center">
+          <p className="font-heading text-lg font-bold text-[#111827]">Clinic not found</p>
+          <p className="mt-1 text-sm text-[#6B7280]">
+            It may have been removed, or the link is wrong. Check your clinics list.
+          </p>
+          <Link href="/coach/clinics" className="coach-btn-primary mt-4 inline-flex">
+            Go to clinics
+          </Link>
+        </div>
+      </CoachPageShell>
+    );
   }
 
   const courtName = lookup.get(clinic.courtId)?.name ?? "Court TBD";
@@ -136,14 +156,7 @@ export function ClinicDetailPageClient() {
             {clinic.status !== "canceled" ? (
               <button
                 type="button"
-                onClick={() =>
-                  void mutations.cancel
-                    .mutateAsync()
-                    .then(() => showToast("Clinic canceled"))
-                    .catch((e) =>
-                      showToast(e instanceof Error ? e.message : "Failed", "error")
-                    )
-                }
+                onClick={() => setCancelOpen(true)}
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/80 transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Cancel clinic"
               >
@@ -267,14 +280,24 @@ export function ClinicDetailPageClient() {
             <button
               type="button"
               onClick={() => setAddDateOpen(true)}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
+              className="inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
             >
               <Plus className="h-3.5 w-3.5" />
               Add date
             </button>
           </div>
           {sessions.length === 0 ? (
-            <p className="text-sm text-[#9CA3AF]">No dates yet.</p>
+            <div className="coach-card p-4 text-center">
+              <p className="text-sm font-medium text-[#374151]">No clinic days scheduled yet</p>
+              <button
+                type="button"
+                onClick={() => setAddDateOpen(true)}
+                className="coach-btn-outline mt-3 inline-flex min-h-[44px] items-center gap-1.5 px-4"
+              >
+                <Plus className="h-4 w-4" />
+                Add the first date
+              </button>
+            </div>
           ) : (
             sessions.map((s) => (
               <Link key={s.id} href={`/coach/sessions/${s.id}`} className="coach-card block p-4">
@@ -295,14 +318,24 @@ export function ClinicDetailPageClient() {
             <button
               type="button"
               onClick={() => setAddPlayerOpen(true)}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
+              className="inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
             >
               <Plus className="h-3.5 w-3.5" />
               Add player
             </button>
           </div>
           {enrolled.length === 0 ? (
-            <p className="text-sm text-[#9CA3AF]">No players enrolled yet.</p>
+            <div className="coach-card p-4 text-center">
+              <p className="text-sm font-medium text-[#374151]">No players on the roster yet</p>
+              <button
+                type="button"
+                onClick={() => setAddPlayerOpen(true)}
+                className="coach-btn-outline mt-3 inline-flex min-h-[44px] items-center gap-1.5 px-4"
+              >
+                <Plus className="h-4 w-4" />
+                Add your first player
+              </button>
+            </div>
           ) : (
             enrolled.map((s) => {
               const playerPaid = clinicEnrollmentPaymentStatus(clinic, s.id) === "paid";
@@ -492,6 +525,22 @@ export function ClinicDetailPageClient() {
           </div>
         </div>
       </CoachBottomSheet>
+
+      <ConfirmSheet
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        message="Cancel this clinic?"
+        description={`${clinic.name}\n${enrolled.length} player${enrolled.length === 1 ? "" : "s"} enrolled · ${sessions.length} date${sessions.length === 1 ? "" : "s"}\n\nThe clinic stays in your list marked canceled. Your players won't be charged going forward.`}
+        confirmLabel="Cancel clinic"
+        onConfirm={async () => {
+          try {
+            await mutations.cancel.mutateAsync();
+            showToast("Clinic canceled");
+          } catch (e) {
+            showToast(e instanceof Error ? e.message : "Failed", "error");
+          }
+        }}
+      />
     </CoachPageShell>
   );
 }

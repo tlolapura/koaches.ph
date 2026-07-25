@@ -95,6 +95,18 @@ export default function ProgramDetailPage({
       <CoachSectionTitle className="mt-8">Roster</CoachSectionTitle>
       <CoachSectionHint>Skill progress and ratings are on each student&apos;s profile</CoachSectionHint>
       <div className="mt-4 space-y-3">
+        {enrolled.length === 0 ? (
+          <div className="coach-card p-5 text-center">
+            <p className="text-sm font-medium text-[#374151]">No students in this program yet</p>
+            <button
+              type="button"
+              className="coach-btn-primary mt-3 inline-flex px-4"
+              onClick={() => setAssignOpen(true)}
+            >
+              Add a student
+            </button>
+          </div>
+        ) : null}
         {enrolled.map((s) => (
           <Link key={s.id} href={`/coach/students/${s.id}`} className="coach-card block p-4">
             <div className="flex items-center gap-3">
@@ -112,7 +124,7 @@ export default function ProgramDetailPage({
       </div>
 
       <button type="button" className="coach-btn-secondary mt-8" onClick={() => setAssignOpen(true)}>
-        Assign Student
+        Add student to program
       </button>
 
       <AssignStudentSheet

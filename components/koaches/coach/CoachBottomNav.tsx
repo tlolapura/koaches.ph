@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Home, Users, CalendarDays, BarChart3, Menu } from "lucide-react";
+import { Home, Users, CalendarDays, UsersRound, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { bottomNavActiveClass } from "@/lib/koaches/coach-colors";
 import { CoachMoreSheet } from "@/components/koaches/coach/CoachMoreSheet";
@@ -12,16 +12,17 @@ const tabs = [
   { id: "home", href: "/coach/dashboard", label: "Home", icon: Home },
   { id: "schedule", href: "/coach/sessions", label: "Schedule", icon: CalendarDays },
   { id: "students", href: "/coach/students", label: "Students", icon: Users },
-  { id: "reports", href: "/coach/reports", label: "Reports", icon: BarChart3 },
+  { id: "clinics", href: "/coach/clinics", label: "Clinics", icon: UsersRound },
   { id: "more", label: "More", icon: Menu },
 ] as const;
 
 const moreSectionPrefixes = [
   "/coach/profile",
   "/coach/social",
+  "/coach/billing",
   "/coach/settings",
   "/coach/programs",
-  "/coach/clinics",
+  "/coach/reports",
 ];
 
 export function CoachBottomNav() {

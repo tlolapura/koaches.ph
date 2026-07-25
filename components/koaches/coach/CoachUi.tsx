@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Award, CheckCircle2, Plus, XCircle, type LucideIcon } from "lucide-react";
 import { COACH_COLORS as C } from "@/lib/koaches/coach-colors";
@@ -23,12 +23,26 @@ const ToastContext = createContext<{
 
 export function CoachToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const lastQueryErrorToastAt = useRef(0);
 
   const showToast = useCallback((message: string, type: "success" | "error" = "success") => {
     const id = Date.now();
     setToasts((t) => [...t, { id, message, type }]);
     setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3000);
   }, []);
+
+  // Failed background fetches otherwise look like empty data. Surface one
+  // toast (throttled) so the coach knows it's a connection problem.
+  useEffect(() => {
+    const onQueryError = () => {
+      const now = Date.now();
+      if (now - lastQueryErrorToastAt.current < 8000) return;
+      lastQueryErrorToastAt.current = now;
+      showToast("Couldn't load your latest data. Check your connection.", "error");
+    };
+    window.addEventListener("koaches-query-error", onQueryError);
+    return () => window.removeEventListener("koaches-query-error", onQueryError);
+  }, [showToast]);
 
   return (
     <ToastContext.Provider value={{ showToast }}>
@@ -289,7 +303,7 @@ export function EmptyState({
       </div>
       <p className="font-heading mt-4 text-base font-semibold text-[#111827]">{title}</p>
       {description && (
-        <p className="mt-1 hidden max-w-xs text-sm text-[#6B7280] md:block">{description}</p>
+        <p className="mt-1 max-w-xs text-sm text-[#6B7280]">{description}</p>
       )}
       {action && <div className="mt-4 w-full max-w-xs">{action}</div>}
     </div>

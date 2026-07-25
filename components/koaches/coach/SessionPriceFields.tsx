@@ -33,9 +33,11 @@ export function SessionPriceFields({
         </CoachSheetField>
         <CoachSheetField
           label="Session value (₱)"
+          htmlFor="session-value-input"
           hint={`Revenue allocation: ${formatCurrency(program.price)} ÷ ${program.sessionCount} sessions`}
         >
           <input
+            id="session-value-input"
             type="number"
             min={0}
             step={50}
@@ -58,6 +60,7 @@ export function SessionPriceFields({
   return (
     <CoachSheetField
       label="Session total (₱)"
+      htmlFor="session-total-input"
       hint={
         suggested !== price
           ? `Suggested: ${formatCurrency(perPerson)}/person × ${playerCount} = ${formatCurrency(suggested)}`
@@ -65,6 +68,7 @@ export function SessionPriceFields({
       }
     >
       <input
+        id="session-total-input"
         type="number"
         min={0}
         step={50}

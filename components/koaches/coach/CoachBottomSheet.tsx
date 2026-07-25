@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -47,9 +47,21 @@ export function CoachBottomSheet({
 }: CoachBottomSheetProps) {
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setMounted(true), []);
   useSheetBodyLock(open);
+
+  useEffect(() => {
+    if (!open) return;
+    // Move keyboard focus into the dialog so it doesn't stay on the page behind.
+    panelRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
 
   if (!open || !mounted) return null;
 
@@ -68,8 +80,10 @@ export function CoachBottomSheet({
       />
 
       <div
+        ref={panelRef}
+        tabIndex={-1}
         className={cn(
-          "coach-portal coach-sheet-panel relative flex w-full min-h-0 flex-col overflow-hidden bg-white shadow-xl",
+          "coach-portal coach-sheet-panel relative flex w-full min-h-0 flex-col overflow-hidden bg-white shadow-xl outline-none",
           "max-h-[min(92dvh,calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)))]",
           "rounded-t-2xl rounded-b-none animate-in slide-in-from-bottom duration-300",
           "md:max-h-[min(85vh,720px)] md:rounded-2xl md:animate-none",

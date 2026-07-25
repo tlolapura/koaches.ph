@@ -123,7 +123,7 @@ export function WorkingHoursCard() {
                     <button
                       type="button"
                       onClick={() => removeWindow(row.id)}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-[#EF4444]"
+                      className="-my-2 inline-flex min-h-[44px] items-center gap-1 text-xs font-medium text-[#EF4444]"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       Remove
@@ -131,8 +131,9 @@ export function WorkingHoursCard() {
                   )}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <CoachSheetField label="Start">
+                  <CoachSheetField label="Start" htmlFor={`window-${row.id}-start`}>
                     <input
+                      id={`window-${row.id}-start`}
                       type="time"
                       className="coach-input"
                       value={row.startValue}
@@ -140,8 +141,9 @@ export function WorkingHoursCard() {
                       required
                     />
                   </CoachSheetField>
-                  <CoachSheetField label="End">
+                  <CoachSheetField label="End" htmlFor={`window-${row.id}-end`}>
                     <input
+                      id={`window-${row.id}-end`}
                       type="time"
                       className="coach-input"
                       value={row.endValue}

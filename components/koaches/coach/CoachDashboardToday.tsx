@@ -153,7 +153,7 @@ function ProgressActionLink({
         )}
       >
         <ClipboardList className="h-3.5 w-3.5" aria-hidden />
-        {compact ? "Rate now" : "Add progress report"}
+        {compact ? "Wrap up" : "Wrap up this session"}
       </Link>
     );
   }
@@ -173,7 +173,7 @@ function ProgressActionLink({
         )}
       >
         <TrendingUp className="h-3.5 w-3.5" aria-hidden />
-        {compact ? "Share" : "Share progress card"}
+        {compact ? "Send" : "Send progress card"}
       </Link>
     );
   }
@@ -359,7 +359,7 @@ function FinishedSection({
             </span>
             <div className="min-w-0">
               <p className="font-heading truncate text-sm font-semibold text-[#14532D]">
-                Share progress card
+                Send progress card
               </p>
               <p className="truncate text-[11px] text-[#6B7280]">For {name}</p>
             </div>

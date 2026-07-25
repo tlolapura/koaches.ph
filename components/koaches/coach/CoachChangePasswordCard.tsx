@@ -77,8 +77,9 @@ export function CoachChangePasswordCard() {
             reset();
           }}
         >
-          <CoachSheetField label="Current password">
+          <CoachSheetField label="Current password" htmlFor="current-password-input">
             <input
+              id="current-password-input"
               type="password"
               autoComplete="current-password"
               className="coach-input"
@@ -87,8 +88,9 @@ export function CoachChangePasswordCard() {
               required
             />
           </CoachSheetField>
-          <CoachSheetField label="New password">
+          <CoachSheetField label="New password" htmlFor="new-password-input">
             <input
+              id="new-password-input"
               type="password"
               autoComplete="new-password"
               className="coach-input"
@@ -98,8 +100,9 @@ export function CoachChangePasswordCard() {
               minLength={8}
             />
           </CoachSheetField>
-          <CoachSheetField label="Confirm new password">
+          <CoachSheetField label="Confirm new password" htmlFor="confirm-password-input">
             <input
+              id="confirm-password-input"
               type="password"
               autoComplete="new-password"
               className="coach-input"

@@ -28,6 +28,7 @@ import type { Session } from "@/lib/koaches/types";
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { EditStudentSheet } from "@/components/koaches/coach/EditStudentSheet";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { useSetCoachPageTitle } from "@/components/koaches/coach/CoachPageTitleContext";
 import {
   CoachBackLink,
   CoachEntityTitle,
@@ -50,6 +51,7 @@ export function StudentProfileView({ student }: { student: Student }) {
   const [note, setNote] = useState(student.notes ?? "");
   const [savingNote, setSavingNote] = useState(false);
   const { showToast } = useCoachToast();
+  useSetCoachPageTitle(student.name);
 
   const { programs } = useCoachPrograms(coachId);
   const { courts } = useCoachCourts(coachId);
@@ -151,7 +153,7 @@ export function StudentProfileView({ student }: { student: Student }) {
             href={`/coach/sessions/${upcoming.id}`}
             className="coach-btn-primary flex-1 text-center text-sm"
           >
-            Rate next session
+            Open next session
           </Link>
         )}
         <button
@@ -187,7 +189,17 @@ export function StudentProfileView({ student }: { student: Student }) {
         {tab === "Sessions" && (
           <div className="space-y-6">
             {sessions.length === 0 ? (
-              <p className="text-center text-sm text-[#6B7280]">No sessions yet.</p>
+              <div className="coach-card p-5 text-center">
+                <p className="text-sm font-medium text-[#374151]">
+                  No sessions with {student.name.split(" ")[0]} yet
+                </p>
+                <Link
+                  href="/coach/sessions?add=1"
+                  className="coach-btn-primary mt-3 inline-flex px-4"
+                >
+                  Book a session
+                </Link>
+              </div>
             ) : (
               sessionGroups.map((group) => (
                 <section key={group.key}>

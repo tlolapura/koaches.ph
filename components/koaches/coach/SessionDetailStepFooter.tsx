@@ -12,6 +12,8 @@ type SessionDetailStepFooterProps = {
   nextLoading?: boolean;
   nextLoadingLabel?: ReactNode;
   nextIcon?: ReactNode;
+  /** Optional secondary action rendered above the main buttons (e.g. "Add a message"). */
+  secondary?: { label: string; onClick: () => void; disabled?: boolean };
 };
 
 function FooterButtons({
@@ -63,6 +65,17 @@ function FooterButtons({
 export function SessionDetailStepFooter(props: SessionDetailStepFooterProps) {
   return (
     <div className="coach-session-step-footer">
+      {props.secondary ? (
+        <CoachButton
+          type="button"
+          variant="outline"
+          className="mb-2 w-full"
+          disabled={props.secondary.disabled}
+          onClick={props.secondary.onClick}
+        >
+          {props.secondary.label}
+        </CoachButton>
+      ) : null}
       <FooterButtons {...props} backLabel={props.backLabel ?? "Back"} nextLabel={props.nextLabel ?? "Continue"} />
     </div>
   );

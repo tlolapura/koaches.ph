@@ -126,10 +126,10 @@ export function CoachStudentSearchSelect({
               <button
                 type="button"
                 onClick={() => remove(s.id)}
-                className="shrink-0 rounded-full p-0.5 hover:bg-[#DDD6FE]"
+                className="-my-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full hover:bg-[#DDD6FE]"
                 aria-label={`Remove ${s.name}`}
               >
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </span>
           ))}
@@ -169,6 +169,7 @@ export function CoachStudentSearchSelect({
             )}
             aria-haspopup="listbox"
             aria-expanded={open}
+            aria-label={placeholder}
             autoComplete="off"
           />
           {!multiple && singleLabel && !open ? (
@@ -179,7 +180,7 @@ export function CoachStudentSearchSelect({
                 setQuery("");
                 openMenu();
               }}
-              className="shrink-0 rounded-full p-1 text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#6B7280]"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[#9CA3AF] hover:bg-[#F3F4F6] hover:text-[#6B7280]"
               aria-label="Clear selection"
             >
               <X className="h-4 w-4" />

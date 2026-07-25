@@ -95,24 +95,44 @@ export function CoachProfilePhoto({
   return (
     <div className={cn("relative inline-block", className)}>
       {photo ? (
-        // eslint-disable-next-line @next/next/no-img-element -- storage or legacy URLs
-        <img
-          src={photo}
-          alt={name}
-          className={cn(
-            "rounded-2xl object-cover ring-4 ring-[#F0FDF4] shadow-[0_8px_24px_rgba(22,163,74,0.12)]",
-            dim,
-            editable && !uploading && "cursor-pointer",
-            uploading && "opacity-70"
-          )}
-          onClick={editable && !uploading ? pickPhoto : undefined}
-        />
+        editable ? (
+          <button
+            type="button"
+            className="block rounded-2xl"
+            onClick={!uploading ? pickPhoto : undefined}
+            disabled={uploading}
+            aria-label="Change profile photo"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- storage or legacy URLs */}
+            <img
+              src={photo}
+              alt={name}
+              className={cn(
+                "rounded-2xl object-cover ring-4 ring-[#F0FDF4] shadow-[0_8px_24px_rgba(22,163,74,0.12)]",
+                dim,
+                !uploading && "cursor-pointer",
+                uploading && "opacity-70"
+              )}
+            />
+          </button>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- storage or legacy URLs
+          <img
+            src={photo}
+            alt={name}
+            className={cn(
+              "rounded-2xl object-cover ring-4 ring-[#F0FDF4] shadow-[0_8px_24px_rgba(22,163,74,0.12)]",
+              dim
+            )}
+          />
+        )
       ) : (
         <button
           type="button"
           className={cn(editable && "group relative", initialsShape)}
           onClick={editable ? pickPhoto : undefined}
           disabled={!editable || uploading}
+          aria-label={editable ? "Add profile photo" : undefined}
         >
           <InitialsAvatar
             name={name}

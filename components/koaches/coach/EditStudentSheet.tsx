@@ -73,8 +73,9 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <CoachSheetField label="First name *">
+          <CoachSheetField label="First name *" htmlFor="edit-student-first-name">
             <input
+              id="edit-student-first-name"
               className="coach-input"
               name="firstName"
               required
@@ -82,8 +83,9 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
               autoComplete="given-name"
             />
           </CoachSheetField>
-          <CoachSheetField label="Last name *">
+          <CoachSheetField label="Last name *" htmlFor="edit-student-last-name">
             <input
+              id="edit-student-last-name"
               className="coach-input"
               name="lastName"
               required
@@ -92,11 +94,11 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
             />
           </CoachSheetField>
         </div>
-        <CoachSheetField label="Mobile number">
-          <input className="coach-input" name="mobile" defaultValue={student.mobile} />
+        <CoachSheetField label="Mobile number" htmlFor="edit-student-mobile">
+          <input id="edit-student-mobile" className="coach-input" name="mobile" defaultValue={student.mobile} />
         </CoachSheetField>
-        <CoachSheetField label="Email">
-          <input className="coach-input" name="email" type="email" defaultValue={student.email} />
+        <CoachSheetField label="Email" htmlFor="edit-student-email">
+          <input id="edit-student-email" className="coach-input" name="email" type="email" defaultValue={student.email} />
         </CoachSheetField>
         <CoachSheetField label="Player level">
           <CoachSelect

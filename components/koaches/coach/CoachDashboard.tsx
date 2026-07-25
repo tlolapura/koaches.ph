@@ -12,14 +12,16 @@ import {
   startOfWeek,
 } from "date-fns";
 import {
+  Check,
   ChevronRight,
   Plus,
   TrendingUp,
-  Wallet,
+  UserPlus,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
+import { useCoachStudents } from "@/hooks/useCoachStudents";
 import { parseDisplayTime, sessionStartsAt } from "@/lib/koaches/session-time";
 import { formatCurrency, cn } from "@/lib/utils";
 import { isCanceledStatus } from "@/lib/koaches/session-status";
@@ -66,6 +68,7 @@ export function CoachDashboard() {
   const todayKey = format(today, "yyyy-MM-dd");
   const todayLabel = format(today, "EEEE, MMM d");
   const { sessions: allSessions, loading } = useCoachSessions(coachId);
+  const { students: rosterStudents, loading: studentsLoading } = useCoachStudents(coachId);
   const { cards, candidates } = useProgressCards(coachId);
   const [overviewRange, setOverviewRange] = useState<OverviewRange>("week");
 
@@ -93,38 +96,33 @@ export function CoachDashboard() {
     [todaySessions, cards]
   );
 
-  const todayStats = useMemo(() => {
-    const upcoming = todayUpcoming;
-    const unpaid = upcoming.filter((s) => !isCollectedSession(s)).length;
-    const booked = upcoming.reduce((sum, s) => sum + s.price, 0);
-    const weekSessions = allSessions.filter((s) => {
-      if (!s.date || isCanceledStatus(s.status)) return false;
-      return isWithinInterval(parseISO(s.date), weekInterval);
-    }).length;
-
-    return {
-      sessionCount: todaySessions.length,
-      upcomingCount: upcoming.length,
-      unpaid,
-      booked,
-      weekSessions,
-    };
-  }, [todaySessions, todayUpcoming, allSessions, weekInterval]);
+  const todayStats = useMemo(
+    () => ({ sessionCount: todaySessions.length }),
+    [todaySessions]
+  );
 
   const periodOverview = useMemo(() => {
     const interval = overviewRange === "week" ? weekInterval : monthInterval;
-    const upcoming = allSessions.filter((s) => {
+    const inRange = allSessions.filter((s) => {
       if (!s.date || isCanceledStatus(s.status)) return false;
-      if (getSessionDisplayStatus(s, cards) !== "upcoming") return false;
       return isWithinInterval(parseISO(s.date), interval);
     });
-    const expected = upcoming.reduce((sum, s) => sum + s.price + (s.tip ?? 0), 0);
-    const unpaid = upcoming.filter((s) => !isCollectedSession(s)).length;
+
+    // Money already in the bank: sessions marked done and paid.
+    const earned = inRange
+      .filter((s) => isCollectedSession(s))
+      .reduce((sum, s) => sum + s.price + (s.tip ?? 0), 0);
+
+    // Money on the way: still-upcoming sessions this period.
+    const upcoming = inRange.filter(
+      (s) => getSessionDisplayStatus(s, cards) === "upcoming"
+    );
+    const coming = upcoming.reduce((sum, s) => sum + s.price + (s.tip ?? 0), 0);
 
     return {
-      upcomingCount: upcoming.length,
-      expected,
-      unpaid,
+      earned,
+      sessionCount: inRange.length,
+      coming,
     };
   }, [overviewRange, weekInterval, monthInterval, allSessions, cards]);
 
@@ -147,26 +145,18 @@ export function CoachDashboard() {
 
   const attentionItems: AttentionItem[] = [];
   if (candidates.length > 0) {
+    const single = candidates.length === 1 ? candidates[0] : null;
     attentionItems.push({
       key: "progress",
-      href: "/coach/students",
-      label: `${candidates.length} progress card${candidates.length === 1 ? "" : "s"}`,
-      detail: "Ready to share. Open a student profile.",
+      href: single ? `/coach/students/${single.studentId}` : "/coach/students",
+      label: single
+        ? `Send ${single.participantName}'s progress card`
+        : `${candidates.length} progress cards to send`,
+      detail: "Ratings are saved. Tap to send it to your student.",
       icon: TrendingUp,
       tone: "navy",
     });
   }
-  if (todayStats.unpaid > 0) {
-    attentionItems.push({
-      key: "unpaid",
-      href: "/coach/sessions?view=list",
-      label: `${todayStats.unpaid} unpaid today`,
-      detail: "Mark payment when collected",
-      icon: Wallet,
-      tone: "amber",
-    });
-  }
-
   const toneStyles = {
     coral: {
       card: "border-[#BBF7D0] bg-gradient-to-br from-[#F0FDF4] to-white",
@@ -240,9 +230,9 @@ export function CoachDashboard() {
 
         <div className="grid grid-cols-3 bg-white pb-1">
           {[
-            { value: String(periodOverview.upcomingCount), label: "Upcoming", color: "text-[#16A34A]" },
-            { value: formatCurrency(periodOverview.expected), label: "Expected", color: "text-[#4F8FF7]" },
-            { value: String(periodOverview.unpaid), label: "Unpaid", color: "text-[#111827]" },
+            { value: formatCurrency(periodOverview.earned), label: "Earned", color: "text-[#16A34A]" },
+            { value: String(periodOverview.sessionCount), label: "Sessions", color: "text-[#111827]" },
+            { value: formatCurrency(periodOverview.coming), label: "On the way", color: "text-[#4F8FF7]" },
           ].map((stat, idx) => (
             <div
               key={stat.label}
@@ -263,15 +253,22 @@ export function CoachDashboard() {
         </div>
       </div>
 
-      <section className="mt-4 px-4">
-        <Link
-          href="/coach/sessions"
-          className="coach-btn-primary gap-2 shadow-[0_4px_14px_rgba(22,163,74,0.28)]"
-        >
-          <Plus className="h-4 w-4" strokeWidth={2.5} />
-          Book a session
-        </Link>
-      </section>
+      {!studentsLoading && (rosterStudents.filter((s) => !s.isArchived).length === 0 || allSessions.length === 0) ? (
+        <FirstRunChecklist
+          hasStudent={rosterStudents.some((s) => !s.isArchived)}
+          hasSession={allSessions.length > 0}
+        />
+      ) : (
+        <section className="mt-4 px-4">
+          <Link
+            href="/coach/sessions?add=1"
+            className="coach-btn-primary gap-2 shadow-[0_4px_14px_rgba(22,163,74,0.28)]"
+          >
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+            Book a session
+          </Link>
+        </section>
+      )}
 
       {/* Needs attention */}
       {attentionItems.length > 0 && (
@@ -349,5 +346,90 @@ export function CoachDashboard() {
         </section>
       )}
     </CoachPageShell>
+  );
+}
+
+function FirstRunChecklist({ hasStudent, hasSession }: { hasStudent: boolean; hasSession: boolean }) {
+  const steps = [
+    {
+      key: "student",
+      done: hasStudent,
+      href: "/coach/students?add=1",
+      icon: UserPlus,
+      label: "Add your first student",
+      detail: "Just a name is enough to start",
+    },
+    {
+      key: "session",
+      done: hasSession,
+      href: "/coach/sessions?add=1",
+      icon: Plus,
+      label: "Book your first session",
+      detail: "Pick the student, a date, and a time",
+    },
+  ];
+
+  return (
+    <section className="mt-4 px-4">
+      <div className="rounded-2xl border border-[#BBF7D0] bg-gradient-to-br from-[#F0FDF4] to-white p-4">
+        <h2 className="font-heading text-sm font-bold text-[#111827]">Let&apos;s get you started</h2>
+        <p className="mt-0.5 text-xs text-[#6B7280]">
+          Two quick steps and you&apos;re coaching with everything in one place.
+        </p>
+        <div className="mt-3 space-y-2">
+          {steps.map((s) => {
+            const Icon = s.icon;
+            const content = (
+              <>
+                <span
+                  className={cn(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                    s.done ? "bg-[#16A34A] text-white" : "bg-white text-[#16A34A] shadow-sm"
+                  )}
+                >
+                  {s.done ? (
+                    <Check className="h-4 w-4" strokeWidth={3} />
+                  ) : (
+                    <Icon className="h-4 w-4" strokeWidth={2.25} />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span
+                    className={cn(
+                      "font-heading block text-sm font-semibold",
+                      s.done ? "text-[#6B7280] line-through" : "text-[#111827]"
+                    )}
+                  >
+                    {s.label}
+                  </span>
+                  {!s.done ? <span className="block text-xs text-[#6B7280]">{s.detail}</span> : null}
+                </span>
+                {!s.done ? <ChevronRight className="h-4 w-4 shrink-0 text-[#9CA3AF]" /> : null}
+              </>
+            );
+
+            if (s.done) {
+              return (
+                <div key={s.key} className="flex items-center gap-3 rounded-xl p-2">
+                  {content}
+                </div>
+              );
+            }
+            return (
+              <Link
+                key={s.key}
+                href={s.href}
+                className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-2 transition-transform active:scale-[0.99]"
+              >
+                {content}
+              </Link>
+            );
+          })}
+        </div>
+        <p className="mt-3 text-xs text-[#6B7280]">
+          After the session, mark it done and we&apos;ll help you send a progress card.
+        </p>
+      </div>
+    </section>
   );
 }

@@ -6,10 +6,10 @@ export type SessionDetailStep =
   | "complete";
 
 export const SESSION_DETAIL_STEPS = [
-  { id: "session" as const, label: "Session", description: "Wrap-up & payment" },
-  { id: "coverage" as const, label: "Coverage", description: "Skills covered" },
-  { id: "ratings" as const, label: "Ratings", description: "Before & after" },
-  { id: "feedback" as const, label: "Feedback", description: "Notes for player" },
+  { id: "session" as const, label: "Session", description: "Payment & notes" },
+  { id: "coverage" as const, label: "Worked on", description: "Pick the skills" },
+  { id: "ratings" as const, label: "How they did", description: "Start vs. end" },
+  { id: "feedback" as const, label: "Message", description: "Optional note" },
 ];
 
 export type SessionRatingStep = Extract<

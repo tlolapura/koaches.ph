@@ -12,6 +12,7 @@ import {
   Settings,
   User,
   GraduationCap,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navActiveClass } from "@/lib/koaches/coach-colors";
@@ -23,14 +24,15 @@ import { KoachesWordmark, KoachesMark } from "@/components/koaches/coach/CoachIc
 import { CourtStripe } from "@/components/koaches/coach/CourtStripe";
 
 const navItems = [
-  { href: "/coach/dashboard", label: "Dashboard", icon: Home },
+  { href: "/coach/dashboard", label: "Home", icon: Home },
   { href: "/coach/sessions", label: "Schedule", icon: CalendarDays },
   { href: "/coach/students", label: "Students", icon: Users },
   { href: "/coach/clinics", label: "Clinics", icon: GraduationCap },
   { href: "/coach/programs", label: "Programs", icon: FileText },
-  { href: "/coach/reports", label: "Reports", icon: BarChart3 },
+  { href: "/coach/reports", label: "Earnings", icon: BarChart3 },
   { href: "/coach/social", label: "Social", icon: Share2 },
   { href: "/coach/profile", label: "Profile", icon: User },
+  { href: "/coach/billing", label: "Billing", icon: CreditCard },
   { href: "/coach/settings", label: "Settings", icon: Settings },
 ];
 

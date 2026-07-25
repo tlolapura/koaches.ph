@@ -18,6 +18,7 @@ import type { AvailableSlot } from "@/lib/koaches/session-slots";
 import { CoachScheduleGrid } from "@/components/koaches/coach/CoachScheduleGrid";
 import dynamic from "next/dynamic";
 import {
+  CoachFab,
   EmptyState,
   InitialsAvatar,
   SessionTypeBadge,
@@ -204,13 +205,14 @@ export function CoachSchedulePage() {
             <EmptyState
               icon={CalendarDays}
               title="No sessions here yet"
+              description="Book a lesson and it will show up in this list."
               action={
                 <button
                   type="button"
                   onClick={() => openAddSession()}
                   className="coach-btn-primary max-w-xs"
                 >
-                  Add session
+                  Book a session
                 </button>
               }
             />
@@ -261,6 +263,8 @@ export function CoachSchedulePage() {
           )}
         </>
       )}
+
+      <CoachFab onClick={() => openAddSession()} label="Book a session" />
 
       <AddSessionSheet
         open={addOpen}

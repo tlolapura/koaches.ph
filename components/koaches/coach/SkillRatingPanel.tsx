@@ -161,7 +161,7 @@ function SkillRatingRow({
           onClick={() => onToggleSkipped(false)}
           className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-[#BFDBFE] bg-white px-4 text-sm font-semibold text-[#2563EB] active:bg-[#EFF6FF]"
         >
-          Rate this skill
+          Score this skill
         </button>
       </div>
     );
@@ -187,14 +187,14 @@ function SkillRatingRow({
           value={beforeScore}
           onChange={onBefore}
           tone="start"
-          label="Before"
+          label="Start of session"
           labels={scoreLabels}
         />
         <ScorePicker
           value={afterScore}
           onChange={onAfter}
           tone="after"
-          label="After"
+          label="End of session"
           labels={scoreLabels}
         />
       </div>
@@ -203,7 +203,7 @@ function SkillRatingRow({
         onClick={() => onToggleSkipped(true)}
         className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-semibold text-[#6B7280] active:bg-[#F3F4F6]"
       >
-        Didn&apos;t cover this session
+        Skip this one
       </button>
     </div>
   );
@@ -313,7 +313,6 @@ export function SkillRatingPanel({
   };
 
   const ratedCount = before.filter((s) => s.skipped === false).length;
-  const skippedCount = before.length - ratedCount;
   const canCopyCovered = step === "coverage" && Boolean(copyCoveredSkillIds?.length);
 
   const goToFeedback = useCallback(() => {
@@ -328,13 +327,24 @@ export function SkillRatingPanel({
     if (!onSave || saving) return;
     setSaving(true);
     try {
-      const cardId = await onSave(before, after, feedback);
+      // Saving straight from the scores step: fill the player's message with
+      // friendly suggested text so the progress card never goes out blank.
+      const skippedMessageStep =
+        !feedbackPrefilled.current &&
+        !feedback.strengths &&
+        !feedback.toImprove &&
+        !feedback.generalNote;
+      const effectiveFeedback = skippedMessageStep
+        ? suggestSessionFeedback(skillChanges)
+        : feedback;
+      if (skippedMessageStep) setFeedback(effectiveFeedback);
+      const cardId = await onSave(before, after, effectiveFeedback);
       if (typeof cardId === "string") setSavedCardId(cardId);
       onStepChange("complete");
     } finally {
       setSaving(false);
     }
-  }, [after, before, feedback, onSave, onStepChange, saving]);
+  }, [after, before, feedback, onSave, onStepChange, saving, skillChanges]);
 
   const onActionsChangeRef = useRef(onActionsChange);
   onActionsChangeRef.current = onActionsChange;
@@ -371,17 +381,15 @@ export function SkillRatingPanel({
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDF4]">
               <PartyPopper className="h-7 w-7 text-[#166534]" />
             </div>
-            <p className="font-heading mt-4 text-lg font-semibold text-[#111827]">Session saved</p>
+            <p className="font-heading mt-4 text-lg font-semibold text-[#111827]">All done</p>
             <p className="mt-1 text-sm text-[#6B7280]">
               {savedCardId
-                ? `Progress card is ready${participantName ? ` for ${participantName}` : ""}.`
-                : `Ratings saved${participantName ? ` for ${participantName}` : ""}.`}
+                ? `${participantName ? `${participantName}'s` : "The"} progress card is ready to send.`
+                : `Saved${participantName ? ` for ${participantName}` : ""}.`}
             </p>
             {savedCardId ? (
               <div className="mt-6 space-y-2">
-                <a href={`/progress/${savedCardId}`} className="coach-btn-primary block w-full text-center">
-                  View progress card
-                </a>
+                <SendProgressCardEmailButton cardId={savedCardId} className="w-full" />
                 <button
                   type="button"
                   className="coach-btn-outline w-full"
@@ -391,15 +399,20 @@ export function SkillRatingPanel({
                     setTimeout(() => setLinkCopied(false), 3000);
                   }}
                 >
-                  {linkCopied ? "Link copied!" : "Copy share link"}
+                  {linkCopied ? "Link copied!" : "Copy link to send"}
                 </button>
-                <SendProgressCardEmailButton cardId={savedCardId} className="w-full" />
+                <a
+                  href={`/progress/${savedCardId}`}
+                  className="coach-btn-ghost block w-full text-center text-sm text-[#6B7280]"
+                >
+                  See what your player sees
+                </a>
                 <button
                   type="button"
                   className="coach-btn-ghost w-full text-sm text-[#6B7280]"
                   onClick={() => onStepChange("coverage")}
                 >
-                  Edit ratings
+                  Change the scores
                 </button>
               </div>
             ) : (
@@ -408,7 +421,7 @@ export function SkillRatingPanel({
                 className="coach-btn-outline mt-6 w-full"
                 onClick={() => onStepChange("coverage")}
               >
-                Edit ratings
+                Change the scores
               </button>
             )}
           </div>
@@ -417,14 +430,15 @@ export function SkillRatingPanel({
             <p className="text-sm text-[#6B7280]">
               {step === "coverage" && (
                 <>
-                  {ratedCount} covered
-                  {skippedCount > 0 && (
-                    <span className="text-[#9CA3AF]"> · {skippedCount} skipped</span>
+                  Tap the skills you worked on today
+                  {ratedCount > 0 && (
+                    <span className="text-[#9CA3AF]"> · {ratedCount} picked</span>
                   )}
                 </>
               )}
-              {step === "ratings" && `Rate ${ratedCount} covered skill${ratedCount !== 1 ? "s" : ""}`}
-              {step === "feedback" && "Add session feedback for the player"}
+              {step === "ratings" &&
+                `How did they do? Score each of the ${ratedCount} skill${ratedCount !== 1 ? "s" : ""} you picked`}
+              {step === "feedback" && "Anything you want to tell your player"}
             </p>
 
         {step === "coverage" ? (
@@ -435,8 +449,9 @@ export function SkillRatingPanel({
                 onClick={copyCoveredSkills}
                 className="coach-btn-outline w-full text-sm"
               >
-                Copy skills covered
-                {copyCoveredFromName ? ` from ${copyCoveredFromName}` : ""}
+                {copyCoveredFromName
+                  ? `Same skills as ${copyCoveredFromName}`
+                  : "Copy skills from the last player"}
               </button>
             ) : null}
             {skillsByCategory.length === 0 ? (
@@ -491,7 +506,7 @@ export function SkillRatingPanel({
           <div className="mt-5 space-y-4">
             <div>
               <label className="coach-label" htmlFor="session-feedback-strengths">
-                Strengths
+                What went well
               </label>
               <textarea
                 id="session-feedback-strengths"
@@ -503,19 +518,19 @@ export function SkillRatingPanel({
             </div>
             <div>
               <label className="coach-label" htmlFor="session-feedback-improve">
-                To improve
+                What to work on next
               </label>
               <textarea
                 id="session-feedback-improve"
                 className="coach-input mt-1 min-h-[88px] resize-none"
-                placeholder="What to work on next session?"
+                placeholder="What should they practice before next time?"
                 value={feedback.toImprove}
                 onChange={(e) => updateFeedback("toImprove", e.target.value)}
               />
             </div>
             <div>
               <label className="coach-label" htmlFor="session-feedback-note">
-                General note
+                Anything else
               </label>
               <textarea
                 id="session-feedback-note"
@@ -528,7 +543,7 @@ export function SkillRatingPanel({
           </div>
         ) : ratedSkillsByCategory.length === 0 ? (
           <div className="mt-5 rounded-xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-4 text-sm text-[#6B7280]">
-            No covered skills to rate yet. Go back and mark at least one skill as covered.
+            Nothing to score yet. Go back and tap at least one skill you worked on.
           </div>
         ) : (
           <div className="mt-5 space-y-8">

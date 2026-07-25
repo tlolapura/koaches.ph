@@ -21,7 +21,7 @@ export function SessionDetailStepper({ step, ratingsUnlocked }: SessionDetailSte
       className="mt-4"
       steps={steps}
       currentStepId={step === "complete" ? "feedback" : step}
-      hint={!ratingsUnlocked ? "Mark the session done to unlock skill ratings" : undefined}
+      hint={!ratingsUnlocked ? "Mark the session done first, then you can rate skills" : undefined}
     />
   );
 }

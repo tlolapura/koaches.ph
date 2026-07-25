@@ -31,13 +31,15 @@ export function ProgressCardReadySection({
       <div className="mb-2 flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-[#16A34A]" aria-hidden />
         <h2 className="font-heading text-sm font-semibold text-[#111827]">
-          {studentId ? "Ready to share" : `${filtered.length} card${filtered.length === 1 ? "" : "s"} ready to share`}
+          {studentId
+            ? "Ready to send"
+            : `${filtered.length} progress card${filtered.length === 1 ? "" : "s"} to send`}
         </h2>
       </div>
       <p className="mb-3 text-xs text-[#6B7280]">
         {studentId
-          ? "Ratings saved. Generate a progress card for your student."
-          : "Sessions with ratings that haven't been shared yet."}
+          ? "Ratings are saved. Send the progress card to your student."
+          : "These sessions are rated but haven't been sent yet."}
       </p>
       <div className="space-y-2">
         {filtered.map((c) => (
@@ -62,7 +64,7 @@ export function ProgressCardReadySection({
                 className="rounded-full bg-[#16A34A] px-3 py-2 text-xs font-semibold text-white"
                 onClick={() => onGenerate(c.session.id, c.participantId)}
               >
-                Generate card
+                Send to student
               </button>
               {!studentId && c.studentId && (
                 <Link

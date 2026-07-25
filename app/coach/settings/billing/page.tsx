@@ -1,11 +1,6 @@
-import { Suspense } from "react";
-import { CoachBillingPage } from "@/components/koaches/coach/CoachBillingPage";
-import { CoachBillingSkeleton } from "@/components/koaches/coach/CoachSkeletons";
+import { redirect } from "next/navigation";
 
-export default function SettingsBillingRoute() {
-  return (
-    <Suspense fallback={<CoachBillingSkeleton />}>
-      <CoachBillingPage />
-    </Suspense>
-  );
+/** Old settings path — keep for bookmarks and emails. */
+export default function SettingsBillingRedirect() {
+  redirect("/coach/billing");
 }

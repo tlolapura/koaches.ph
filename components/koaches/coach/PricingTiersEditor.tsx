@@ -138,7 +138,7 @@ export function PricingTiersEditor({
           <button
             type="button"
             onClick={addTier}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
+            className="inline-flex min-h-[44px] items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
           >
             <Plus className="h-3.5 w-3.5" /> Add tier
           </button>
@@ -161,7 +161,7 @@ export function PricingTiersEditor({
                   <button
                     type="button"
                     onClick={() => removeTier(tier.id)}
-                    className="text-[#6B7280] hover:text-[#EF4444]"
+                    className="-my-2 flex h-10 w-10 items-center justify-center text-[#6B7280] hover:text-[#EF4444]"
                     aria-label="Remove tier"
                   >
                     <Trash2 className="h-4 w-4" />

@@ -421,14 +421,14 @@ function OpenCell({
   onBookSlot: (date: string, slot: AvailableSlot) => void;
   onBlockSlot: (date: string, cell: HourlySlotRow) => void;
 }) {
-  const label = blockMode ? "Block" : "Open";
+  const label = blockMode ? "Close" : "Open";
 
   return (
     <button
       type="button"
       title={
         blockMode
-          ? `Block ${format(parseDateKey(dateKey), "EEE MMM d")} ${cell.timeLabel}`
+          ? `Mark ${format(parseDateKey(dateKey), "EEE MMM d")} ${cell.timeLabel} as time off`
           : `Book ${format(parseDateKey(dateKey), "EEE MMM d")} ${cell.timeLabel}`
       }
       onClick={() =>
@@ -459,7 +459,7 @@ function BlockedCell({
   return (
     <button
       type="button"
-      title="Tap to unblock this time"
+      title="Tap to make this time available again"
       onClick={() => cell.blockedSlotId && onUnblockSlot(cell.blockedSlotId)}
       className={cn(
         slotCellBase,
@@ -467,7 +467,7 @@ function BlockedCell({
       )}
     >
       <span className={cn("leading-tight", compact ? "text-[10px]" : "text-[9px] sm:text-[10px]")}>
-        Blocked
+        Time off
       </span>
       <span className={cn("font-medium leading-tight text-[#9CA3AF]", compact ? "text-[9px]" : "text-[8px]")}>
         Tap to open
@@ -810,27 +810,36 @@ export function CoachScheduleGrid({
         />
       </div>
 
-      <div className="mt-1 space-y-2 border-t border-[#E5E7EB] pt-3 md:mt-0 md:flex md:justify-end md:space-y-0 md:border-0 md:pt-0">
-        <button
-          type="button"
-          onClick={() => setBlockMode((v) => !v)}
-          aria-pressed={blockMode}
-          className={cn(
-            "font-heading inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-colors active:scale-[0.99] md:w-auto md:min-h-[36px] md:rounded-full md:px-3.5 md:py-1.5 md:text-xs",
-            blockMode
-              ? "bg-[#4F8FF7] text-white shadow-sm"
-              : "border border-[#E5E7EB] bg-white text-[#374151] hover:bg-[#F9FAFB]"
-          )}
-        >
-          <Ban className="h-4 w-4 md:h-3.5 md:w-3.5" strokeWidth={2.25} />
-          {blockMode ? "Done blocking" : "Block time"}
-        </button>
-        {blockMode ? (
-          <p className="text-center text-xs text-[#6B7280] md:hidden">
-            Tap an open slot to block it. Tap a blocked slot to open it again.
+      {blockMode ? (
+        <div className="mt-1 rounded-2xl border border-[#4F8FF7] bg-[#EFF6FF] p-3">
+          <p className="font-heading text-sm font-semibold text-[#1D4ED8]">
+            Marking times you&apos;re not available
           </p>
-        ) : null}
-      </div>
+          <p className="mt-0.5 text-xs text-[#1D4ED8]/80">
+            Tap an open slot to close it. Tap a closed slot to open it again. You won&apos;t book
+            lessons while this is on.
+          </p>
+          <button
+            type="button"
+            onClick={() => setBlockMode(false)}
+            className="font-heading mt-2.5 inline-flex min-h-[40px] w-full items-center justify-center gap-2 rounded-xl bg-[#4F8FF7] px-4 text-sm font-semibold text-white active:scale-[0.99] md:w-auto"
+          >
+            Done — back to booking
+          </button>
+        </div>
+      ) : (
+        <div className="mt-1 flex justify-center border-t border-[#E5E7EB] pt-3 md:mt-0 md:justify-end md:border-0 md:pt-0">
+          <button
+            type="button"
+            onClick={() => setBlockMode(true)}
+            aria-pressed={false}
+            className="font-heading inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold text-[#6B7280] transition-colors hover:bg-[#F9FAFB] hover:text-[#374151]"
+          >
+            <Ban className="h-3.5 w-3.5" strokeWidth={2.25} />
+            Mark time off
+          </button>
+        </div>
+      )}
 
       <MonthCalendarSheet
         open={calendarOpen}

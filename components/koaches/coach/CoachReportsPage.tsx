@@ -96,7 +96,7 @@ export function CoachReportsPage() {
 
   return (
     <CoachPageShell>
-      <CoachPageHeader title="Reports" subtitle="What you earned and how busy the court was" />
+      <CoachPageHeader title="Earnings" subtitle="What you earned and how busy the court was" />
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
         {REPORT_PERIODS.map((p) => (
@@ -338,7 +338,7 @@ export function CoachReportsPage() {
                   </Link>
                 )}
                 <Link
-                  href="/coach/settings/billing"
+                  href="/coach/billing"
                   className="coach-card flex items-center justify-between gap-3 p-4"
                 >
                   <div>

@@ -119,8 +119,9 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
             }
           }}
         >
-          <CoachSheetField label="Mobile" hint="For calls and Viber">
+          <CoachSheetField label="Mobile" htmlFor="contact-mobile-input" hint="For calls and Viber">
             <input
+              id="contact-mobile-input"
               className="coach-input"
               type="tel"
               placeholder="09XX XXX XXXX"
@@ -128,16 +129,18 @@ export function CoachContactSocialsCard({ coachId, coach, onSaved }: CoachContac
               onChange={(e) => setMobile(e.target.value)}
             />
           </CoachSheetField>
-          <CoachSheetField label="Instagram" hint="@handle or profile URL">
+          <CoachSheetField label="Instagram" htmlFor="contact-instagram-input" hint="@handle or profile URL">
             <input
+              id="contact-instagram-input"
               className="coach-input"
               placeholder="@coachhandle"
               value={instagram}
               onChange={(e) => setInstagram(e.target.value)}
             />
           </CoachSheetField>
-          <CoachSheetField label="Facebook" hint="Profile URL or page name">
+          <CoachSheetField label="Facebook" htmlFor="contact-facebook-input" hint="Profile URL or page name">
             <input
+              id="contact-facebook-input"
               className="coach-input"
               placeholder="facebook.com/yourpage"
               value={facebook}

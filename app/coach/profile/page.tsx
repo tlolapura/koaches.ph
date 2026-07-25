@@ -35,7 +35,7 @@ const EDIT_BIO_FORM_ID = "edit-bio-form";
 
 export default function ProfilePage() {
   const coachId = usePortalCoachId();
-  const { coach, refresh } = useCoachProfile(coachId);
+  const { coach, error: profileError, refresh } = useCoachProfile(coachId);
   const [editOpen, setEditOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
@@ -65,10 +65,20 @@ export default function ProfilePage() {
           title="Profile"
           subtitle="How you look online, what you charge, and when you're free"
         />
-        <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading profile">
-          <div className="h-64 rounded-2xl bg-[#E5E7EB]" />
-          <div className="h-32 rounded-2xl bg-[#E5E7EB]/80" />
-        </div>
+        {profileError ? (
+          <div className="coach-card mt-6 p-6 text-center">
+            <p className="font-heading font-semibold text-[#111827]">Couldn&apos;t load your profile</p>
+            <p className="mt-1 text-sm text-[#6B7280]">Check your connection and try again.</p>
+            <CoachButton type="button" className="mt-4 px-6" onClick={() => void refresh()}>
+              Try again
+            </CoachButton>
+          </div>
+        ) : (
+          <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading profile">
+            <div className="h-64 rounded-2xl bg-[#E5E7EB]" />
+            <div className="h-32 rounded-2xl bg-[#E5E7EB]/80" />
+          </div>
+        )}
       </CoachPageShell>
     );
   }

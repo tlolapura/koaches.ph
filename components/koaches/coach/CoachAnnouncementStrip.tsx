@@ -42,7 +42,7 @@ export function CoachAnnouncementStrip() {
           <span className="truncate">{message}</span>
         </span>
         <Link
-          href="/coach/settings/billing"
+          href="/coach/billing"
           className="shrink-0 text-[11px] font-semibold underline underline-offset-2"
         >
           Open billing

@@ -9,6 +9,7 @@ import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
 import { formatParticipantProgramLabel, resolveParticipantProgramContext } from "@/lib/koaches/participant-program";
 import { SessionSkillRatingsSection } from "@/components/koaches/coach/SessionSkillRatingsSection";
 import { SessionDetailStepper } from "@/components/koaches/coach/SessionDetailStepper";
+import { useSetCoachPageTitle } from "@/components/koaches/coach/CoachPageTitleContext";
 import { SessionDetailStepFooter } from "@/components/koaches/coach/SessionDetailStepFooter";
 import type { SkillRatingActions } from "@/components/koaches/coach/SkillRatingPanel";
 import { SessionTypeBadge, SessionDisplayStatusBadge, useCoachToast } from "@/components/koaches/coach/CoachUi";
@@ -173,6 +174,7 @@ function ClinicSessionDetail({ session }: { session: Session }) {
   const primaryName =
     formatSessionParticipantNames(session) ||
     (session.playerCount > 0 ? `${session.playerCount} players` : "Clinic session");
+  useSetCoachPageTitle(primaryName);
   const { lookup } = useCourts();
   const courtName = courtNameFromLookup(lookup, session.courtId);
   const deleteSessionDetails = isSessionDateScheduled(session)
@@ -287,6 +289,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
   const ratingsUnlocked = status !== "upcoming" && status !== "canceled";
   const participants = getSessionParticipants(session);
   const primaryName = formatSessionParticipantNames(session);
+  useSetCoachPageTitle(primaryName);
   const { lookup } = useCourts();
   const courtName = courtNameFromLookup(lookup, session.courtId);
   const deleteSessionDetails = isSessionDateScheduled(session)
@@ -322,7 +325,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
     setMarkingDone(true);
     try {
       await markDone();
-      showToast("Session marked done. Mark skill coverage next.");
+      showToast("Session marked done. Now pick the skills you worked on.");
       setMode("edit");
       setStep("coverage");
     } catch (e) {
@@ -350,7 +353,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
 
       return (
         <SessionDetailStepFooter
-          nextLabel={needsRatings ? "Add ratings" : "Continue"}
+          nextLabel={needsRatings ? "Rate this session" : "Continue"}
           onNext={() => setStep("coverage")}
           nextDisabled={!ratingsUnlocked}
         />
@@ -363,6 +366,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
           onBack={() => (wrapUpComplete ? setMode("view") : setStep("session"))}
           backLabel={wrapUpComplete ? "Cancel" : "Back"}
           onNext={() => setStep("ratings")}
+          nextDisabled={!ratingActions?.canContinueFromRatings}
         />
       );
     }
@@ -371,8 +375,17 @@ function StandardSessionDetail({ session }: { session: Session }) {
       return (
         <SessionDetailStepFooter
           onBack={() => setStep("coverage")}
-          onNext={() => ratingActions?.continueToFeedback()}
+          secondary={{
+            label: "Add a message for your player (optional)",
+            onClick: () => ratingActions?.continueToFeedback(),
+            disabled: !ratingActions?.canContinueFromRatings,
+          }}
+          nextLabel={ratingActions?.saveLabel ?? "Save session"}
+          nextIcon={<Check className="h-4 w-4" strokeWidth={2.5} />}
+          onNext={() => void ratingActions?.saveSession()}
           nextDisabled={!ratingActions?.canContinueFromRatings}
+          nextLoading={ratingActions?.saving}
+          nextLoadingLabel="Saving…"
         />
       );
     }
@@ -418,7 +431,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
               <button
                 type="button"
                 onClick={startEditRatings}
-                className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#4F8FF7] hover:underline"
+                className="inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold text-[#4F8FF7] hover:underline"
               >
                 <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
                 Edit ratings

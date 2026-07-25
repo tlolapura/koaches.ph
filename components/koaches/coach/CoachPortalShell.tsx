@@ -5,6 +5,7 @@ import { HydrationBoundary, type DehydratedState } from "@tanstack/react-query";
 import { coachSlugFromPublicPath, isPublicCoachJoinPath } from "@/lib/koaches/coach-routes";
 import { CoachBottomNav } from "@/components/koaches/coach/CoachBottomNav";
 import { CoachMobileHeader } from "@/components/koaches/coach/CoachMobileHeader";
+import { CoachPageTitleProvider } from "@/components/koaches/coach/CoachPageTitleContext";
 import { CoachSidebar, CoachSidebarCompact } from "@/components/koaches/coach/CoachSidebar";
 import { CoachAnnouncementStrip } from "@/components/koaches/coach/CoachAnnouncementStrip";
 import { CoachAuthProvider } from "@/components/koaches/coach/CoachAuthProvider";
@@ -60,17 +61,21 @@ function CoachPortalShellInner({ children }: { children: React.ReactNode }) {
         <CoachNavProgress />
       </Suspense>
       <CoachOnboardingGuard />
-      <div className="coach-portal relative flex min-h-screen bg-[#FAFAF8]">
-        <CoachSidebar />
-        <CoachSidebarCompact />
-        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
-          <PickleballBallBackdrop variant="portal" className="z-0" />
-          <CoachAnnouncementStrip />
-          <CoachMobileHeader />
-          <main className="relative flex-1 pb-[var(--portal-bottom-nav-offset)] md:pb-6">{children}</main>
-          <CoachBottomNav />
+      <CoachPageTitleProvider>
+        <div className="coach-portal relative flex min-h-screen bg-[#FAFAF8]">
+          <CoachSidebar />
+          <CoachSidebarCompact />
+          <div className="relative flex min-h-screen min-w-0 flex-1 flex-col">
+            <PickleballBallBackdrop variant="portal" className="z-0" />
+            <CoachAnnouncementStrip />
+            <CoachMobileHeader />
+            <main className="relative flex-1 pb-[var(--portal-bottom-nav-offset)] md:pb-6">
+              {children}
+            </main>
+            <CoachBottomNav />
+          </div>
         </div>
-      </div>
+      </CoachPageTitleProvider>
     </CoachToastProvider>
   );
 }

@@ -46,7 +46,7 @@ function useStoryPreviewWidth() {
 
 export function CoachSocialPage() {
   const coachId = usePortalCoachId();
-  const { coach, loading } = useCoachProfile(coachId);
+  const { coach, loading, error: profileError, refresh } = useCoachProfile(coachId);
   const { sessions } = useCoachSessions(coachId);
   const { workingHours, blockedSlots } = useCoachAvailability(coachId);
   const { showToast } = useCoachToast();
@@ -135,11 +135,21 @@ export function CoachSocialPage() {
     return (
       <CoachPageShell>
         <CoachPageHeader title="Social" subtitle="Post open court time to your stories" />
-        <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading social tools">
-          <div className="h-24 rounded-xl bg-[#E5E7EB]" />
-          <div className="h-10 rounded-xl bg-[#E5E7EB]" />
-          <div className="h-80 rounded-2xl bg-[#E5E7EB]/80" />
-        </div>
+        {!loading && profileError ? (
+          <div className="coach-card mt-6 p-6 text-center">
+            <p className="font-heading font-semibold text-[#111827]">Couldn&apos;t load your info</p>
+            <p className="mt-1 text-sm text-[#6B7280]">Check your connection and try again.</p>
+            <CoachButton type="button" className="mt-4 px-6" onClick={() => void refresh()}>
+              Try again
+            </CoachButton>
+          </div>
+        ) : (
+          <div className="mt-6 animate-pulse space-y-4" aria-busy aria-label="Loading social tools">
+            <div className="h-24 rounded-xl bg-[#E5E7EB]" />
+            <div className="h-10 rounded-xl bg-[#E5E7EB]" />
+            <div className="h-80 rounded-2xl bg-[#E5E7EB]/80" />
+          </div>
+        )}
       </CoachPageShell>
     );
   }

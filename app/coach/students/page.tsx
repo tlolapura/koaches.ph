@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Clock, UserCheck, Users, X } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachPrograms } from "@/hooks/useCoachPrograms";
@@ -68,11 +69,28 @@ function FilterChip({
 }
 
 export default function StudentsPage() {
+  return (
+    <Suspense fallback={null}>
+      <StudentsPageContent />
+    </Suspense>
+  );
+}
+
+function StudentsPageContent() {
   const coachId = usePortalCoachId();
   const { coach } = useCoachProfile(coachId);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
-  const [addOpen, setAddOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(() => searchParams.get("add") === "1");
+
+  useEffect(() => {
+    if (searchParams.get("add") === "1") {
+      router.replace(pathname, { scroll: false });
+    }
+  }, [searchParams, router, pathname]);
   const { showToast } = useCoachToast();
   const { students: rosterStudents, loading: studentsLoading } = useCoachStudents(coachId, true);
   const [savingStudent, setSavingStudent] = useState(false);
@@ -93,12 +111,19 @@ export default function StudentsPage() {
   }, [refreshPending]);
 
   const [pendingIntakesList, setPendingIntakesList] = useState<Awaited<ReturnType<typeof fetchIntakeSubmissionsAction>>>([]);
+  const [intakeLoadFailed, setIntakeLoadFailed] = useState(false);
 
   useEffect(() => {
     if (!coachId) return;
     void fetchIntakeSubmissionsAction(coachId)
-      .then((list) => setPendingIntakesList(list.filter((s) => s.status === "pending")))
-      .catch(() => setPendingIntakesList([]));
+      .then((list) => {
+        setPendingIntakesList(list.filter((s) => s.status === "pending"));
+        setIntakeLoadFailed(false);
+      })
+      .catch(() => {
+        setPendingIntakesList([]);
+        setIntakeLoadFailed(true);
+      });
   }, [coachId, pendingVersion]);
 
   const pendingIntakes = pendingIntakesList;
@@ -190,9 +215,9 @@ export default function StudentsPage() {
     { key: "all", label: "All" },
     {
       key: "pending",
-      label: rosterCounts.pending > 0 ? `Pending (${rosterCounts.pending})` : "Pending",
+      label: rosterCounts.pending > 0 ? `New sign-ups (${rosterCounts.pending})` : "New sign-ups",
     },
-    { key: "archived", label: "Archived" },
+    { key: "archived", label: "Inactive" },
   ];
 
   return (
@@ -239,11 +264,21 @@ export default function StudentsPage() {
       )}
 
       {statusFilter === "pending" ? (
-        pendingIntakes.length === 0 ? (
+        intakeLoadFailed ? (
+          <div className="mt-3 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-sm text-[#92400E]">
+            <p className="font-heading font-semibold">Couldn&apos;t load new sign-ups</p>
+            <p className="mt-1">Check your connection, then{" "}
+              <button type="button" className="font-semibold underline" onClick={refreshPending}>
+                try again
+              </button>
+              .
+            </p>
+          </div>
+        ) : pendingIntakes.length === 0 ? (
           <EmptyState
             icon={UserCheck}
-            title="No pending sign-ups"
-            description="Students who complete your intake form will show up here."
+            title="No new sign-ups"
+            description="Anyone who scans your join QR code will show up here first."
           />
         ) : (
           <div className="mt-3 space-y-3">
@@ -391,12 +426,12 @@ export default function StudentsPage() {
       <CoachBottomSheet
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        title="Add New Student"
+        title="Add student"
         subtitle="Bring someone new onto your roster"
         footer={
           <CoachSheetFooter>
             <CoachButton type="submit" form={ADD_STUDENT_FORM_ID} loading={savingStudent} loadingLabel="Saving…">
-              Save Student
+              Save student
             </CoachButton>
           </CoachSheetFooter>
         }

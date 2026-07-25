@@ -74,8 +74,8 @@ export function getSessionDisplayStatusLabel(status: SessionDisplayStatus): stri
     case "done":
       return "Done";
     case "pending_progress_review":
-      return "Needs ratings";
+      return "Needs wrap-up";
     case "ready_to_share":
-      return "Ready to share";
+      return "Ready to send";
   }
 }

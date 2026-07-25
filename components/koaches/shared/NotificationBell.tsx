@@ -106,7 +106,7 @@ export function NotificationBell({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] md:hidden"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-[#6B7280] hover:bg-[#F3F4F6] md:hidden"
                 aria-label="Close"
               >
                 <X className="h-4 w-4" />

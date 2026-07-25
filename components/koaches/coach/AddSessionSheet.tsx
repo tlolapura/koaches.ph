@@ -120,6 +120,7 @@ export function AddSessionSheet({
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const selectedProgram =
     sessionType === "program"
@@ -216,6 +217,8 @@ export function AddSessionSheet({
     const day = initialDate ?? format(new Date(), "yyyy-MM-dd");
     const preferredStart = initialStartTime ?? "08:00";
     setStep("form");
+    setMoreOpen(false);
+    setNotes("");
     setSessionType("drop-in");
     setSelectedProgramId(programs[0]?.id);
     setPlayerCount(1);
@@ -404,11 +407,11 @@ export function AddSessionSheet({
     <CoachBottomSheet
       open={open}
       onClose={onClose}
-      title={step === "confirm" ? "Review session" : "Add Session"}
+      title={step === "confirm" ? "Review" : "Book a session"}
       subtitle={
         step === "confirm"
-          ? "Confirm the details before saving"
-          : "Choose type first, then set details"
+          ? "Quick check before saving"
+          : "Who, when, and where"
       }
       footer={
         step === "confirm" ? (
@@ -423,7 +426,7 @@ export function AddSessionSheet({
               disabled={!canSave}
               onClick={() => void handleConfirmSave()}
             >
-              Save Session
+              Book session
             </CoachButton>
           </CoachSheetFooter>
         ) : (
@@ -642,41 +645,6 @@ export function AddSessionSheet({
           onPriceChange={setPrice}
         />
 
-        <SessionPaymentFields value={paymentStatus} onChange={setPaymentStatus} />
-        <CoachSheetField
-          label="Tip (optional)"
-          htmlFor="session-tip"
-          hint="Extra on top of the session fee"
-        >
-          <div className="relative">
-            <span
-              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6B7280]"
-              aria-hidden
-            >
-              ₱
-            </span>
-            <input
-              id="session-tip"
-              type="number"
-              min={0}
-              step={50}
-              inputMode="numeric"
-              className="coach-input coach-input-icon"
-              value={tip}
-              onChange={(e) => setTip(Math.max(0, Math.round(Number(e.target.value) || 0)))}
-              placeholder="0"
-            />
-          </div>
-        </CoachSheetField>
-        {tip > 0 && (
-          <p className="text-sm text-[#374151]">
-            Total received{" "}
-            <span className="font-heading font-semibold text-[#14532D]">
-              {formatCurrency(price + tip)}
-            </span>
-          </p>
-        )}
-
         {showScheduleFields && (
           <>
             {hasConflict && (
@@ -758,19 +726,71 @@ export function AddSessionSheet({
           />
         </CoachSheetField>
 
-        <CoachSheetField
-          label="Notes (optional)"
-          htmlFor="session-notes"
-          hint="Court number, gate code, reminders…"
-        >
-          <textarea
-            id="session-notes"
-            className="coach-input min-h-[72px] resize-none"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="e.g. Court 3 · near the café"
-          />
-        </CoachSheetField>
+        <div className="border-t border-[#E5E7EB] pt-3">
+          <button
+            type="button"
+            onClick={() => setMoreOpen((v) => !v)}
+            aria-expanded={moreOpen}
+            className="font-heading flex min-h-[44px] w-full items-center justify-between text-sm font-semibold text-[#374151]"
+          >
+            More options
+            <span className="text-xs font-medium text-[#9CA3AF]">
+              {moreOpen ? "Hide" : "Already paid? Add a note?"}
+            </span>
+          </button>
+
+          {moreOpen ? (
+            <div className="mt-2 space-y-4">
+              <SessionPaymentFields value={paymentStatus} onChange={setPaymentStatus} />
+              <CoachSheetField
+                label="Tip (optional)"
+                htmlFor="session-tip"
+                hint="Extra on top of the session fee"
+              >
+                <div className="relative">
+                  <span
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium text-[#6B7280]"
+                    aria-hidden
+                  >
+                    ₱
+                  </span>
+                  <input
+                    id="session-tip"
+                    type="number"
+                    min={0}
+                    step={50}
+                    inputMode="numeric"
+                    className="coach-input coach-input-icon"
+                    value={tip}
+                    onChange={(e) => setTip(Math.max(0, Math.round(Number(e.target.value) || 0)))}
+                    placeholder="0"
+                  />
+                </div>
+              </CoachSheetField>
+              {tip > 0 && (
+                <p className="text-sm text-[#374151]">
+                  Total received{" "}
+                  <span className="font-heading font-semibold text-[#14532D]">
+                    {formatCurrency(price + tip)}
+                  </span>
+                </p>
+              )}
+              <CoachSheetField
+                label="Notes (optional)"
+                htmlFor="session-notes"
+                hint="Court number, gate code, reminders…"
+              >
+                <textarea
+                  id="session-notes"
+                  className="coach-input min-h-[72px] resize-none"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="e.g. Court 3 · near the café"
+                />
+              </CoachSheetField>
+            </div>
+          ) : null}
+        </div>
 
       </form>
       )}

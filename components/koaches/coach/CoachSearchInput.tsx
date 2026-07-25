@@ -26,6 +26,7 @@ export function CoachSearchInput({
           type="search"
           className="coach-input coach-input-icon"
           placeholder={placeholder}
+          aria-label={placeholder}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />

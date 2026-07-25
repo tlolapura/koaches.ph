@@ -68,12 +68,14 @@ const STEPS = [
     title: "Drop-in rates",
     subtitle: "Set your session pricing. You can change this anytime.",
     icon: Wallet,
+    skippable: true,
   },
   {
     id: "levels",
     title: "Player levels",
     subtitle: "Who you love coaching most",
     icon: Target,
+    skippable: true,
   },
   {
     id: "share",
@@ -346,6 +348,16 @@ export function CoachOnboardingPage() {
 
       <footer className="relative z-[1] shrink-0 border-t border-[#E5E7EB] bg-white/95 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
         <div className="mx-auto w-full max-w-lg">
+          {"skippable" in current && current.skippable ? (
+            <button
+              type="button"
+              className="mb-2 flex min-h-[44px] w-full items-center justify-center text-sm font-semibold text-[#6B7280]"
+              disabled={saving}
+              onClick={() => setStep((s) => s + 1)}
+            >
+              Skip for now — you can set this later in Settings
+            </button>
+          ) : null}
           <div className="flex gap-3">
             {!isFirst && (
               <button

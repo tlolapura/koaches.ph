@@ -7,11 +7,14 @@ import { getCoachPageMeta } from "@/lib/koaches/coach-page-titles";
 import { CoachAvatar } from "@/components/koaches/coach/CoachAvatar";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
+import { useCoachPageTitle } from "@/components/koaches/coach/CoachPageTitleContext";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 
 export function CoachMobileHeader() {
   const pathname = usePathname();
-  const { title, back } = getCoachPageMeta(pathname);
+  const { title: sectionTitle, back } = getCoachPageMeta(pathname);
+  const detailTitle = useCoachPageTitle();
+  const title = detailTitle ?? sectionTitle;
   const coachId = usePortalCoachId();
   const { coach } = useCoachProfile(coachId);
   const isDashboard = pathname === "/coach/dashboard" || pathname === "/coach";
@@ -35,7 +38,7 @@ export function CoachMobileHeader() {
             <h1 className="font-heading truncate text-lg font-semibold text-[#111827]">{title}</h1>
           )}
         </div>
-        <Link href="/coach/profile" className="shrink-0" title={coach?.name ?? "Profile"}>
+        <Link href="/coach/profile" className="shrink-0" aria-label="Your profile" title={coach?.name ?? "Profile"}>
           <CoachAvatar name={coach?.name ?? "Coach"} photo={coach?.photo} size="sm" />
         </Link>
       </div>

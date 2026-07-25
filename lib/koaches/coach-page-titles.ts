@@ -11,10 +11,10 @@ const SECTIONS: Array<{ prefix: string; title: string; backHref?: string; backLa
   { prefix: "/coach/sessions", title: "Schedule", backHref: "/coach/sessions", backLabel: "Schedule" },
   { prefix: "/coach/programs", title: "Programs", backHref: "/coach/programs", backLabel: "Programs" },
   { prefix: "/coach/clinics", title: "Clinics", backHref: "/coach/clinics", backLabel: "Clinics" },
-  { prefix: "/coach/reports", title: "Reports" },
+  { prefix: "/coach/reports", title: "Earnings" },
   { prefix: "/coach/social", title: "Social", backHref: "/coach/dashboard", backLabel: "Home" },
   { prefix: "/coach/profile", title: "Profile", backHref: "/coach/dashboard", backLabel: "Home" },
-  { prefix: "/coach/settings/billing", title: "Billing", backHref: "/coach/settings", backLabel: "Settings" },
+  { prefix: "/coach/billing", title: "Billing" },
   { prefix: "/coach/settings/terms", title: "Terms", backHref: "/coach/settings", backLabel: "Settings" },
   { prefix: "/coach/settings/privacy", title: "Privacy", backHref: "/coach/settings", backLabel: "Settings" },
   {
