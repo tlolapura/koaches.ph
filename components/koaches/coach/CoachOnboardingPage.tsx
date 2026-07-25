@@ -14,17 +14,16 @@ import {
   Target,
   Wallet,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
-import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import { PricingTiersEditor } from "@/components/koaches/coach/PricingTiersEditor";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
-import { SpecializationPicker } from "@/components/koaches/shared/SpecializationPicker";
 import {
   completeCoachOnboardingAction,
   updateCoachBioAction,
@@ -43,7 +42,6 @@ import { invalidateCoachProfile, setCoachProfileCache } from "@/lib/koaches/quer
 import type { CoachSessionPricing } from "@/lib/koaches/types";
 import { cn } from "@/lib/utils";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
-import { LegalLinks } from "@/components/koaches/shared/LegalLinks";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
 
 const STEPS = [
@@ -94,7 +92,6 @@ export function CoachOnboardingPage() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [bio, setBio] = useState("");
-  const [specialization, setSpecialization] = useState("");
   const [mobile, setMobile] = useState("");
   const [pricing, setPricing] = useState<CoachSessionPricing>(DEFAULT_SESSION_PRICING);
   const [coachingLevels, setCoachingLevels] = useState<CoachingLevelId[]>(["intermediate"]);
@@ -102,7 +99,6 @@ export function CoachOnboardingPage() {
   useEffect(() => {
     if (!coach) return;
     setBio(coach.bio);
-    setSpecialization(coach.specialization ?? "");
     setMobile(coach.mobile ?? "");
     setPricing(coach.sessionPricing ?? DEFAULT_SESSION_PRICING);
     setCoachingLevels(resolveCoachCoachingLevels(coach));
@@ -129,6 +125,7 @@ export function CoachOnboardingPage() {
 
   const current = STEPS[step];
   const StepIcon = current.icon;
+  const progress = Math.round(((step + 1) / STEPS.length) * 100);
   const isFirst = step === 0;
   const isLast = step === STEPS.length - 1;
   const greeting = coachGreetingLabel(coach);
@@ -141,7 +138,7 @@ export function CoachOnboardingPage() {
           showToast("Please add a short bio", "error");
           return false;
         }
-        await updateCoachBioAction(coachId, bio, specialization);
+        await updateCoachBioAction(coachId, bio);
       } else if (current.id === "contact") {
         if (!mobile.trim()) {
           showToast("Mobile number is required for your public profile", "error");
@@ -211,135 +208,139 @@ export function CoachOnboardingPage() {
             </span>
           </div>
 
-          <div className="mt-5">
-            <div
-              className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0FDF4] text-[#16A34A]"
-              aria-hidden
-            >
-              <StepIcon className="h-5 w-5" strokeWidth={2} />
+          <div className="mt-5 flex items-end justify-between gap-4">
+            <div>
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0FDF4] text-[#16A34A]"
+                aria-hidden
+              >
+                <StepIcon className="h-5 w-5" strokeWidth={2} />
+              </div>
+              <h1 className="font-heading mt-2.5 text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
+                {current.title}
+              </h1>
+              <p className="mt-0.5 text-sm text-[#6B7280]">{current.subtitle}</p>
             </div>
-            <h1 className="font-heading mt-2.5 text-xl font-bold tracking-tight text-[#111827] sm:text-2xl">
-              {current.title}
-            </h1>
-            <p className="mt-0.5 text-sm text-[#6B7280]">{current.subtitle}</p>
+            <div className="text-right">
+              <p className="font-heading text-2xl font-bold leading-none text-[#16A34A]">{progress}%</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                Step {step + 1}/{STEPS.length}
+              </p>
+            </div>
           </div>
 
-          <CoachStepper
-            card={false}
-            className="mt-4"
-            showCurrentLabel={false}
-            steps={STEPS.map((s) => ({ id: s.id, label: s.title, icon: s.icon }))}
-            currentStepId={current.id}
-          />
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
+            <div
+              className="h-full rounded-full bg-[#16A34A] transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+
+          <div className="mt-3 flex justify-between gap-1">
+            {STEPS.map((s, i) => (
+              <StepDot key={s.id} icon={s.icon} active={i === step} done={i < step} />
+            ))}
+          </div>
         </div>
       </header>
 
       <main className="relative z-[1] min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-lg px-4 py-5">
-          <div className="coach-card p-5 shadow-sm">
-            {current.id === "welcome" && (
-              <div className="space-y-4">
-                <p className="text-sm leading-relaxed text-[#6B7280]">
-                  Hey {greeting}! Thank you for trying {BRAND_NAME}. We built this for coaches, and
-                  it means a lot that you signed in. This quick setup takes about 3 minutes, then
-                  you&apos;re ready to coach.
-                </p>
-                <ul className="space-y-3">
-                  {[
-                    "A photo and bio for your public page",
-                    "Contact info so players can reach you",
-                    "Drop-in rates and player levels",
-                    "Your shareable profile link",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-3 text-sm text-[#374151]">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
-                        <Check className="h-3 w-3" strokeWidth={3} />
-                      </span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {current.id === "profile" && (
-              <div className="space-y-4">
-                <div className="flex justify-center rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-[#EFF6FF] p-5">
-                  <CoachProfilePhoto
-                    coachId={coachId}
-                    name={coach.name}
-                    defaultPhoto={coach.photo}
-                    size="hero"
-                    editable
-                    onUpdated={refresh}
-                  />
-                </div>
-                <CoachSheetField label="Bio *">
-                  <textarea
-                    className="coach-input min-h-[100px] resize-none"
-                    placeholder="Tell students about your coaching style, experience, and what makes your sessions fun..."
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                  />
-                </CoachSheetField>
-                <CoachSheetField label="What do you coach?">
-                  <SpecializationPicker
-                    id="onboarding-specialization"
-                    value={specialization}
-                    onChange={setSpecialization}
-                  />
-                </CoachSheetField>
-              </div>
-            )}
-
-            {current.id === "contact" && (
-              <div className="space-y-3">
-                <p className="text-sm text-[#6B7280]">
-                  Students will see this on your public profile when they want to book.
-                </p>
-                <CoachSheetField label="Mobile number *">
-                  <input
-                    className="coach-input"
-                    type="tel"
-                    placeholder="09XX XXX XXXX"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
-                  />
-                </CoachSheetField>
-              </div>
-            )}
-
-            {current.id === "rates" && (
-              <div>
-                <p className="mb-3 text-sm text-[#6B7280]">
-                  Set per-person drop-in rates by group size. Programs have their own bundle pricing.
-                </p>
-                <PricingTiersEditor pricing={pricing} onChange={setPricing} />
-              </div>
-            )}
-
-            {current.id === "levels" && (
-              <CoachingLevelsPicker value={coachingLevels} onChange={setCoachingLevels} />
-            )}
-
-            {current.id === "share" && (
-              <div className="text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDF4] text-[#16A34A]">
-                  <PartyPopper className="h-7 w-7" strokeWidth={1.75} />
-                </div>
-                <p className="font-heading mt-4 text-lg font-bold text-[#111827]">
-                  Thank you, {greeting}!
-                </p>
+        <div className="mx-auto w-full max-w-lg px-4 py-5 pb-8">
+          {current.id === "share" ? (
+            <div className="space-y-4">
+              <div className="coach-card p-5 text-center shadow-sm">
+                <p className="font-heading text-lg font-bold text-[#111827]">Thank you, {greeting}!</p>
                 <p className="mt-2 text-sm leading-relaxed text-[#6B7280]">
-                  Your profile is live. We&apos;re grateful you took the time to set this up. Share
-                  your link whenever you&apos;re ready for students to find you.
+                  Your profile is live. Share your link whenever you&apos;re ready for students to find
+                  you.
                 </p>
-                <div className="mt-5 text-left">
-                  <CoachPublicProfileLinkCard coach={coach} />
-                </div>
               </div>
-            )}
-          </div>
+              <CoachPublicProfileLinkCard coach={coach} />
+            </div>
+          ) : (
+            <div className="coach-card p-5 shadow-sm">
+              {current.id === "welcome" && (
+                <div className="space-y-4">
+                  <p className="text-sm leading-relaxed text-[#6B7280]">
+                    Hey {greeting}! Thank you for trying {BRAND_NAME}. This quick setup takes about 3
+                    minutes, then you&apos;re ready to coach.
+                  </p>
+                  <ul className="space-y-3">
+                    {[
+                      "A photo and bio for your public page",
+                      "Contact info so players can reach you",
+                      "Drop-in rates and player levels",
+                      "Your shareable profile link",
+                    ].map((item) => (
+                      <li key={item} className="flex items-start gap-3 text-sm text-[#374151]">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDF4] text-[#16A34A]">
+                          <Check className="h-3 w-3" strokeWidth={3} />
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {current.id === "profile" && (
+                <div className="space-y-4">
+                  <div className="flex justify-center rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-[#EFF6FF] p-5">
+                    <CoachProfilePhoto
+                      coachId={coachId}
+                      name={coach.name}
+                      defaultPhoto={coach.photo}
+                      size="hero"
+                      editable
+                      onUpdated={refresh}
+                    />
+                  </div>
+                  <CoachSheetField label="Bio *" htmlFor="onboarding-bio">
+                    <textarea
+                      id="onboarding-bio"
+                      className="coach-input min-h-[100px] resize-none"
+                      placeholder="Tell students about your coaching style, experience, and what makes your sessions fun..."
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                    />
+                  </CoachSheetField>
+                </div>
+              )}
+
+              {current.id === "contact" && (
+                <div className="coach-form">
+                  <p className="text-sm text-[#6B7280]">
+                    Students will see this on your public profile when they want to book.
+                  </p>
+                  <CoachSheetField label="Mobile number *" htmlFor="onboarding-mobile">
+                    <input
+                      id="onboarding-mobile"
+                      className="coach-input"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      placeholder="09XX XXX XXXX"
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value)}
+                    />
+                  </CoachSheetField>
+                </div>
+              )}
+
+              {current.id === "rates" && (
+                <div>
+                  <p className="mb-3 text-sm text-[#6B7280]">
+                    Set per-person drop-in rates by group size. Programs have their own bundle pricing.
+                  </p>
+                  <PricingTiersEditor pricing={pricing} onChange={setPricing} />
+                </div>
+              )}
+
+              {current.id === "levels" && (
+                <CoachingLevelsPicker value={coachingLevels} onChange={setCoachingLevels} />
+              )}
+            </div>
+          )}
         </div>
       </main>
 
@@ -376,12 +377,31 @@ export function CoachOnboardingPage() {
               )}
             </CoachButton>
           </div>
-          <p className="mt-2 text-center text-xs text-[#9CA3AF]">
-            One-time setup · Thank you for being an early coach · Edit anytime in Profile
-          </p>
-          <LegalLinks className="mt-2 justify-center" />
         </div>
       </footer>
     </div>
+  );
+}
+
+function StepDot({
+  icon: Icon,
+  active,
+  done,
+}: {
+  icon: LucideIcon;
+  active: boolean;
+  done: boolean;
+}) {
+  return (
+    <span
+      className={cn(
+        "flex h-8 w-8 items-center justify-center rounded-full transition-all",
+        done && "bg-[#F0FDF4] text-[#16A34A]",
+        active && !done && "bg-[#EFF6FF] text-[#4F8FF7] ring-2 ring-[#BFDBFE] scale-110",
+        !active && !done && "bg-[#F3F4F6] text-[#9CA3AF]"
+      )}
+    >
+      {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Icon className="h-3.5 w-3.5" />}
+    </span>
   );
 }

@@ -217,7 +217,7 @@ function ClinicSessionDetail({ session }: { session: Session }) {
         {session.clinicId ? (
           <div className="coach-card p-4">
             <p className="text-sm text-[#6B7280]">
-              Payment is tracked on the clinic (series), not per date.
+              Payment is tracked on the clinic — per player for ticket pricing, or once for a flat fee.
             </p>
             <Link
               href={`/coach/clinics/${session.clinicId}`}

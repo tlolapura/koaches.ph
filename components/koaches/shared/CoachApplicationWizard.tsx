@@ -55,7 +55,7 @@ const STEPS = [
   {
     id: "coaching",
     title: "Your coaching story",
-    subtitle: "What players see on your page",
+    subtitle: "Bio and optional social links",
     icon: Sparkles,
   },
   {
@@ -281,7 +281,6 @@ export function CoachApplicationWizard({
                       </>
                     }
                   />
-                  <ReviewRow label="Specialization" value={review.specialization} highlight />
                   <div>
                     <dt className="text-[#6B7280]">Bio</dt>
                     <dd className="mt-1 text-[#374151]">{review.bio}</dd>

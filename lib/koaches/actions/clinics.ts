@@ -10,6 +10,7 @@ import {
 import { createServiceClient } from "@/lib/supabase/server";
 import type {
   Clinic,
+  ClinicEnrollment,
   ClinicSessionDraft,
   Session,
   SessionAttendanceEntry,
@@ -27,23 +28,27 @@ import {
   type DbStudent,
 } from "@/lib/koaches/db/mappers";
 import {
+  clinicPricingMode,
   defaultAttendanceForStudents,
   participantsFromStudents,
   syncClinicSessionFields,
 } from "@/lib/koaches/clinic-pricing";
 
 async function loadClinicEnrollments(clinicIds: string[]) {
-  if (clinicIds.length === 0) return new Map<string, string[]>();
+  if (clinicIds.length === 0) return new Map<string, ClinicEnrollment[]>();
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("clinic_enrollments")
-    .select("clinic_id, student_id")
+    .select("clinic_id, student_id, payment_status")
     .in("clinic_id", clinicIds)
     .eq("status", "enrolled");
-  const map = new Map<string, string[]>();
+  const map = new Map<string, ClinicEnrollment[]>();
   for (const row of data ?? []) {
     const list = map.get(row.clinic_id) ?? [];
-    list.push(row.student_id);
+    list.push({
+      studentId: row.student_id,
+      paymentStatus: (row.payment_status as SessionPaymentStatus) || "unpaid",
+    });
     map.set(row.clinic_id, list);
   }
   return map;
@@ -233,6 +238,10 @@ export async function createClinicAction(
     status: "active",
     notes: input.notes?.trim() || undefined,
     enrolledStudentIds: studentIds,
+    enrollments: studentIds.map((studentId) => ({
+      studentId,
+      paymentStatus: "unpaid" as const,
+    })),
     createdAt: now,
     updatedAt: now,
   };
@@ -250,6 +259,7 @@ export async function createClinicAction(
         clinic_id: clinicId,
         student_id: studentId,
         status: "enrolled",
+        payment_status: "unpaid",
       }))
     );
     if (enrollError) throw enrollError;
@@ -346,12 +356,19 @@ export async function enrollStudentInClinicAction(clinicId: string, studentId: s
     clinic_id: clinicId,
     student_id: studentId,
     status: "enrolled",
+    payment_status: "unpaid",
   });
   if (error) throw error;
 
-  const next = {
+  const next: Clinic = {
     ...clinic,
     enrolledStudentIds: [...clinic.enrolledStudentIds, studentId],
+    enrollments: [
+      ...clinic.enrollments,
+      { studentId, paymentStatus: "unpaid" },
+    ],
+    paymentStatus:
+      clinicPricingMode(clinic) === "per-player" ? "unpaid" : clinic.paymentStatus,
   };
   await syncClinicSessionsRoster(next);
   revalidateClinicPaths(clinicId);
@@ -371,9 +388,18 @@ export async function removeStudentFromClinicAction(clinicId: string, studentId:
     .eq("student_id", studentId);
   if (error) throw error;
 
-  const next = {
+  const nextEnrollments = clinic.enrollments.filter((e) => e.studentId !== studentId);
+  const next: Clinic = {
     ...clinic,
     enrolledStudentIds: clinic.enrolledStudentIds.filter((id) => id !== studentId),
+    enrollments: nextEnrollments,
+    paymentStatus:
+      clinicPricingMode(clinic) === "per-player"
+        ? nextEnrollments.length > 0 &&
+          nextEnrollments.every((e) => e.paymentStatus === "paid")
+          ? "paid"
+          : "unpaid"
+        : clinic.paymentStatus,
   };
   await syncClinicSessionsRoster(next);
   revalidateClinicPaths(clinicId);
@@ -442,7 +468,60 @@ export async function updateClinicPaymentAction(
   clinicId: string,
   paymentStatus: SessionPaymentStatus
 ) {
+  const clinic = await fetchClinicByIdAction(clinicId);
+  if (!clinic) throw new Error("Clinic not found.");
+  if (clinicPricingMode(clinic) === "per-player") {
+    throw new Error("Per-player clinics track payment on each student.");
+  }
   return updateClinicAction(clinicId, { paymentStatus });
+}
+
+export async function updateClinicEnrollmentPaymentAction(
+  clinicId: string,
+  studentId: string,
+  paymentStatus: SessionPaymentStatus
+): Promise<Clinic> {
+  await assertCoachOwnsClinic(clinicId);
+  const clinic = await fetchClinicByIdAction(clinicId);
+  if (!clinic) throw new Error("Clinic not found.");
+  if (clinicPricingMode(clinic) !== "per-player") {
+    throw new Error("Flat clinics use a single payment status.");
+  }
+  if (!clinic.enrolledStudentIds.includes(studentId)) {
+    throw new Error("Student is not enrolled in this clinic.");
+  }
+
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("clinic_enrollments")
+    .update({ payment_status: paymentStatus })
+    .eq("clinic_id", clinicId)
+    .eq("student_id", studentId);
+  if (error) throw error;
+
+  const enrollments = clinic.enrollments.map((e) =>
+    e.studentId === studentId ? { ...e, paymentStatus } : e
+  );
+  const allPaid =
+    enrollments.length > 0 && enrollments.every((e) => e.paymentStatus === "paid");
+  const next: Clinic = {
+    ...clinic,
+    enrollments,
+    paymentStatus: allPaid ? "paid" : "unpaid",
+  };
+
+  // Keep clinics.payment_status in sync for list badges / reports that still read the column
+  await supabase
+    .from("clinics")
+    .update({
+      payment_status: next.paymentStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", clinicId);
+
+  await syncClinicSessionsRoster(next);
+  revalidateClinicPaths(clinicId);
+  return next;
 }
 
 export async function cancelClinicAction(clinicId: string) {

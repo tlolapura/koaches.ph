@@ -4,31 +4,43 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { format, parseISO } from "date-fns";
-import { Plus } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  MapPin,
+  Plus,
+  Trash2,
+  Users,
+  Wallet,
+} from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import {
   CoachBackLink,
-  CoachPageHeader,
   CoachPageShell,
   CoachSectionTitle,
 } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachDetailSkeleton } from "@/components/koaches/coach/CoachSkeletons";
 import {
   InitialsAvatar,
-  SessionPaymentBadge,
+  SessionTypeBadge,
   useCoachToast,
 } from "@/components/koaches/coach/CoachUi";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { CoachStudentSearchSelect } from "@/components/koaches/coach/CoachStudentSearchSelect";
 import { CoachDatePicker } from "@/components/koaches/coach/CoachDatePicker";
 import { CoachTimePicker } from "@/components/koaches/coach/CoachTimePicker";
+import { SessionPaymentCheckbox } from "@/components/koaches/coach/SessionPaymentFields";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { useCoachClinic, useClinicMutations } from "@/hooks/useCoachClinics";
 import { useCoachStudents } from "@/hooks/useCoachStudents";
 import { useCourts } from "@/hooks/useCourts";
 import {
+  clinicCollectedRevenue,
+  clinicEnrollmentPaymentStatus,
   clinicExpectedRevenue,
+  clinicPaidEnrollmentCount,
+  clinicPricingMode,
   formatClinicPriceSummary,
 } from "@/lib/koaches/clinic-pricing";
 import { formatTimeDisplay, formatSessionTimeRange } from "@/lib/koaches/session-time";
@@ -73,63 +85,157 @@ export function ClinicDetailPageClient() {
   }
 
   const courtName = lookup.get(clinic.courtId)?.name ?? "Court TBD";
+  const pricingMode = clinicPricingMode(clinic);
+  const isPerPlayer = pricingMode === "per-player";
+  const paidCount = clinicPaidEnrollmentCount(clinic);
+  const expected = clinicExpectedRevenue(clinic);
+  const collected = clinicCollectedRevenue(clinic);
+
+  const clinicStatusLabel =
+    clinic.status === "canceled"
+      ? "Canceled"
+      : clinic.status === "done"
+        ? "Done"
+        : clinic.status === "draft"
+          ? "Draft"
+          : "Active";
+  const paymentLine = isPerPlayer
+    ? enrolled.length === 0
+      ? "No players enrolled yet"
+      : `${paidCount}/${enrolled.length} paid · ${formatCurrency(expected)} expected`
+    : clinic.paymentStatus === "paid"
+      ? `Paid · ${formatCurrency(expected)} flat fee`
+      : `Unpaid · ${formatCurrency(expected)} flat fee`;
 
   return (
     <CoachPageShell>
-      <CoachBackLink href="/coach/clinics" label="Clinics" />
-      <CoachPageHeader
-        title={clinic.name}
-        subtitle={clinic.focus || "Group clinic"}
-        mobileTitle
-      />
+      <CoachBackLink href="/coach/clinics" label="Clinics" className="hidden md:inline-flex" />
 
-      <div className="coach-card mt-4 p-4">
-        <div className="flex flex-wrap gap-2 text-xs font-semibold">
-          <span className="rounded-full bg-[#EDE9FE] px-2.5 py-1 text-[#5B21B6]">
-            {clinic.enrolledStudentIds.length}/{clinic.capacity} enrolled
-          </span>
-          <span className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-[#6B7280]">{courtName}</span>
-          <SessionPaymentBadge status={clinic.paymentStatus} />
-        </div>
-        <p className="mt-3 text-sm text-[#6B7280]">{formatClinicPriceSummary(clinic)}</p>
-        <p className="mt-1 font-heading text-lg font-bold text-[#14532D]">
-          {formatCurrency(clinicExpectedRevenue(clinic))}
-          <span className="ml-1 text-xs font-medium text-[#9CA3AF]">expected</span>
-        </p>
-        {clinic.description ? (
-          <p className="mt-3 text-sm text-[#4B5563]">{clinic.description}</p>
-        ) : null}
-        <div className="mt-4 flex flex-wrap gap-2">
-          <CoachButton
-            type="button"
-            variant="outline"
-            className="w-auto px-3 py-2 text-sm"
-            onClick={() =>
-              void mutations.setPayment
-                .mutateAsync(clinic.paymentStatus === "paid" ? "unpaid" : "paid")
-                .then(() =>
-                  showToast(clinic.paymentStatus === "paid" ? "Marked unpaid" : "Marked paid")
-                )
-                .catch((e) => showToast(e instanceof Error ? e.message : "Failed", "error"))
-            }
-          >
-            Mark {clinic.paymentStatus === "paid" ? "unpaid" : "paid"}
-          </CoachButton>
-          {clinic.status !== "canceled" ? (
-            <CoachButton
-              type="button"
-              variant="outline"
-              className="w-auto px-3 py-2 text-sm text-[#EF4444]"
-              onClick={() =>
-                void mutations.cancel
-                  .mutateAsync()
-                  .then(() => showToast("Clinic canceled"))
-                  .catch((e) => showToast(e instanceof Error ? e.message : "Failed", "error"))
-              }
-            >
-              Cancel clinic
-            </CoachButton>
+      <div className="mt-4 space-y-4">
+        <div className="rounded-3xl bg-[#14532D] px-5 py-5 text-white sm:px-6 sm:py-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <SessionTypeBadge type="clinic" />
+                <span className="font-heading rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold text-white/90">
+                  {clinicStatusLabel}
+                </span>
+              </div>
+              <h2 className="font-heading mt-3 text-2xl font-bold tracking-tight text-white sm:text-[1.75rem]">
+                {clinic.name}
+              </h2>
+              <p className="mt-1 text-sm text-white/70">{clinic.focus || "Group clinic"}</p>
+              <p className="mt-2 font-heading text-lg font-semibold text-[#86EFAC]">
+                {formatCurrency(collected)}
+                <span className="ml-1.5 text-sm font-medium text-white/55">
+                  collected
+                </span>
+              </p>
+            </div>
+
+            {clinic.status !== "canceled" ? (
+              <button
+                type="button"
+                onClick={() =>
+                  void mutations.cancel
+                    .mutateAsync()
+                    .then(() => showToast("Clinic canceled"))
+                    .catch((e) =>
+                      showToast(e instanceof Error ? e.message : "Failed", "error")
+                    )
+                }
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+                aria-label="Cancel clinic"
+              >
+                <Trash2 className="h-4 w-4" strokeWidth={2.25} />
+              </button>
+            ) : null}
+          </div>
+
+          <div className="mt-5 space-y-3 pt-1">
+            <p className="flex items-center gap-3 text-sm text-white/90">
+              <MapPin className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
+              <span>{courtName}</span>
+            </p>
+            <p className="flex items-center gap-3 text-sm text-white/90">
+              <Users className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
+              <span>
+                {clinic.enrolledStudentIds.length}/{clinic.capacity} enrolled
+              </span>
+            </p>
+            <p className="flex items-center gap-3 text-sm text-white/90">
+              <Wallet className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
+              <span>{paymentLine}</span>
+            </p>
+          </div>
+
+          {clinic.description ? (
+            <p className="mt-4 rounded-2xl bg-white/10 px-3.5 py-2.5 text-sm text-white/80">
+              {clinic.description}
+            </p>
           ) : null}
+        </div>
+
+        <div className="coach-card p-4">
+          <p className="font-heading text-sm font-semibold">Payment</p>
+          <p className="mt-1 text-xs text-[#6B7280]">{formatClinicPriceSummary(clinic)}</p>
+
+          {!isPerPlayer ? (
+            <div className="mt-3">
+              <SessionPaymentCheckbox
+                checked={clinic.paymentStatus === "paid"}
+                disabled={mutations.setPayment.isPending}
+                onChange={(paid) =>
+                  void mutations.setPayment
+                    .mutateAsync(paid ? "paid" : "unpaid")
+                    .then(() => showToast(paid ? "Marked paid" : "Marked unpaid"))
+                    .catch((e) =>
+                      showToast(e instanceof Error ? e.message : "Failed", "error")
+                    )
+                }
+              />
+              <p className="mt-2 text-xs text-[#6B7280]">
+                Check when the flat clinic fee is in hand.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-3">
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className="font-heading text-2xl font-bold text-[#14532D]">
+                    {formatCurrency(collected)}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#6B7280]">
+                    {paidCount}/{enrolled.length || 0} players paid ·{" "}
+                    {formatCurrency(expected)} expected
+                  </p>
+                </div>
+                {enrolled.length > 0 && paidCount < enrolled.length ? (
+                  <button
+                    type="button"
+                    onClick={() => setTab("roster")}
+                    className="shrink-0 text-sm font-semibold text-[#16A34A]"
+                  >
+                    Mark players →
+                  </button>
+                ) : null}
+              </div>
+              {enrolled.length > 0 ? (
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#E5E7EB]">
+                  <div
+                    className="h-full rounded-full bg-[#16A34A] transition-all"
+                    style={{
+                      width: `${Math.round((paidCount / enrolled.length) * 100)}%`,
+                    }}
+                  />
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-[#9CA3AF]">
+                  Add players on the Roster tab, then mark each ticket paid.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -198,27 +304,82 @@ export function ClinicDetailPageClient() {
           {enrolled.length === 0 ? (
             <p className="text-sm text-[#9CA3AF]">No players enrolled yet.</p>
           ) : (
-            enrolled.map((s) => (
-              <div key={s.id} className="coach-card flex items-center gap-3 p-3">
-                <InitialsAvatar name={s.name} size="sm" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-heading text-sm font-semibold">{s.name}</p>
-                  <p className="text-xs text-[#9CA3AF]">{s.mobile || s.email}</p>
+            enrolled.map((s) => {
+              const playerPaid = clinicEnrollmentPaymentStatus(clinic, s.id) === "paid";
+              return (
+                <div key={s.id} className="coach-card flex items-center gap-3 p-3">
+                  <InitialsAvatar name={s.name} size="sm" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-heading text-sm font-semibold">{s.name}</p>
+                    <p className="text-xs text-[#9CA3AF]">{s.mobile || s.email}</p>
+                    {isPerPlayer ? (
+                      <p
+                        className={cn(
+                          "mt-0.5 text-xs font-medium",
+                          playerPaid ? "text-[#6B7280]" : "text-[#C2410C]"
+                        )}
+                      >
+                        {formatCurrency(clinic.pricePerPlayer ?? 0)}{" "}
+                        {playerPaid ? "ticket" : "due"}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    {isPerPlayer ? (
+                      <button
+                        type="button"
+                        aria-pressed={playerPaid}
+                        aria-label={
+                          playerPaid
+                            ? `${s.name} paid — tap to mark unpaid`
+                            : `Mark ${s.name} paid`
+                        }
+                        className={cn(
+                          "font-heading inline-flex min-h-[36px] items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors",
+                          playerPaid
+                            ? "border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]"
+                            : "border-[#16A34A] bg-white text-[#16A34A] active:bg-[#F0FDF4]"
+                        )}
+                        onClick={() =>
+                          void mutations.setEnrollmentPayment
+                            .mutateAsync({
+                              studentId: s.id,
+                              status: playerPaid ? "unpaid" : "paid",
+                            })
+                            .then(() =>
+                              showToast(playerPaid ? "Marked unpaid" : "Marked paid")
+                            )
+                            .catch((e) =>
+                              showToast(e instanceof Error ? e.message : "Failed", "error")
+                            )
+                        }
+                      >
+                        {playerPaid ? (
+                          <CheckCircle2 className="h-4 w-4" />
+                        ) : (
+                          <Check className="h-4 w-4" />
+                        )}
+                        {playerPaid ? "Paid" : "Mark paid"}
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="text-xs font-semibold text-[#EF4444]"
+                      onClick={() =>
+                        void mutations.remove
+                          .mutateAsync(s.id)
+                          .then(() => showToast("Removed"))
+                          .catch((e) =>
+                            showToast(e instanceof Error ? e.message : "Failed", "error")
+                          )
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  className="text-xs font-semibold text-[#EF4444]"
-                  onClick={() =>
-                    void mutations.remove
-                      .mutateAsync(s.id)
-                      .then(() => showToast("Removed"))
-                      .catch((e) => showToast(e instanceof Error ? e.message : "Failed", "error"))
-                  }
-                >
-                  Remove
-                </button>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}

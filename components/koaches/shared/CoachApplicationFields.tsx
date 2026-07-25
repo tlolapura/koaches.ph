@@ -9,7 +9,6 @@ import {
 import { joinPersonName } from "@/lib/koaches/person-name";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
-import { SpecializationPicker } from "@/components/koaches/shared/SpecializationPicker";
 
 export type ApplicationFieldStep = "identity" | "coaching" | "business";
 
@@ -107,15 +106,11 @@ export function CoachApplicationFields({ step, draft, onDraftChange }: CoachAppl
   if (step === "coaching") {
     return (
       <div className="coach-form">
-        <CoachSheetField label="What do you coach?" htmlFor="apply-specialization">
-          <SpecializationPicker
-            id="apply-specialization"
-            value={draft.specialization}
-            onChange={(specialization) => onDraftChange({ specialization })}
-            required
-          />
-        </CoachSheetField>
-        <CoachSheetField label="About your coaching" htmlFor="apply-bio">
+        <CoachSheetField
+          label="Profile bio"
+          htmlFor="apply-bio"
+          hint="This appears on your public profile so players know who you are."
+        >
           <textarea
             id="apply-bio"
             className="coach-input min-h-[120px] resize-none"

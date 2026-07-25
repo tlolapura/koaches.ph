@@ -39,6 +39,9 @@ type SkillRatingPanelProps = {
   onActionsChange?: (actions: SkillRatingActions | null) => void;
   initialBefore?: SkillRating[];
   initialAfter?: SkillRating[];
+  /** Covered lesson IDs from another player with the same lesson set — applied only via button. */
+  copyCoveredSkillIds?: string[];
+  copyCoveredFromName?: string;
   rubricId?: SkillRubricId;
   /** @deprecated Use rubricId */
   templateId?: SkillRubricId;
@@ -211,6 +214,8 @@ export function SkillRatingPanel({
   onStepChange,
   initialBefore,
   initialAfter,
+  copyCoveredSkillIds,
+  copyCoveredFromName,
   rubricId,
   templateId,
   customSkillIds,
@@ -296,8 +301,20 @@ export function SkillRatingPanel({
     );
   };
 
+  const copyCoveredSkills = () => {
+    if (!copyCoveredSkillIds?.length) return;
+    const covered = new Set(copyCoveredSkillIds);
+    setBefore((prev) =>
+      prev.map((s) => ({ ...s, skipped: covered.has(s.skillId) ? false : true }))
+    );
+    setAfter((prev) =>
+      prev.map((s) => ({ ...s, skipped: covered.has(s.skillId) ? false : true }))
+    );
+  };
+
   const ratedCount = before.filter((s) => s.skipped === false).length;
   const skippedCount = before.length - ratedCount;
+  const canCopyCovered = step === "coverage" && Boolean(copyCoveredSkillIds?.length);
 
   const goToFeedback = useCallback(() => {
     if (!feedback.strengths && !feedback.toImprove && !feedback.generalNote && !feedbackPrefilled.current) {
@@ -412,6 +429,16 @@ export function SkillRatingPanel({
 
         {step === "coverage" ? (
           <div className="mt-5 space-y-6">
+            {canCopyCovered ? (
+              <button
+                type="button"
+                onClick={copyCoveredSkills}
+                className="coach-btn-outline w-full text-sm"
+              >
+                Copy skills covered
+                {copyCoveredFromName ? ` from ${copyCoveredFromName}` : ""}
+              </button>
+            ) : null}
             {skillsByCategory.length === 0 ? (
               <div className="rounded-xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-4 text-sm text-[#6B7280]">
                 No skills configured yet for this session.

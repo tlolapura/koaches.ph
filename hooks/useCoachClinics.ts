@@ -12,6 +12,7 @@ import {
   fetchClinicsAction,
   removeStudentFromClinicAction,
   updateClinicAction,
+  updateClinicEnrollmentPaymentAction,
   updateClinicPaymentAction,
   updateClinicSessionAttendanceAction,
   type CreateClinicInput,
@@ -116,6 +117,16 @@ export function useClinicMutations(coachId: string, clinicId: string) {
     }),
     setPayment: useMutation({
       mutationFn: (status: SessionPaymentStatus) => updateClinicPaymentAction(clinicId, status),
+      onSuccess: bump,
+    }),
+    setEnrollmentPayment: useMutation({
+      mutationFn: ({
+        studentId,
+        status,
+      }: {
+        studentId: string;
+        status: SessionPaymentStatus;
+      }) => updateClinicEnrollmentPaymentAction(clinicId, studentId, status),
       onSuccess: bump,
     }),
     cancel: useMutation({

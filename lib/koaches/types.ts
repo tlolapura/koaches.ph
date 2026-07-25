@@ -364,6 +364,11 @@ export type ClinicStatus = "draft" | "active" | "canceled" | "done";
 
 export type ClinicPricingMode = "per-player" | "flat";
 
+export type ClinicEnrollment = {
+  studentId: string;
+  paymentStatus: SessionPaymentStatus;
+};
+
 export type Clinic = {
   id: string;
   coachId: string;
@@ -376,10 +381,17 @@ export type Clinic = {
   pricePerPlayer?: number;
   /** Flat fee for the whole clinic (PHP). Used when pricingMode is flat. */
   flatPrice?: number;
+  /**
+   * Series payment flag.
+   * Flat clinics: toggled on the clinic.
+   * Per-player clinics: derived — paid when every enrolled player is paid.
+   */
   paymentStatus: SessionPaymentStatus;
   status: ClinicStatus;
   notes?: string;
   enrolledStudentIds: string[];
+  /** Roster with per-player payment (per-player clinics). */
+  enrollments: ClinicEnrollment[];
   createdAt: string;
   updatedAt?: string;
 };

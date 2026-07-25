@@ -4,7 +4,6 @@ import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useEffect, useState } from "react";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
-import { SpecializationPicker } from "@/components/koaches/shared/SpecializationPicker";
 import {
   formatCoachingLevelsLabel,
   resolveCoachCoachingLevels,
@@ -41,7 +40,6 @@ export default function ProfilePage() {
   const [pricingOpen, setPricingOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [bio, setBio] = useState("");
-  const [editSpecialization, setEditSpecialization] = useState("");
   const [pricing, setPricing] = useState<import("@/lib/koaches/types").CoachSessionPricing>(DEFAULT_SESSION_PRICING);
   const [coachingLevels, setCoachingLevels] = useState<CoachingLevelId[]>(["intermediate"]);
   const [savingBio, setSavingBio] = useState(false);
@@ -52,7 +50,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!coach) return;
     setBio(coach.bio);
-    setEditSpecialization(coach.specialization ?? "");
     setPricing(coach.sessionPricing ?? DEFAULT_SESSION_PRICING);
     setCoachingLevels(resolveCoachCoachingLevels(coach));
   }, [coach]);
@@ -76,7 +73,6 @@ export default function ProfilePage() {
     );
   }
 
-  const specialization = coach.specialization?.trim() ?? "";
   const displayName = coachGreetingLabel(coach);
   const joinedLabel = coach.createdAt
     ? formatDisplayDate(coach.createdAt)
@@ -126,22 +122,9 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            {(specialization || joinedLabel) ? (
-              <div className="mt-4 space-y-2">
-                {specialization ? (
-                  <span className="inline-flex w-fit items-center rounded-full bg-[#F0FDF4] px-3 py-1.5 text-xs font-semibold text-[#166534] ring-1 ring-[#BBF7D0]">
-                    {specialization}
-                  </span>
-                ) : null}
-                {joinedLabel ? (
-                  <p className="text-xs text-[#9CA3AF]">Joined {joinedLabel}</p>
-                ) : null}
-              </div>
-            ) : (
-              <p className="mt-4 text-xs leading-relaxed text-[#9CA3AF]">
-                Add a specialization so players know what you coach.
-              </p>
-            )}
+            {joinedLabel ? (
+              <p className="mt-4 text-xs text-[#9CA3AF]">Joined {joinedLabel}</p>
+            ) : null}
           </div>
         </div>
       </div>
@@ -196,7 +179,7 @@ export default function ProfilePage() {
       <CoachBottomSheet
         open={editOpen}
         onClose={() => setEditOpen(false)}
-        title="Edit bio & focus"
+        title="Edit bio"
         footer={
           <CoachSheetFooter>
             <CoachButton type="submit" form={EDIT_BIO_FORM_ID} loading={savingBio} loadingLabel="Saving…">
@@ -212,7 +195,7 @@ export default function ProfilePage() {
             e.preventDefault();
             setSavingBio(true);
             try {
-              await updateCoachBioAction(coachId, bio, editSpecialization);
+              await updateCoachBioAction(coachId, bio);
               invalidateCoachProfile(coachId);
               await refresh();
               showToast("Bio updated!");
@@ -231,13 +214,6 @@ export default function ProfilePage() {
               placeholder="Tell students about your coaching style and experience"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-            />
-          </CoachSheetField>
-          <CoachSheetField label="What do you coach?">
-            <SpecializationPicker
-              id="coach-profile-specialization"
-              value={editSpecialization}
-              onChange={setEditSpecialization}
             />
           </CoachSheetField>
           <button type="submit" form={EDIT_BIO_FORM_ID} className="hidden" />

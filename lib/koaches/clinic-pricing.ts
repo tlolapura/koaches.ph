@@ -1,5 +1,5 @@
 import { format, parseISO } from "date-fns";
-import type { Clinic, Session, SessionAttendanceEntry, Student } from "@/lib/koaches/types";
+import type { Clinic, Session, SessionAttendanceEntry, SessionPaymentStatus, Student } from "@/lib/koaches/types";
 import { formatCurrency } from "@/lib/utils";
 
 export function clinicPricingMode(clinic: Pick<Clinic, "pricePerPlayer" | "flatPrice">): "per-player" | "flat" {
@@ -17,6 +17,35 @@ export function clinicExpectedRevenue(
     return clinic.flatPrice ?? 0;
   }
   return (clinic.pricePerPlayer ?? 0) * clinic.enrolledStudentIds.length;
+}
+
+/** Collected revenue — per-player uses paid enrollments; flat uses clinic payment flag. */
+export function clinicCollectedRevenue(
+  clinic: Pick<
+    Clinic,
+    "pricePerPlayer" | "flatPrice" | "enrolledStudentIds" | "enrollments" | "paymentStatus"
+  >
+): number {
+  if (clinicPricingMode(clinic) === "flat") {
+    return clinic.paymentStatus === "paid" ? clinic.flatPrice ?? 0 : 0;
+  }
+  const paidCount = (clinic.enrollments ?? []).filter((e) => e.paymentStatus === "paid").length;
+  return (clinic.pricePerPlayer ?? 0) * paidCount;
+}
+
+export function clinicPaidEnrollmentCount(
+  clinic: Pick<Clinic, "enrollments">
+): number {
+  return (clinic.enrollments ?? []).filter((e) => e.paymentStatus === "paid").length;
+}
+
+export function clinicEnrollmentPaymentStatus(
+  clinic: Pick<Clinic, "enrollments">,
+  studentId: string
+): SessionPaymentStatus {
+  return (
+    clinic.enrollments?.find((e) => e.studentId === studentId)?.paymentStatus ?? "unpaid"
+  );
 }
 
 export function formatClinicPriceSummary(

@@ -1,5 +1,6 @@
 import type {
   Clinic,
+  ClinicEnrollment,
   CoachAchievement,
   CoachApplication,
   CoachProfile,
@@ -528,7 +529,20 @@ export function sessionToDb(session: Session): DbSession {
   };
 }
 
-export function mapClinic(row: DbClinic, enrolledStudentIds: string[]): Clinic {
+export function mapClinic(row: DbClinic, enrollments: ClinicEnrollment[] = []): Clinic {
+  const enrolledStudentIds = enrollments.map((e) => e.studentId);
+  const perPlayer =
+    row.flat_price != null && row.flat_price > 0 && row.price_per_player == null
+      ? false
+      : true;
+  const allPaid =
+    enrollments.length > 0 && enrollments.every((e) => e.paymentStatus === "paid");
+  const paymentStatus = perPlayer
+    ? allPaid
+      ? "paid"
+      : "unpaid"
+    : (row.payment_status as Clinic["paymentStatus"]);
+
   return {
     id: row.id,
     coachId: row.coach_id,
@@ -539,10 +553,11 @@ export function mapClinic(row: DbClinic, enrolledStudentIds: string[]): Clinic {
     capacity: row.capacity,
     pricePerPlayer: row.price_per_player ?? undefined,
     flatPrice: row.flat_price ?? undefined,
-    paymentStatus: row.payment_status as Clinic["paymentStatus"],
+    paymentStatus,
     status: row.status as Clinic["status"],
     notes: row.notes ?? undefined,
     enrolledStudentIds,
+    enrollments,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

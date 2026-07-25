@@ -6,6 +6,7 @@ import { getSessionParticipants } from "@/lib/koaches/session-participants";
 import {
   formatParticipantProgramLabel,
   resolveParticipantProgramContext,
+  type ParticipantProgramContext,
 } from "@/lib/koaches/participant-program";
 import {
   filterRatedSkills,
@@ -20,6 +21,19 @@ import { SkillRatingPanel, type SkillRatingActions } from "@/components/koaches/
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { cn } from "@/lib/utils";
 import type { SessionDetailStep, SessionRatingStep } from "@/lib/koaches/session-detail-steps";
+import { resolveSkills } from "@/lib/koaches/constants";
+
+function lessonSetKey(ctx: ParticipantProgramContext): string {
+  return resolveSkills({
+    rubricId: ctx.rubricId,
+    customSkillIds: ctx.customSkillIds,
+    customSkills: ctx.customSkills,
+    skillLabelOverrides: ctx.skillLabelOverrides,
+  })
+    .map((skill) => skill.id)
+    .sort()
+    .join("|");
+}
 
 type SessionSkillRatingsSectionProps = {
   session: Session;
@@ -59,6 +73,9 @@ function ParticipantProgressPanel({
   onStepChange,
   onRatingActionsChange,
   coachLookup: coachLookupProp,
+  copyCoveredSkillIds,
+  copyCoveredFromName,
+  onCoverageSaved,
 }: {
   session: Session;
   participantId: string;
@@ -66,6 +83,9 @@ function ParticipantProgressPanel({
   onStepChange: (step: SessionDetailStep) => void;
   onRatingActionsChange?: (actions: SkillRatingActions | null) => void;
   coachLookup?: Parameters<typeof resolveParticipantProgramContext>[2];
+  copyCoveredSkillIds?: string[];
+  copyCoveredFromName?: string;
+  onCoverageSaved?: (skillIds: string[]) => void;
 }) {
   const participants = getSessionParticipants(session);
   const participant = participants.find((p) => p.id === participantId)!;
@@ -98,6 +118,8 @@ function ParticipantProgressPanel({
       participantName={participant.name}
       initialBefore={ratings.ratingsBefore}
       initialAfter={ratings.ratingsAfter}
+      copyCoveredSkillIds={copyCoveredSkillIds}
+      copyCoveredFromName={copyCoveredFromName}
       rubricId={ctx.rubricId}
       customSkillIds={ctx.customSkillIds}
       customSkills={ctx.customSkills}
@@ -111,6 +133,9 @@ function ParticipantProgressPanel({
       }}
       onSave={async (before, after, feedback) => {
         await saveRatings({ ratingsBefore: before, ratingsAfter: after });
+        onCoverageSaved?.(
+          before.filter((skill) => skill.skipped === false).map((skill) => skill.skillId)
+        );
 
         if (!participant.studentId) {
           return;
@@ -179,7 +204,49 @@ export function SessionSkillRatingsSection({
     [participants, session, coachLookup]
   );
 
+  const [savedCoverageByLessonSet, setSavedCoverageByLessonSet] = useState<
+    Record<string, { skillIds: string[]; fromId: string; fromName: string }>
+  >({});
+
+  const coverageSourceByLessonSet = useMemo(() => {
+    const coverage = new Map<
+      string,
+      { skillIds: string[]; fromId: string; fromName: string }
+    >();
+    for (const participant of participants) {
+      const ctx = contexts.get(participant.id);
+      if (!ctx) continue;
+      const key = lessonSetKey(ctx);
+      const saved = savedCoverageByLessonSet[key];
+      if (saved && !coverage.has(key)) {
+        coverage.set(key, saved);
+        continue;
+      }
+      const covered = filterRatedSkills(
+        resolveParticipantProgress(session, participant.id).ratingsBefore ?? []
+      ).map((skill) => skill.skillId);
+      if (covered.length > 0 && !coverage.has(key)) {
+        coverage.set(key, {
+          skillIds: covered,
+          fromId: participant.id,
+          fromName: participant.name,
+        });
+      }
+    }
+    return coverage;
+  }, [contexts, participants, savedCoverageByLessonSet, session]);
+
   const active = participants.find((p) => p.id === activeId) ?? participants[0];
+  const activeContext = active ? contexts.get(active.id) : undefined;
+  const activeLessonSetKey = activeContext ? lessonSetKey(activeContext) : "";
+  const copySource =
+    active && activeLessonSetKey
+      ? coverageSourceByLessonSet.get(activeLessonSetKey)
+      : undefined;
+  /** Don't offer copy from the same player currently being rated. */
+  const copyCoveredFromOther =
+    copySource && copySource.fromId !== active?.id ? copySource : undefined;
+
   const nextUnratedId = active
     ? nextUnratedParticipantId(session, participantIds, active.id)
     : null;
@@ -282,6 +349,19 @@ export function SessionSkillRatingsSection({
           onStepChange={handleStepChange}
           onRatingActionsChange={handleRatingActionsChange}
           coachLookup={coachLookup}
+          copyCoveredSkillIds={copyCoveredFromOther?.skillIds}
+          copyCoveredFromName={copyCoveredFromOther?.fromName}
+          onCoverageSaved={(skillIds) => {
+            if (!activeLessonSetKey || !active) return;
+            setSavedCoverageByLessonSet((current) => ({
+              ...current,
+              [activeLessonSetKey]: {
+                skillIds,
+                fromId: active.id,
+                fromName: active.name,
+              },
+            }));
+          }}
         />
       </div>
     </div>

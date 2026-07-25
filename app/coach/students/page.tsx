@@ -200,11 +200,12 @@ export default function StudentsPage() {
       <CoachPageHeader
         title="Students"
         subtitle="Everyone you're coaching right now"
+        className="max-md:hidden"
         actions={
           <button
             type="button"
             onClick={() => setAddOpen(true)}
-            className="coach-btn-primary hidden md:inline-flex"
+            className="coach-btn-primary"
           >
             Add student
           </button>

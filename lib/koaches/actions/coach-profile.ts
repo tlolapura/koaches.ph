@@ -86,8 +86,8 @@ export async function updateCoachProfileAction(
   }
 }
 
-export async function updateCoachBioAction(coachId: string, bio: string, specialization: string) {
-  return updateCoachProfileAction(coachId, { bio, specialization });
+export async function updateCoachBioAction(coachId: string, bio: string) {
+  return updateCoachProfileAction(coachId, { bio });
 }
 
 export async function updateCoachPricingAction(coachId: string, sessionPricing: CoachSessionPricing) {
