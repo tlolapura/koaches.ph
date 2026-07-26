@@ -3,6 +3,7 @@ import type { CoachNavBadgeCounts } from "@/lib/koaches/coach-nav-notifications"
 export type AdminNavBadgeCounts = {
   pendingApplications: number;
   pendingPaymentReceipts: number;
+  pendingCourtRequests: number;
 };
 
 export function coachBadgeForNavHref(href: string, counts: CoachNavBadgeCounts): number {
@@ -36,8 +37,10 @@ export function adminBadgeForNavHref(href: string, counts: AdminNavBadgeCounts):
       return counts.pendingApplications;
     case "/admin/payments":
       return counts.pendingPaymentReceipts;
+    case "/admin/courts":
+      return counts.pendingCourtRequests;
     case "/admin/more":
-      return counts.pendingApplications;
+      return counts.pendingApplications + counts.pendingCourtRequests;
     default:
       return 0;
   }

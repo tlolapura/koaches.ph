@@ -14,7 +14,7 @@ import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import { CoachStudentSearchSelect } from "@/components/koaches/coach/CoachStudentSearchSelect";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
-import { useCourts } from "@/hooks/useCourts";
+import { useCoachCourts } from "@/hooks/useCourts";
 import { useCoachStudents } from "@/hooks/useCoachStudents";
 import { useCreateClinic } from "@/hooks/useCoachClinics";
 import type { ClinicSessionDraft } from "@/lib/koaches/types";
@@ -49,10 +49,10 @@ export function AddClinicSheet({ open, onClose }: AddClinicSheetProps) {
   const coachId = usePortalCoachId();
   const router = useRouter();
   const { showToast } = useCoachToast();
-  const { courts } = useCourts();
+  const { courts } = useCoachCourts(coachId);
   const { students } = useCoachStudents(coachId);
   const createClinic = useCreateClinic(coachId);
-  const activeCourts = useMemo(() => courts.filter((c) => c.isActive), [courts]);
+  const activeCourts = useMemo(() => courts.filter((c) => c.isActive !== false), [courts]);
   const defaultCourtId = activeCourts[0]?.id ?? "";
   const courtOptions = useMemo(
     () => activeCourts.map((c) => ({ value: c.id, label: c.name })),

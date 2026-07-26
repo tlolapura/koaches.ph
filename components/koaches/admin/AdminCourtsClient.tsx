@@ -3,29 +3,85 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExternalLink, MapPin, Plus, Search, Trash2 } from "lucide-react";
-import type { Court } from "@/lib/koaches/types";
+import type { Court, CourtRequest } from "@/lib/koaches/types";
 import {
+  approveCourtRequestAction,
   createCourtAction,
   deleteCourtAction,
+  linkCourtRequestToExistingAction,
+  rejectCourtRequestAction,
   updateCourtActiveAction,
 } from "@/lib/koaches/actions/courts";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
-import { cn } from "@/lib/utils";
+import { cn, formatDisplayDate } from "@/lib/utils";
 
 type AdminCourtsClientProps = {
   initialCourts: Court[];
+  initialRequests?: CourtRequest[];
 };
 
 const ADD_COURT_FORM_ID = "admin-add-court-form";
+const REVIEW_COURT_FORM_ID = "admin-review-court-form";
+
+type ReviewDraft = {
+  name: string;
+  address: string;
+  city: string;
+  region: string;
+  mapsUrl: string;
+};
 
 type FilterId = "all" | "active" | "inactive";
 
-export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
+function normalizeCourtName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Match by court name. Exact / near-exact names win even if city differs. */
+function findDuplicateCourts(courts: Court[], name: string, city?: string): Court[] {
+  const needle = normalizeCourtName(name);
+  if (!needle) return [];
+  const cityNeedle = normalizeCourtName(city ?? "");
+  const words = needle.split(" ").filter((w) => w.length > 2);
+
+  const scored = courts
+    .map((c) => {
+      const existing = normalizeCourtName(c.name);
+      if (!existing) return null;
+
+      let score = 0;
+      if (existing === needle) score = 100;
+      else if (existing.includes(needle) || needle.includes(existing)) score = 80;
+      else if (words.length > 0 && words.every((w) => existing.includes(w))) score = 60;
+      else if (words.some((w) => w.length > 3 && existing.includes(w))) score = 30;
+      else return null;
+
+      if (cityNeedle) {
+        const existingCity = normalizeCourtName(c.city ?? "");
+        if (existingCity === cityNeedle) score += 10;
+      }
+      return { court: c, score };
+    })
+    .filter((x): x is { court: Court; score: number } => !!x && x.score >= 60)
+    .sort((a, b) => b.score - a.score);
+
+  return scored.slice(0, 3).map((x) => x.court);
+}
+
+export function AdminCourtsClient({
+  initialCourts,
+  initialRequests = [],
+}: AdminCourtsClientProps) {
   const router = useRouter();
   const [courtList, setCourtList] = useState(initialCourts);
+  const [requests, setRequests] = useState(initialRequests);
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -34,9 +90,20 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
   const [mapsUrl, setMapsUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [busyCourtId, setBusyCourtId] = useState<string | null>(null);
+  const [busyRequestId, setBusyRequestId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
+  const [reviewing, setReviewing] = useState<CourtRequest | null>(null);
+  const [reviewDraft, setReviewDraft] = useState<ReviewDraft>({
+    name: "",
+    address: "",
+    city: "",
+    region: "",
+    mapsUrl: "",
+  });
+  const [pickingDuplicate, setPickingDuplicate] = useState(false);
+  const [duplicateSearch, setDuplicateSearch] = useState("");
 
   const resetForm = () => {
     setName("");
@@ -143,6 +210,113 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
     }
   };
 
+  const openReview = (req: CourtRequest, startAsDuplicate = false) => {
+    setError(null);
+    setReviewing(req);
+    setReviewDraft({
+      name: req.name,
+      address: req.address,
+      city: req.city ?? "",
+      region: req.region ?? "",
+      mapsUrl: req.mapsUrl ?? "",
+    });
+    setPickingDuplicate(startAsDuplicate);
+    setDuplicateSearch(req.name);
+  };
+
+  const approveRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewing) return;
+    const requestId = reviewing.id;
+    setBusyRequestId(requestId);
+    setError(null);
+    try {
+      const result = await approveCourtRequestAction(requestId, {
+        name: reviewDraft.name.trim(),
+        address: reviewDraft.address.trim(),
+        city: reviewDraft.city.trim(),
+        region: reviewDraft.region.trim(),
+        mapsUrl: reviewDraft.mapsUrl.trim(),
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+      if (result.court) {
+        const court = result.court;
+        setCourtList((prev) => [...prev, court]);
+      }
+      setReviewing(null);
+      setPickingDuplicate(false);
+      router.refresh();
+    } finally {
+      setBusyRequestId(null);
+    }
+  };
+
+  const assignExistingCourt = async (requestId: string, courtId: string) => {
+    setBusyRequestId(requestId);
+    setError(null);
+    try {
+      const result = await linkCourtRequestToExistingAction(requestId, courtId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+      setReviewing(null);
+      setPickingDuplicate(false);
+      router.refresh();
+    } finally {
+      setBusyRequestId(null);
+    }
+  };
+
+  const possibleDuplicates = useMemo(
+    () => findDuplicateCourts(courtList, reviewDraft.name, reviewDraft.city),
+    [courtList, reviewDraft.city, reviewDraft.name]
+  );
+
+  const manualDuplicateChoices = useMemo(() => {
+    const q = duplicateSearch.trim().toLowerCase();
+    const active = courtList.filter((c) => c.isActive !== false);
+    if (!q) return active.slice(0, 8);
+    return active
+      .filter((c) =>
+        [c.name, c.address, c.city, c.region].some((value) =>
+          value?.toLowerCase().includes(q)
+        )
+      )
+      .slice(0, 12);
+  }, [courtList, duplicateSearch]);
+
+  const duplicatesByRequestId = useMemo(() => {
+    const map = new Map<string, Court[]>();
+    for (const req of requests) {
+      map.set(req.id, findDuplicateCourts(courtList, req.name, req.city));
+    }
+    return map;
+  }, [courtList, requests]);
+
+  const rejectRequest = async (requestId: string) => {
+    setBusyRequestId(requestId);
+    setError(null);
+    try {
+      const result = await rejectCourtRequestAction(requestId);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setRequests((prev) => prev.filter((r) => r.id !== requestId));
+      setReviewing(null);
+      setPickingDuplicate(false);
+      router.refresh();
+    } finally {
+      setBusyRequestId(null);
+    }
+  };
+
   const filters: { id: FilterId; label: string; count: number }[] = [
     { id: "all", label: "All", count: stats.total },
     { id: "active", label: "Active", count: stats.active },
@@ -175,6 +349,101 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
           {error}
         </p>
       )}
+
+      {requests.length > 0 ? (
+        <section className="mb-6 overflow-hidden rounded-2xl border border-[#FDE68A] bg-[#FFFBEB]">
+          <div className="border-b border-[#FDE68A] px-4 py-3 sm:px-5">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-[#92400E]">
+              Coach requests
+            </p>
+            <h2 className="font-heading mt-0.5 text-lg font-bold text-[#78350F]">
+              {requests.length} waiting for review
+            </h2>
+          </div>
+          <ul className="divide-y divide-[#FDE68A]/70">
+            {requests.map((req) => {
+              const busy = busyRequestId === req.id;
+              const duplicates = duplicatesByRequestId.get(req.id) ?? [];
+              const topDuplicate = duplicates[0];
+              return (
+                <li key={req.id} className="px-4 py-4 sm:px-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-heading font-semibold text-[#111827]">{req.name}</p>
+                        {topDuplicate ? (
+                          <span className="rounded-full bg-[#92400E] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                            Duplicate
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-0.5 text-sm text-[#6B7280]">{req.address}</p>
+                      <p className="mt-0.5 text-xs text-[#9CA3AF]">
+                        {[req.city, req.region].filter(Boolean).join(", ")}
+                        {req.coachName ? ` · from ${req.coachName}` : ""}
+                        {req.createdAt ? ` · ${formatDisplayDate(req.createdAt.slice(0, 10))}` : ""}
+                      </p>
+                      {topDuplicate ? (
+                        <p className="mt-1.5 text-xs font-medium text-[#92400E]">
+                          Matches existing: {topDuplicate.name}
+                          {topDuplicate.city ? ` · ${topDuplicate.city}` : ""}
+                        </p>
+                      ) : null}
+                      {req.mapsUrl ? (
+                        <a
+                          href={req.mapsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
+                        >
+                          Maps <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : null}
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      {topDuplicate ? (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void assignExistingCourt(req.id, topDuplicate.id)}
+                          className="inline-flex h-10 items-center rounded-xl bg-[#92400E] px-3.5 text-sm font-semibold text-white hover:bg-[#78350F] disabled:opacity-50"
+                        >
+                          {busy ? "…" : "Use existing court"}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => openReview(req, true)}
+                          className="inline-flex h-10 items-center rounded-xl px-3.5 text-sm font-semibold text-[#92400E] ring-1 ring-[#FDE68A] hover:bg-[#FFFBEB] disabled:opacity-50"
+                        >
+                          Mark as duplicate
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void rejectRequest(req.id)}
+                        className="inline-flex h-10 items-center rounded-xl px-3.5 text-sm font-semibold text-[#B91C1C] hover:bg-[#FEF2F2] disabled:opacity-50"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => openReview(req)}
+                        className="inline-flex h-10 items-center rounded-xl bg-[#16A34A] px-3.5 text-sm font-semibold text-white hover:bg-[#15803D] disabled:opacity-50"
+                      >
+                        {busy ? "…" : "Review"}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-white p-4 ring-1 ring-[#BBF7D0]/80">
@@ -234,6 +503,210 @@ export function AdminCourtsClient({ initialCourts }: AdminCourtsClientProps) {
           ))}
         </div>
       </div>
+
+      <CoachBottomSheet
+        open={!!reviewing}
+        onClose={() => {
+          if (busyRequestId) return;
+          setReviewing(null);
+          setPickingDuplicate(false);
+        }}
+        title={pickingDuplicate ? "Mark as duplicate" : "Review court request"}
+        subtitle={
+          pickingDuplicate
+            ? "Pick the existing court to assign to this coach."
+            : reviewing?.coachName
+              ? `From ${reviewing.coachName}. Fix any details before adding it.`
+              : "Fix any details before adding it."
+        }
+        footer={
+          pickingDuplicate ? (
+            <div className="flex gap-2">
+              <CoachButton
+                type="button"
+                variant="outline"
+                className="flex-1"
+                disabled={!!busyRequestId}
+                onClick={() => setPickingDuplicate(false)}
+              >
+                Back
+              </CoachButton>
+              <CoachButton
+                type="button"
+                variant="outline"
+                className="flex-1"
+                disabled={!!busyRequestId}
+                onClick={() => reviewing && void rejectRequest(reviewing.id)}
+              >
+                Reject instead
+              </CoachButton>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <CoachButton
+                type="button"
+                variant="outline"
+                className="flex-1"
+                disabled={!!busyRequestId}
+                onClick={() => reviewing && void rejectRequest(reviewing.id)}
+              >
+                Reject
+              </CoachButton>
+              <CoachButton
+                type="submit"
+                form={REVIEW_COURT_FORM_ID}
+                className="flex-1"
+                loading={!!busyRequestId}
+                loadingLabel="Adding…"
+              >
+                Approve court
+              </CoachButton>
+            </div>
+          )
+        }
+      >
+        {pickingDuplicate ? (
+          <div className="space-y-3">
+            <label className="relative block">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+              <input
+                type="search"
+                value={duplicateSearch}
+                onChange={(e) => setDuplicateSearch(e.target.value)}
+                placeholder="Search existing courts…"
+                className="h-11 w-full rounded-xl border border-[#E5E7EB] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none ring-[#16A34A]/30 placeholder:text-[#9CA3AF] focus:border-[#86EFAC] focus:ring-2"
+              />
+            </label>
+            {manualDuplicateChoices.length === 0 ? (
+              <p className="text-sm text-[#6B7280]">No courts match that search.</p>
+            ) : (
+              <ul className="space-y-2">
+                {manualDuplicateChoices.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      disabled={!!busyRequestId || !reviewing}
+                      onClick={() => reviewing && void assignExistingCourt(reviewing.id, c.id)}
+                      className="flex w-full items-start justify-between gap-3 rounded-xl border border-[#E5E7EB] px-3 py-3 text-left hover:border-[#92400E] hover:bg-[#FFFBEB] disabled:opacity-50"
+                    >
+                      <span className="min-w-0">
+                        <span className="font-heading block text-sm font-semibold text-[#111827]">
+                          {c.name}
+                        </span>
+                        <span className="block text-xs text-[#6B7280]">
+                          {[c.address, c.city, c.region].filter(Boolean).join(" · ")}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-lg bg-[#92400E] px-2.5 py-1.5 text-xs font-semibold text-white">
+                        Use this
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ) : (
+        <form
+          id={REVIEW_COURT_FORM_ID}
+          className="coach-form"
+          onSubmit={(e) => void approveRequest(e)}
+        >
+          {possibleDuplicates.length > 0 ? (
+            <div className="mb-4 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5">
+              <p className="text-xs font-semibold text-[#92400E]">Duplicate of an existing court</p>
+              <ul className="mt-1.5 space-y-1.5">
+                {possibleDuplicates.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-sm text-[#78350F]">
+                      {c.name}
+                      {c.city ? ` · ${c.city}` : ""}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={!!busyRequestId || !reviewing}
+                      onClick={() => reviewing && void assignExistingCourt(reviewing.id, c.id)}
+                      className="shrink-0 rounded-lg bg-[#92400E] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#78350F] disabled:opacity-50"
+                    >
+                      Use this court
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={() => {
+                  setDuplicateSearch(reviewDraft.name);
+                  setPickingDuplicate(true);
+                }}
+                className="mt-2 text-xs font-semibold text-[#92400E] underline underline-offset-2"
+              >
+                Pick a different court
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setDuplicateSearch(reviewDraft.name);
+                setPickingDuplicate(true);
+              }}
+              className="mb-4 flex w-full items-center justify-center rounded-xl border border-dashed border-[#FDE68A] bg-[#FFFBEB] px-3 py-2.5 text-sm font-semibold text-[#92400E] hover:bg-[#FEF3C7]"
+            >
+              It&apos;s a duplicate — pick existing court
+            </button>
+          )}
+          <CoachSheetField label="Court name" htmlFor="review-court-name">
+            <input
+              id="review-court-name"
+              className="coach-input"
+              value={reviewDraft.name}
+              onChange={(e) => setReviewDraft((d) => ({ ...d, name: e.target.value }))}
+              required
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Address" htmlFor="review-court-address">
+            <input
+              id="review-court-address"
+              className="coach-input"
+              value={reviewDraft.address}
+              onChange={(e) => setReviewDraft((d) => ({ ...d, address: e.target.value }))}
+              required
+            />
+          </CoachSheetField>
+          <CoachSheetField label="City" htmlFor="review-court-city">
+            <input
+              id="review-court-city"
+              className="coach-input"
+              value={reviewDraft.city}
+              onChange={(e) => setReviewDraft((d) => ({ ...d, city: e.target.value }))}
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Region" htmlFor="review-court-region">
+            <input
+              id="review-court-region"
+              className="coach-input"
+              value={reviewDraft.region}
+              onChange={(e) => setReviewDraft((d) => ({ ...d, region: e.target.value }))}
+            />
+          </CoachSheetField>
+          <CoachSheetField
+            label="Google Maps link (optional)"
+            htmlFor="review-court-maps"
+            hint="Approving adds this court and assigns it to the coach."
+          >
+            <input
+              id="review-court-maps"
+              className="coach-input"
+              type="url"
+              value={reviewDraft.mapsUrl}
+              onChange={(e) => setReviewDraft((d) => ({ ...d, mapsUrl: e.target.value }))}
+              placeholder="https://maps.google.com/..."
+            />
+          </CoachSheetField>
+        </form>
+        )}
+      </CoachBottomSheet>
 
       <CoachBottomSheet
         open={addOpen}

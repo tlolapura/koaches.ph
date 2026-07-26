@@ -52,16 +52,20 @@ export function CoachBottomSheet({
   useEffect(() => setMounted(true), []);
   useSheetBodyLock(open);
 
+  // Keep a stable Escape handler without re-focusing the panel on every parent re-render
+  // (inline onClose identities would otherwise steal focus from inputs on each keystroke).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!open) return;
-    // Move keyboard focus into the dialog so it doesn't stay on the page behind.
     panelRef.current?.focus();
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || !mounted) return null;
 

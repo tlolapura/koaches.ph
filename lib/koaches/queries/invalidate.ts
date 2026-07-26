@@ -65,6 +65,13 @@ export function invalidateCoachProfile(coachId: string) {
   });
 }
 
+export function invalidateCoachCourts(coachId: string) {
+  const qc = getQueryClient();
+  void qc.invalidateQueries({ queryKey: [...coachKeys.all, "courts"] });
+  void qc.invalidateQueries({ queryKey: [...coachKeys.all, "courts", coachId] });
+  void qc.invalidateQueries({ queryKey: [...coachKeys.all, "court-requests", coachId] });
+}
+
 export function setCoachProfileCache(coachId: string, coach: CoachProfile) {
   getQueryClient().setQueryData([...coachKeys.all, "profile", coachId], coach);
 }

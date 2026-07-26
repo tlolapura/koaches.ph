@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchCourtsAction, fetchCourtsForCoachAction } from "@/lib/koaches/actions/courts";
+import { fetchCourtsAction, fetchCourtsForCoachAction, fetchMyCourtRequestsAction } from "@/lib/koaches/actions/courts";
 import { coachKeys } from "@/lib/koaches/queries/keys";
 import type { Court } from "@/lib/koaches/types";
 
@@ -35,6 +35,20 @@ export function useCoachCourts(coachId: string) {
   return {
     courts: query.data ?? [],
     loading: query.isPending,
+  };
+}
+
+export function useMyCourtRequests(coachId: string) {
+  const query = useQuery({
+    queryKey: [...coachKeys.all, "court-requests", coachId] as const,
+    queryFn: () => fetchMyCourtRequestsAction(),
+    enabled: !!coachId,
+  });
+
+  return {
+    requests: query.data ?? [],
+    loading: query.isPending,
+    refresh: () => query.refetch(),
   };
 }
 

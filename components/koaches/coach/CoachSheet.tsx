@@ -1,11 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type CoachSheetFieldProps = {
   label: string;
-  hint?: string;
-  children: React.ReactNode;
+  hint?: ReactNode;
+  children: ReactNode;
   className?: string;
   htmlFor?: string;
 };

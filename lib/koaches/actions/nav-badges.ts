@@ -113,6 +113,19 @@ function buildAdminNotifications(counts: AdminNavBadgeCounts): PortalNotificatio
     });
   }
 
+  if (counts.pendingCourtRequests > 0) {
+    items.push({
+      id: "courts-pending",
+      href: "/admin/courts",
+      title:
+        counts.pendingCourtRequests === 1
+          ? "1 court request"
+          : `${counts.pendingCourtRequests} court requests`,
+      message: "Review courts coaches asked to add.",
+      tone: "green",
+    });
+  }
+
   return items;
 }
 
@@ -120,8 +133,11 @@ export async function adminNotificationsAction(): Promise<AdminNotificationsPayl
   await requireAdmin();
   const supabase = createServiceClient();
 
-  const [{ count: pendingApplications, error: appsError }, { count: pendingPaymentReceipts, error: paymentsError }] =
-    await Promise.all([
+  const [
+    { count: pendingApplications, error: appsError },
+    { count: pendingPaymentReceipts, error: paymentsError },
+    { count: pendingCourtRequests, error: courtsError },
+  ] = await Promise.all([
       supabase
         .from("coach_applications")
         .select("*", { count: "exact", head: true })
@@ -130,14 +146,20 @@ export async function adminNotificationsAction(): Promise<AdminNotificationsPayl
         .from("coach_payment_submissions")
         .select("*", { count: "exact", head: true })
         .eq("status", "pending"),
+      supabase
+        .from("court_requests")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
     ]);
 
   if (appsError) throw appsError;
   if (paymentsError) throw paymentsError;
+  if (courtsError) throw courtsError;
 
   const counts = {
     pendingApplications: pendingApplications ?? 0,
     pendingPaymentReceipts: pendingPaymentReceipts ?? 0,
+    pendingCourtRequests: pendingCourtRequests ?? 0,
   };
 
   return {

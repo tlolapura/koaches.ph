@@ -11,7 +11,8 @@ type AdminNotificationBellProps = {
 
 export function AdminNotificationBell({ align = "right", className }: AdminNotificationBellProps) {
   const { counts, items, loading } = useAdminNavBadges();
-  const total = counts.pendingApplications + counts.pendingPaymentReceipts;
+  const total =
+    counts.pendingApplications + counts.pendingPaymentReceipts + counts.pendingCourtRequests;
 
   return (
     <NotificationBell

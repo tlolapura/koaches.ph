@@ -6,6 +6,7 @@ import { adminNotificationsAction } from "@/lib/koaches/actions/nav-badges";
 const EMPTY_COUNTS = {
   pendingApplications: 0,
   pendingPaymentReceipts: 0,
+  pendingCourtRequests: 0,
 } as const;
 
 export function useAdminNavBadges() {

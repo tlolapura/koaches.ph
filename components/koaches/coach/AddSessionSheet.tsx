@@ -2,6 +2,7 @@
 
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { format } from "date-fns";
 import type { Session, SessionParticipant, SessionPaymentStatus } from "@/lib/koaches/types";
 import { notifySessionsUpdated, useCoachSessions } from "@/hooks/useCoachSessions";
@@ -715,14 +716,37 @@ export function AddSessionSheet({
           </>
         )}
 
-        <CoachSheetField label="Court">
+        <CoachSheetField
+          label="Court"
+          hint={
+            courts.length === 0 ? (
+              <>
+                No courts on your list yet.{" "}
+                <Link href="/coach/profile?courts=1" className="font-semibold text-[#16A34A]">
+                  Add or request one
+                </Link>
+              </>
+            ) : (
+              <>
+                Missing a venue?{" "}
+                <Link href="/coach/profile?courts=1" className="font-semibold text-[#16A34A]">
+                  Manage courts
+                </Link>
+              </>
+            )
+          }
+        >
           <CoachSelect
             value={courtId}
             onChange={setCourtId}
-            options={courts.map((c) => ({
-              value: c.id,
-              label: c.name,
-            }))}
+            options={
+              courts.length > 0
+                ? courts.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                  }))
+                : [{ value: "", label: "No courts yet" }]
+            }
           />
         </CoachSheetField>
 

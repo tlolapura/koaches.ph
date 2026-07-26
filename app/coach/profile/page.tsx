@@ -33,6 +33,7 @@ import {
   updateCoachCoachingLevelsAction,
 } from "@/lib/koaches/actions/coach-profile";
 import { CoachContactSocialsCard } from "@/components/koaches/coach/CoachContactSocialsCard";
+import { CoachCourtsCard } from "@/components/koaches/coach/CoachCourtsCard";
 import { CoachPublicProfileLinkCard } from "@/components/koaches/coach/CoachPublicProfileLinkCard";
 import { invalidateCoachProfile } from "@/lib/koaches/queries/invalidate";
 import { coachGreetingLabel } from "@/lib/koaches/person-name";
@@ -58,6 +59,7 @@ function ProfilePageContent() {
   const [pricingOpen, setPricingOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [skillsOpen, setSkillsOpen] = useState(() => searchParams.get("skills") === "1");
+  const [courtsOpen, setCourtsOpen] = useState(() => searchParams.get("courts") === "1");
   const [bio, setBio] = useState("");
   const [pricing, setPricing] = useState<import("@/lib/koaches/types").CoachSessionPricing>(DEFAULT_SESSION_PRICING);
   const [coachingLevels, setCoachingLevels] = useState<CoachingLevelId[]>(["intermediate"]);
@@ -67,7 +69,7 @@ function ProfilePageContent() {
   const { showToast } = useCoachToast();
 
   useEffect(() => {
-    if (searchParams.get("skills") === "1") {
+    if (searchParams.get("skills") === "1" || searchParams.get("courts") === "1") {
       router.replace(pathname, { scroll: false });
     }
   }, [searchParams, router, pathname]);
@@ -167,6 +169,16 @@ function ProfilePageContent() {
       <CoachPublicProfileLinkCard coach={coach} className="mt-4" />
 
       <CoachContactSocialsCard coachId={coachId} coach={coach} onSaved={refresh} />
+
+      <CoachCourtsCard
+        coachId={coachId}
+        coach={coach}
+        initialOpen={courtsOpen}
+        onSaved={() => {
+          invalidateCoachProfile(coachId);
+          void refresh();
+        }}
+      />
 
       <button
         type="button"

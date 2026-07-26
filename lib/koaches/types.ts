@@ -80,6 +80,24 @@ export type Court = {
   isActive?: boolean;
 };
 
+export type CourtRequestStatus = "pending" | "approved" | "rejected";
+
+export type CourtRequest = {
+  id: string;
+  coachId: string;
+  coachName?: string;
+  name: string;
+  address: string;
+  city: string;
+  region: string;
+  mapsUrl?: string;
+  status: CourtRequestStatus;
+  adminNote?: string;
+  createdCourtId?: string;
+  createdAt: string;
+  reviewedAt?: string;
+};
+
 export type PlatformOwner = {
   name: string;
   email: string;
@@ -157,6 +175,7 @@ export type CoachProfile = {
   /** Drop-in rates by group size */
   sessionPricing: CoachSessionPricing;
   /** Platform courts this coach teaches at (managed in admin) */
+  /** Platform courts this coach teaches at (coach can edit on Profile) */
   courtIds: string[];
   /** Public contact */
   mobile?: string;
