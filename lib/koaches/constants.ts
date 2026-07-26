@@ -35,6 +35,8 @@ export const RESERVED_SLUGS = new Set([
   "proposal-to-sarah",
   "proposal-to-sarazas",
   "proposal-to-jaysteel",
+  "instagram-soft-launch",
+  "instagram-posts",
   "terms",
   "privacy",
   "refund-policy",

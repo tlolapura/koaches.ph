@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ECFDF5"/>
+      <stop offset="100%" stop-color="#EFF6FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="390" height="844" fill="url(#g)"/>
+  <rect x="24" y="24" width="342" height="796" rx="28" fill="#fff" stroke="#E5E7EB" stroke-width="2"/>
+  <circle cx="195" cy="320" r="36" fill="#16A34A" opacity="0.15"/>
+  <text x="195" y="400" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" font-weight="700" fill="#111827">Add screenshot</text>
+  <text x="195" y="432" text-anchor="middle" font-family="system-ui,sans-serif" font-size="14" fill="#4F8FF7">profile.png</text>
+  <text x="195" y="468" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#9CA3AF">Replace this file</text>
+  <text x="195" y="490" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#9CA3AF">public/marketing/ig-screenshots/</text>
+</svg>
