@@ -175,7 +175,7 @@ export function CoachSocialPage() {
 
       {step === 1 ? (
         <div className="mt-4">
-          <p className="font-heading text-sm font-semibold text-[#14532D]">Choose a template</p>
+          <p className="font-heading text-sm font-semibold text-[#14532D]">Choose a design</p>
           <p className="mt-0.5 text-xs text-[#6B7280]">What kind of story do you want to post?</p>
           <div className="mt-3">
             <SocialTemplatePicker value={template} onChange={setTemplate} />

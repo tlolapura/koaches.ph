@@ -390,7 +390,7 @@ function TemplateCustomizeForm({
       <div className="border-t border-[#E5E7EB] pt-4">
         <p className="font-heading text-sm font-semibold text-[#111827]">Skills you&apos;ll track</p>
         <p className="mt-0.5 text-xs text-[#6B7280]">
-          Starts with the template&apos;s skill list. Adjust, rename, or add your own.
+          Starts with this program&apos;s usual skills. Adjust, rename, or add your own.
         </p>
         <div className="mt-3">
           <SkillRubricPicker

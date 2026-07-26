@@ -2,7 +2,8 @@
 
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { ClipboardList, PenLine, Plus, Zap } from "lucide-react";
 import { getProgramPreset } from "@/lib/koaches/program-templates";
 import type { ProgramDraft } from "@/lib/koaches/program-templates";
@@ -10,7 +11,10 @@ import { resolveSkills } from "@/lib/koaches/constants";
 import { EmptyState } from "@/components/koaches/coach/CoachUi";
 import { ProgramListIcon } from "@/components/koaches/coach/CoachIcons";
 import { ProgramCreateFlow } from "@/components/koaches/coach/ProgramCreateFlow";
-import { DropInSkillsSheet } from "@/components/koaches/coach/DropInSkillsSheet";
+import {
+  coachHasCustomizedSessionSkills,
+  DropInSkillsSheet,
+} from "@/components/koaches/coach/DropInSkillsSheet";
 import { formatProgramBundleSummary } from "@/lib/koaches/program-pricing";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachProgramListSkeleton } from "@/components/koaches/coach/CoachSkeletons";
@@ -18,13 +22,30 @@ import { useCoachPrograms, useCreateProgram } from "@/hooks/useCoachPrograms";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 
 export default function ProgramsPage() {
+  return (
+    <Suspense fallback={<CoachProgramListSkeleton />}>
+      <ProgramsPageContent />
+    </Suspense>
+  );
+}
+
+function ProgramsPageContent() {
   const coachId = usePortalCoachId();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
-  const [dropInOpen, setDropInOpen] = useState(false);
+  const [dropInOpen, setDropInOpen] = useState(() => searchParams.get("skills") === "1");
   const [createMode, setCreateMode] = useState<"templates" | "custom">("templates");
   const { programs, loading } = useCoachPrograms(coachId);
   const { coach, refresh: refreshCoach } = useCoachProfile(coachId);
   const createProgram = useCreateProgram(coachId);
+
+  useEffect(() => {
+    if (searchParams.get("skills") === "1") {
+      router.replace(pathname, { scroll: false });
+    }
+  }, [searchParams, router, pathname]);
 
   const dropInSkillCount = coach
     ? resolveSkills({
@@ -34,6 +55,8 @@ export default function ProgramsPage() {
         skillLabelOverrides: coach.skillLabelOverrides,
       }).length
     : 0;
+
+  const skillsCustomized = coach ? coachHasCustomizedSessionSkills(coach) : false;
 
   const openCreate = (mode: "templates" | "custom" = "templates") => {
     setCreateMode(mode);
@@ -57,18 +80,22 @@ export default function ProgramsPage() {
         <button
           type="button"
           onClick={() => setDropInOpen(true)}
-          className="coach-card mt-5 flex w-full items-center gap-3 p-4 text-left"
+          className="coach-card mt-5 flex w-full items-center gap-3 p-4 text-left ring-1 ring-[#BFDBFE]"
         >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB]">
             <Zap className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-heading text-sm font-semibold">Drop-in skills</p>
+            <p className="font-heading text-sm font-semibold">Skills you score</p>
             <p className="text-xs text-[#6B7280]">
-              {dropInSkillCount} skills · customize what you rate on one-off sessions
+              {skillsCustomized
+                ? `${dropInSkillCount} skills for one-off sessions`
+                : "Pick what you rate after drop-in lessons — most important setup"}
             </p>
           </div>
-          <span className="text-xs font-semibold text-[#4F8FF7]">Edit →</span>
+          <span className="text-xs font-semibold text-[#4F8FF7]">
+            {skillsCustomized ? "Edit →" : "Set up →"}
+          </span>
         </button>
       )}
 
@@ -95,7 +122,7 @@ export default function ProgramsPage() {
             <Plus className="h-5 w-5" />
           </div>
           <div>
-            <p className="font-heading text-sm font-semibold">Use a Template</p>
+            <p className="font-heading text-sm font-semibold">Start from a Ready-Made Program</p>
             <p className="text-xs text-[#6B7280]">Open Play Ready, Tournament Ready…</p>
           </div>
         </button>
@@ -164,6 +191,7 @@ export default function ProgramsPage() {
           onClose={() => setDropInOpen(false)}
           coach={coach}
           onSaved={() => void refreshCoach()}
+          forcePick={!skillsCustomized}
         />
       )}
     </CoachPageShell>

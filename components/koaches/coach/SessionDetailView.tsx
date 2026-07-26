@@ -39,10 +39,7 @@ import { isDoneStatus } from "@/lib/koaches/session-status";
 import { filterRatedSkills, resolveParticipantProgress } from "@/lib/koaches/session-progress";
 import { findProgressCardForSession, buildProgressCardUrl } from "@/lib/koaches/progress-cards";
 import { useProgressCards } from "@/hooks/useProgressCards";
-import {
-  SessionProgressSummary,
-  SkillProgressList,
-} from "@/components/koaches/SkillProgressDisplay";
+import { SessionProgressSummary } from "@/components/koaches/SkillProgressDisplay";
 import { SendProgressCardEmailButton } from "@/components/koaches/coach/SendProgressCardEmailButton";
 
 type SessionDetailViewProps = {
@@ -454,9 +451,9 @@ function StandardSessionDetail({ session }: { session: Session }) {
                   {before.length > 0 && after.length > 0 ? (
                     <div className={participants.length > 1 ? "mt-3" : undefined}>
                       <SessionProgressSummary before={before} after={after} />
-                      <div className="mt-3">
-                        <SkillProgressList before={before} after={after} compact maxItems={6} />
-                      </div>
+                      <p className="mt-2 text-xs text-[#6B7280]">
+                        The full skill-by-skill breakdown is on the progress card.
+                      </p>
                     </div>
                   ) : (
                     <p className="text-sm text-[#6B7280]">No skill ratings saved.</p>

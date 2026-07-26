@@ -118,7 +118,7 @@ export async function updateDropInSkillsAction(
   }
 ) {
   if (config.customSkillIds.length === 0) {
-    throw new Error("Pick at least one skill for drop-in sessions.");
+    throw new Error("Pick at least one skill to score after sessions.");
   }
   return updateCoachProfileAction(coachId, {
     skillTemplateId: config.customSkillIds.length ? "custom" : config.skillTemplateId,

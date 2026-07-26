@@ -70,10 +70,10 @@ export function SendProgressCardEmailButton({
     >
       <Mail className="h-4 w-4" strokeWidth={2} />
       {atLimit
-        ? `Email limit reached (${PROGRESS_CARD_EMAIL_MAX_SENDS}/${PROGRESS_CARD_EMAIL_MAX_SENDS})`
+        ? "Email already sent"
         : sendCount > 0
-          ? `Email again (${remaining} left)`
-          : `Email to player (${PROGRESS_CARD_EMAIL_MAX_SENDS} max)`}
+          ? `Email again (${remaining} send${remaining === 1 ? "" : "s"} left)`
+          : "Email progress card to player"}
     </CoachButton>
   );
 }

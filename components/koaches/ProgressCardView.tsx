@@ -76,7 +76,7 @@ function SkillRatingRow({ change, leveledUp }: { change: SkillChange; leveledUp?
             showScale ? "bg-[#111827] text-white" : "bg-white text-[#6B7280] border border-[#E5E7EB]"
           )}
         >
-          {showScale ? "Hide 0-5 guide" : "View 0-5 guide"}
+          {showScale ? "Hide rating guide" : "What each rating means"}
         </button>
       </div>
 

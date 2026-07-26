@@ -15,6 +15,7 @@ import {
   Check,
   ChevronRight,
   Plus,
+  Sparkles,
   TrendingUp,
   UserPlus,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import type { LucideIcon } from "lucide-react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { useCoachStudents } from "@/hooks/useCoachStudents";
+import { coachHasCustomizedSessionSkills } from "@/components/koaches/coach/DropInSkillsSheet";
 import { parseDisplayTime, sessionStartsAt } from "@/lib/koaches/session-time";
 import { formatCurrency, cn } from "@/lib/utils";
 import { isCanceledStatus } from "@/lib/koaches/session-status";
@@ -142,6 +144,10 @@ export function CoachDashboard() {
   }
 
   const greetingName = coach ? coachGreetingLabel(coach) : "Coach";
+  const skillsReady = coach ? coachHasCustomizedSessionSkills(coach) : true;
+  const hasActiveStudent = rosterStudents.some((s) => !s.isArchived);
+  const showFirstRun =
+    !studentsLoading && (!hasActiveStudent || allSessions.length === 0 || !skillsReady);
 
   const attentionItems: AttentionItem[] = [];
   if (candidates.length > 0) {
@@ -154,6 +160,16 @@ export function CoachDashboard() {
         : `${candidates.length} progress cards to send`,
       detail: "Ratings are saved. Tap to send it to your student.",
       icon: TrendingUp,
+      tone: "navy",
+    });
+  }
+  if (!skillsReady && !showFirstRun) {
+    attentionItems.push({
+      key: "skills",
+      href: "/coach/profile?skills=1",
+      label: "Set the skills you score",
+      detail: "Pick a starter pack — used on every drop-in session",
+      icon: Sparkles,
       tone: "navy",
     });
   }
@@ -253,10 +269,11 @@ export function CoachDashboard() {
         </div>
       </div>
 
-      {!studentsLoading && (rosterStudents.filter((s) => !s.isArchived).length === 0 || allSessions.length === 0) ? (
+      {showFirstRun ? (
         <FirstRunChecklist
-          hasStudent={rosterStudents.some((s) => !s.isArchived)}
+          hasStudent={hasActiveStudent}
           hasSession={allSessions.length > 0}
+          hasSkills={skillsReady}
         />
       ) : (
         <section className="mt-4 px-4">
@@ -349,8 +366,24 @@ export function CoachDashboard() {
   );
 }
 
-function FirstRunChecklist({ hasStudent, hasSession }: { hasStudent: boolean; hasSession: boolean }) {
+function FirstRunChecklist({
+  hasStudent,
+  hasSession,
+  hasSkills,
+}: {
+  hasStudent: boolean;
+  hasSession: boolean;
+  hasSkills: boolean;
+}) {
   const steps = [
+    {
+      key: "skills",
+      done: hasSkills,
+      href: "/coach/profile?skills=1",
+      icon: Sparkles,
+      label: "Pick skills you score",
+      detail: "Beginner, Intermediate, or Advanced — 30 seconds",
+    },
     {
       key: "student",
       done: hasStudent,
@@ -374,7 +407,7 @@ function FirstRunChecklist({ hasStudent, hasSession }: { hasStudent: boolean; ha
       <div className="rounded-2xl border border-[#BBF7D0] bg-gradient-to-br from-[#F0FDF4] to-white p-4">
         <h2 className="font-heading text-sm font-bold text-[#111827]">Let&apos;s get you started</h2>
         <p className="mt-0.5 text-xs text-[#6B7280]">
-          Two quick steps and you&apos;re coaching with everything in one place.
+          Three quick steps and you&apos;re coaching with everything in one place.
         </p>
         <div className="mt-3 space-y-2">
           {steps.map((s) => {
@@ -427,7 +460,7 @@ function FirstRunChecklist({ hasStudent, hasSession }: { hasStudent: boolean; ha
           })}
         </div>
         <p className="mt-3 text-xs text-[#6B7280]">
-          After the session, mark it done and we&apos;ll help you send a progress card.
+          Once these are done, you&apos;re set for your next lesson.
         </p>
       </div>
     </section>

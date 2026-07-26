@@ -1,7 +1,9 @@
 "use client";
 
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Zap } from "lucide-react";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
 import {
@@ -10,6 +12,7 @@ import {
   type CoachingLevelId,
 } from "@/lib/koaches/application-form";
 import { formatTierRate, formatTierLabel, DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
+import { resolveSkills } from "@/lib/koaches/constants";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachProfilePhoto } from "@/components/koaches/coach/CoachProfilePhoto";
@@ -20,6 +23,10 @@ import { WorkingHoursCard } from "@/components/koaches/coach/WorkingHoursCard";
 import { CoachAchievementsCard } from "@/components/koaches/coach/CoachAchievementsCard";
 import { CoachPageHeader, CoachPageShell } from "@/components/koaches/coach/CoachPageLayout";
 import { CoachProfileSkeleton } from "@/components/koaches/coach/CoachSkeletons";
+import {
+  coachHasCustomizedSessionSkills,
+  DropInSkillsSheet,
+} from "@/components/koaches/coach/DropInSkillsSheet";
 import {
   updateCoachBioAction,
   updateCoachPricingAction,
@@ -34,11 +41,23 @@ import { formatDisplayDate } from "@/lib/utils";
 const EDIT_BIO_FORM_ID = "edit-bio-form";
 
 export default function ProfilePage() {
+  return (
+    <Suspense fallback={<CoachProfileSkeleton />}>
+      <ProfilePageContent />
+    </Suspense>
+  );
+}
+
+function ProfilePageContent() {
   const coachId = usePortalCoachId();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { coach, error: profileError, refresh } = useCoachProfile(coachId);
   const [editOpen, setEditOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [skillsOpen, setSkillsOpen] = useState(() => searchParams.get("skills") === "1");
   const [bio, setBio] = useState("");
   const [pricing, setPricing] = useState<import("@/lib/koaches/types").CoachSessionPricing>(DEFAULT_SESSION_PRICING);
   const [coachingLevels, setCoachingLevels] = useState<CoachingLevelId[]>(["intermediate"]);
@@ -46,6 +65,12 @@ export default function ProfilePage() {
   const [savingPricing, setSavingPricing] = useState(false);
   const [savingTemplate, setSavingTemplate] = useState(false);
   const { showToast } = useCoachToast();
+
+  useEffect(() => {
+    if (searchParams.get("skills") === "1") {
+      router.replace(pathname, { scroll: false });
+    }
+  }, [searchParams, router, pathname]);
 
   useEffect(() => {
     if (!coach) return;
@@ -142,6 +167,35 @@ export default function ProfilePage() {
       <CoachPublicProfileLinkCard coach={coach} className="mt-4" />
 
       <CoachContactSocialsCard coachId={coachId} coach={coach} onSaved={refresh} />
+
+      <button
+        type="button"
+        onClick={() => setSkillsOpen(true)}
+        className="coach-card mt-4 flex w-full items-center gap-3 p-4 text-left"
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#2563EB]">
+          <Zap className="h-5 w-5" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-heading font-semibold">Skills you score</p>
+          <p className="text-sm text-[#6B7280]">
+            {(() => {
+              const count = resolveSkills({
+                rubricId: coach.customSkillIds?.length ? "custom" : coach.skillTemplateId,
+                customSkillIds: coach.customSkillIds,
+                customSkills: coach.customSkills,
+                skillLabelOverrides: coach.skillLabelOverrides,
+              }).length;
+              return coachHasCustomizedSessionSkills(coach)
+                ? `${count} skills for one-off sessions`
+                : "Not set yet — pick what you rate after drop-ins";
+            })()}
+          </p>
+        </div>
+        <span className="text-sm font-semibold text-[#4F8FF7]">
+          {coachHasCustomizedSessionSkills(coach) ? "Edit" : "Set up"}
+        </span>
+      </button>
 
       <div className="coach-card mt-4 p-4">
         <div className="flex items-center justify-between">
@@ -284,7 +338,7 @@ export default function ProfilePage() {
                   showToast("Player levels saved!");
                   setTemplateOpen(false);
                 } catch (err) {
-                  showToast(err instanceof Error ? err.message : "Could not save template", "error");
+                  showToast(err instanceof Error ? err.message : "Could not save player levels", "error");
                 } finally {
                   setSavingTemplate(false);
                 }
@@ -297,6 +351,17 @@ export default function ProfilePage() {
       >
         <CoachingLevelsPicker value={coachingLevels} onChange={setCoachingLevels} hint="" />
       </CoachBottomSheet>
+
+      <DropInSkillsSheet
+        open={skillsOpen}
+        onClose={() => setSkillsOpen(false)}
+        coach={coach}
+        onSaved={() => {
+          invalidateCoachProfile(coachId);
+          void refresh();
+        }}
+        forcePick={!coachHasCustomizedSessionSkills(coach)}
+      />
     </CoachPageShell>
   );
 }

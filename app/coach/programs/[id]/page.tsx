@@ -70,7 +70,7 @@ export default function ProgramDetailPage({
 
       <section className="mt-6">
         <div className="flex items-center justify-between gap-3">
-          <CoachSectionTitle size="sm">Skill rubric</CoachSectionTitle>
+          <CoachSectionTitle size="sm">Skills you score</CoachSectionTitle>
           <button
             type="button"
             onClick={() => setSkillsOpen(true)}

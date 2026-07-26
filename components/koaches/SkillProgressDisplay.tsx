@@ -63,7 +63,7 @@ export function SkillScoreGuideToggle({
           open ? "bg-[#111827] text-white" : "bg-white text-[#6B7280] border border-[#E5E7EB]"
         )}
       >
-        {open ? "Hide 0-5 guide" : "View 0-5 guide"}
+        {open ? "Hide rating guide" : "What each rating means"}
       </button>
       {open && (
         <SkillScoreGuide

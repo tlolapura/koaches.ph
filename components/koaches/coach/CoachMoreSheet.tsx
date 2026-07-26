@@ -12,7 +12,7 @@ const links = [
     href: "/coach/programs",
     label: "Programs",
     icon: FileText,
-    desc: "Packages and skill lists you reuse with students",
+    desc: "Packages, and the skills you score after sessions",
   },
   {
     href: "/coach/reports",

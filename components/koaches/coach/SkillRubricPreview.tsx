@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp, ClipboardList } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { SkillRubricId } from "@/lib/koaches/types";
 import { resolveSkills, SKILL_CATEGORY_LABELS } from "@/lib/koaches/constants";
-import { SkillScoreGuideToggle } from "@/components/koaches/SkillProgressDisplay";
+import { SkillScoreMeanings } from "@/components/koaches/coach/SkillScoreMeanings";
 import { cn } from "@/lib/utils";
 
 type SkillRubricPreviewProps = {
@@ -73,11 +73,10 @@ export function SkillRubricPreview({
                 {section.skills.map((skill) => (
                   <li key={skill.id}>
                     <p className="text-sm font-medium text-[#374151]">{skill.name}</p>
-                    <SkillScoreGuideToggle
+                    <SkillScoreMeanings
                       skillId={skill.id}
                       category={skill.category}
-                      overrides={skillLabelOverrides}
-                      className="mt-2"
+                      overrides={skillLabelOverrides ?? {}}
                     />
                   </li>
                 ))}
