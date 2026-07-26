@@ -30,7 +30,7 @@ const PLANS = [
     featured: true,
     perks: [
       "Save ₱200 every month",
-      "Founding coach rate while your plan stays active",
+      "Founding rate locked in while you stay subscribed",
       "Personal onboarding and setup help",
     ],
   },
@@ -39,12 +39,12 @@ const PLANS = [
     name: "Regular",
     price: SUBSCRIPTION_PRICES.regular,
     badge: "Standard plan",
-    description: "Same full platform once early bird slots fill up.",
+    description: "Full access once early bird slots fill up.",
     featured: false,
     perks: [
-      "Simple month-to-month subscription",
-      "Cancel anytime",
-      "No feature limits or reduced access",
+      "Month-to-month. Cancel anytime",
+      "Same features as early bird",
+      "No locks or reduced access",
     ],
   },
 ] as const;
@@ -110,7 +110,7 @@ export function CoachMarketingLanding() {
                   Your coaching, organized.
                 </h1>
                 <p className="mt-3 text-base leading-relaxed text-[#4B5563] sm:text-lg">
-                  Run students, sessions, programs, and progress from one place — built for pickleball
+                  Run students, sessions, programs, and progress from one place. Built for pickleball
                   coaches.
                 </p>
 
@@ -127,15 +127,6 @@ export function CoachMarketingLanding() {
                     Coach login
                   </Link>
                 </div>
-                <p className="mt-4 text-sm text-[#6B7280]">
-                  Prefer email?{" "}
-                  <a
-                    href={DEMO_MAILTO}
-                    className="font-semibold text-[#16A34A] underline-offset-2 hover:underline"
-                  >
-                    {DEMO_EMAIL}
-                  </a>
-                </p>
               </motion.div>
             </div>
 
@@ -164,9 +155,6 @@ export function CoachMarketingLanding() {
               Walkthrough
             </p>
             <h2 className="font-heading mt-1 text-2xl font-bold">See how coaches use the app</h2>
-            <p className="mt-1 text-sm text-[#4B5563]">
-              Watch a quick walkthrough of scheduling, student management, reports, and daily workflow.
-            </p>
           </div>
 
           <div className="p-3 sm:p-4">
@@ -213,9 +201,6 @@ export function CoachMarketingLanding() {
                   }
                 />
               </div>
-              <p className="mt-2 text-center text-xs text-white/75 sm:text-sm">
-                Live desktop app walkthrough
-              </p>
             </div>
           </div>
         </div>
@@ -229,8 +214,7 @@ export function CoachMarketingLanding() {
             </p>
             <h2 className="font-heading mt-1 text-2xl font-bold">Simple monthly plans</h2>
             <p className="mt-1 max-w-xl text-sm text-[#4B5563]">
-              One subscription for everything you need to coach. Pay monthly via GCash, Maya, BPI, or
-              UnionBank.
+              One subscription for everything you need to coach.
             </p>
           </div>
 
@@ -314,9 +298,6 @@ export function CoachMarketingLanding() {
             <p className="text-center text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">
               Modes of payment
             </p>
-            <p className="mt-1 text-center text-sm text-[#4B5563]">
-              Scan QR in your billing page, then upload your receipt for confirmation.
-            </p>
             <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
               {KOACHES_PAYMENT_CHANNELS.map((channel) => (
                 <div
@@ -340,10 +321,10 @@ export function CoachMarketingLanding() {
         <div className="overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-gradient-to-br from-[#ECFDF5] via-white to-[#EFF6FF] p-5 text-center shadow-[0_8px_30px_rgba(22,163,74,0.06)] sm:p-8">
           <KoachesWordmark size="md" className="mx-auto justify-center" />
           <h2 className="font-heading mt-5 text-2xl font-bold text-[#111827] sm:text-3xl">
-            Ready to get organized?
+            Ready to get started?
           </h2>
           <p className="mx-auto mt-2 max-w-md text-base text-[#4B5563]">
-            Join early and we&apos;ll help you set up your profile, students, and daily workflow.
+            Apply now, or email us for a live demo.
           </p>
           <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
             <Link href="/apply" className="coach-btn-primary min-h-[48px] gap-2 sm:w-auto sm:px-8">
@@ -359,7 +340,6 @@ export function CoachMarketingLanding() {
             </Link>
           </div>
           <p className="mt-4 text-sm text-[#6B7280]">
-            Demo requests:{" "}
             <a
               href={DEMO_MAILTO}
               className="font-semibold text-[#16A34A] underline-offset-2 hover:underline"
