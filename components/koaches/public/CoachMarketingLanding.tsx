@@ -7,8 +7,8 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   Check,
+  Mail,
   MessageCircle,
-  UserPlus,
 } from "lucide-react";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { FacebookIcon, InstagramIcon } from "@/components/koaches/shared/SocialIcons";
@@ -50,80 +50,118 @@ const PLANS = [
 ] as const;
 
 const SHARED_PLAN_FEATURES = [
-  "Full coaching OS access",
+  "Full access to PickleKoach",
   "Students, sessions, and programs",
   "Progress cards and reports",
   "Public coach profile page",
 ] as const;
 
 const VIBER_SUPPORT_NUMBER = "+639688546190";
+const DEMO_EMAIL = "picklekoach@gmail.com";
+const DEMO_MAILTO = `mailto:${DEMO_EMAIL}?subject=${encodeURIComponent("PickleKoach demo request")}`;
 
 export function CoachMarketingLanding() {
   const [recordingView, setRecordingView] = useState<"mobile" | "desktop">("desktop");
 
   return (
-    <div className="coach-portal relative min-h-dvh overflow-hidden bg-[#FAFAF8] text-[#111827]">
-      <PickleballBallBackdrop variant="landing" className="opacity-50" />
-      <section className="border-b border-[#E5E7EB] bg-white">
-        <div className="mx-auto flex w-full max-w-6xl flex-col px-4 pb-0 pt-6 sm:px-6 sm:pb-0">
-          <div className="flex items-center justify-between gap-3">
-            <KoachesWordmark size="sm" />
-            <Link href="/" className="text-xs font-semibold text-[#6B7280] hover:text-[#111827]">
+    <div className="coach-portal relative min-h-dvh overflow-hidden bg-white text-[#111827]">
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#ECFDF5] via-white to-[#EFF6FF]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -right-24 top-0 h-[55%] w-[55%] rounded-full bg-[#4F8FF7]/10 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -left-20 bottom-[20%] h-[45%] w-[50%] rounded-full bg-[#16A34A]/12 blur-3xl"
+        aria-hidden
+      />
+      <PickleballBallBackdrop variant="landing" className="opacity-80" />
+
+      <div className="relative z-[1]">
+        <section className="mx-auto w-full max-w-6xl">
+          <div className="flex items-center justify-end px-6 pt-[max(1.25rem,env(safe-area-inset-top))] sm:px-10 lg:px-12">
+            <Link
+              href="/"
+              className="text-sm font-semibold text-[#6B7280] transition-colors hover:text-[#111827]"
+            >
               ← Home
             </Link>
           </div>
 
-          <div className="mt-5 grid items-center gap-4 lg:grid-cols-[1fr_.95fr]">
+          <div className="grid lg:grid-cols-[1.05fr_0.95fr] lg:items-stretch">
+            <div className="flex flex-col justify-center px-6 pb-4 pt-4 sm:px-10 lg:px-12 lg:pb-10 lg:pt-6">
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, ease: "easeOut" }}
+              >
+                <KoachesWordmark size="lg" className="origin-left scale-110 sm:scale-125" />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.12, ease: "easeOut" }}
+                className="mt-8 max-w-lg sm:mt-10"
+              >
+                <h1 className="font-heading text-[clamp(1.85rem,5.5vw,3rem)] font-bold leading-[1.12] tracking-tight text-[#111827]">
+                  Your coaching, organized.
+                </h1>
+                <p className="mt-3 text-base leading-relaxed text-[#4B5563] sm:text-lg">
+                  Run students, sessions, programs, and progress from one place — built for pickleball
+                  coaches.
+                </p>
+
+                <div className="mt-8 flex w-full max-w-md flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+                  <Link href="/apply" className="coach-btn-primary min-h-[48px] gap-2 sm:w-auto">
+                    Apply as coach
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <a href={DEMO_MAILTO} className="coach-btn-outline min-h-[48px] gap-2 sm:w-auto">
+                    <Mail className="h-4 w-4" />
+                    Request a demo
+                  </a>
+                  <Link href="/coach/login" className="coach-btn-outline min-h-[48px] sm:w-auto">
+                    Coach login
+                  </Link>
+                </div>
+                <p className="mt-4 text-sm text-[#6B7280]">
+                  Prefer email?{" "}
+                  <a
+                    href={DEMO_MAILTO}
+                    className="font-semibold text-[#16A34A] underline-offset-2 hover:underline"
+                  >
+                    {DEMO_EMAIL}
+                  </a>
+                </p>
+              </motion.div>
+            </div>
+
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-              className="order-1 -mx-4 w-auto sm:-mx-6 lg:order-2 lg:mx-0 lg:w-full"
+              initial={{ opacity: 0, x: 28 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.65, delay: 0.08, ease: "easeOut" }}
+              className="relative mt-auto flex min-h-[38vh] items-end justify-center sm:min-h-[42vh] lg:min-h-[520px] lg:items-end lg:justify-end"
             >
               <Image
                 src="/illustrations/coaches.webp"
                 alt="Pickleball coaches using PickleKoach"
                 width={900}
                 height={900}
-                className="block h-[360px] w-full object-contain object-bottom sm:h-[440px] lg:h-[520px]"
+                className="pointer-events-none h-[min(48vh,400px)] w-full object-contain object-bottom sm:h-[min(52vh,480px)] lg:h-[min(560px,70vh)] lg:w-auto lg:translate-x-4"
                 priority
               />
             </motion.div>
-
-            <div className="order-2 lg:order-1 lg:self-center">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#16A34A]">For coaches</p>
-              <h1 className="font-heading mt-2 text-4xl font-bold leading-tight text-[#111827] sm:text-5xl">
-                {BRAND_NAME} is your coaching OS.
-              </h1>
-              <p className="mt-3 max-w-lg text-sm text-[#4B5563] sm:text-base">
-                Run your coaching business from one app. No scattered sheets. No messy chat threads. Just a
-                clear system built for pickleball coaches.
-              </p>
-
-              <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
-                <Link href="/apply" className="coach-btn-primary gap-2 py-3 sm:w-auto">
-                  Apply as coach
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/coach/login"
-                  className="coach-btn-outline py-3 sm:w-auto"
-                >
-                  Coach login
-                </Link>
-              </div>
-
-            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-6">
-        <div className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white">
-          <div className="border-b border-[#E5E7EB] bg-gradient-to-r from-[#F0FDF4] via-[#EFF6FF] to-[#F8FAFC] px-4 py-4 sm:px-6">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">
-              What coaches can do inside
+        <div className="overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-white/90 shadow-[0_8px_30px_rgba(22,163,74,0.06)] backdrop-blur-sm">
+          <div className="border-b border-[#E5E7EB] bg-gradient-to-r from-[#ECFDF5] via-white to-[#EFF6FF] px-4 py-4 sm:px-6">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#16A34A]">
+              Walkthrough
             </p>
             <h2 className="font-heading mt-1 text-2xl font-bold">See how coaches use the app</h2>
             <p className="mt-1 text-sm text-[#4B5563]">
@@ -184,14 +222,15 @@ export function CoachMarketingLanding() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-2 sm:px-6">
-        <div className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white">
-          <div className="border-b border-[#E5E7EB] bg-gradient-to-r from-[#F0FDF4] via-[#EFF6FF] to-[#F8FAFC] px-4 py-4 sm:px-6">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#6B7280]">
+        <div className="overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-white/90 shadow-[0_8px_30px_rgba(79,143,247,0.06)] backdrop-blur-sm">
+          <div className="border-b border-[#E5E7EB] bg-gradient-to-r from-[#ECFDF5] via-white to-[#EFF6FF] px-4 py-4 sm:px-6">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#16A34A]">
               Pricing
             </p>
             <h2 className="font-heading mt-1 text-2xl font-bold">Simple monthly plans</h2>
             <p className="mt-1 max-w-xl text-sm text-[#4B5563]">
-              One subscription for the full coaching OS. Pay monthly via GCash, Maya, BPI, or UnionBank.
+              One subscription for everything you need to coach. Pay monthly via GCash, Maya, BPI, or
+              UnionBank.
             </p>
           </div>
 
@@ -278,17 +317,17 @@ export function CoachMarketingLanding() {
             <p className="mt-1 text-center text-sm text-[#4B5563]">
               Scan QR in your billing page, then upload your receipt for confirmation.
             </p>
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
               {KOACHES_PAYMENT_CHANNELS.map((channel) => (
                 <div
                   key={channel.id}
-                  className="flex h-14 w-[7.5rem] items-center justify-center rounded-2xl bg-white px-3 ring-1 ring-[#E5E7EB] sm:h-16 sm:w-36"
+                  className="flex h-9 w-[4.75rem] items-center justify-center rounded-lg bg-white px-2 ring-1 ring-[#E5E7EB] sm:h-10 sm:w-24"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- static brand logos */}
                   <img
                     src={channel.logoSrc}
                     alt={channel.label}
-                    className="h-8 w-auto max-w-full object-contain sm:h-9"
+                    className="h-4 w-auto max-w-full object-contain sm:h-5"
                   />
                 </div>
               ))}
@@ -298,27 +337,40 @@ export function CoachMarketingLanding() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-8 sm:px-6">
-        <div className="overflow-hidden rounded-3xl border border-[#E5E7EB] bg-white p-5 text-center sm:p-8">
-          <UserPlus className="mx-auto h-8 w-8 text-[#16A34A]" />
-          <h2 className="font-heading mt-3 text-2xl font-bold text-[#111827]">
-            Want to see your coaching business level up?
+        <div className="overflow-hidden rounded-3xl border border-[#E5E7EB]/80 bg-gradient-to-br from-[#ECFDF5] via-white to-[#EFF6FF] p-5 text-center shadow-[0_8px_30px_rgba(22,163,74,0.06)] sm:p-8">
+          <KoachesWordmark size="md" className="mx-auto justify-center" />
+          <h2 className="font-heading mt-5 text-2xl font-bold text-[#111827] sm:text-3xl">
+            Ready to get organized?
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-[#6B7280]">
-            Join early and we&apos;ll help you set up your profile, workflow, and app screens.
+          <p className="mx-auto mt-2 max-w-md text-base text-[#4B5563]">
+            Join early and we&apos;ll help you set up your profile, students, and daily workflow.
           </p>
-          <div className="mt-5 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
-            <Link href="/apply" className="coach-btn-primary gap-2 sm:w-auto sm:px-8">
+          <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
+            <Link href="/apply" className="coach-btn-primary min-h-[48px] gap-2 sm:w-auto sm:px-8">
               Start application
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link href="/coach/login" className="coach-btn-outline sm:w-auto sm:px-8">
+            <a href={DEMO_MAILTO} className="coach-btn-outline min-h-[48px] gap-2 sm:w-auto sm:px-8">
+              <Mail className="h-4 w-4" />
+              Request a demo
+            </a>
+            <Link href="/coach/login" className="coach-btn-outline min-h-[48px] sm:w-auto sm:px-8">
               I already have access
             </Link>
           </div>
+          <p className="mt-4 text-sm text-[#6B7280]">
+            Demo requests:{" "}
+            <a
+              href={DEMO_MAILTO}
+              className="font-semibold text-[#16A34A] underline-offset-2 hover:underline"
+            >
+              {DEMO_EMAIL}
+            </a>
+          </p>
         </div>
       </section>
 
-      <footer className="border-t border-[#E5E7EB] bg-white/95 backdrop-blur">
+      <footer className="border-t border-[#E5E7EB]/80 bg-white/80 backdrop-blur">
         <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-7">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <KoachesWordmark size="sm" className="opacity-90" />
@@ -329,6 +381,9 @@ export function CoachMarketingLanding() {
               <Link href="/apply" className="hover:text-[#111827]">
                 Apply
               </Link>
+              <a href={DEMO_MAILTO} className="hover:text-[#111827]">
+                Request a demo
+              </a>
               <Link href="/coach/login" className="hover:text-[#111827]">
                 Coach login
               </Link>
@@ -366,6 +421,7 @@ export function CoachMarketingLanding() {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
