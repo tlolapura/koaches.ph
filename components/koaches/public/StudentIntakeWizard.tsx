@@ -30,7 +30,7 @@ import {
 } from "@/lib/koaches/intake";
 import { submitIntakeAction } from "@/lib/koaches/actions/intake";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
-import { coachFirstName } from "@/lib/koaches/person-name";
+import { coachFirstName, joinPersonName } from "@/lib/koaches/person-name";
 import type { CoachProfile } from "@/lib/koaches/types";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +80,8 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
   const [pending, setPending] = useState(false);
   const [waiverOpen, setWaiverOpen] = useState(false);
   const [form, setForm] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     mobile: "",
     email: "",
     emergencyContact: "",
@@ -90,6 +91,8 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
     agreed: false,
   });
 
+  const displayName = joinPersonName(form.firstName, form.lastName);
+
   const current = STEPS[step];
   const StepIcon = current.icon;
   const progress = Math.round(((step + 1) / STEPS.length) * 100);
@@ -98,7 +101,8 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
   const isSuccess = current.id === "success";
 
   const validateDetails = () => {
-    if (!form.name.trim()) return "Please enter your full name.";
+    if (!form.firstName.trim()) return "Please enter your first name.";
+    if (!form.lastName.trim()) return "Please enter your last name.";
     if (!form.mobile.trim()) return "Please enter your mobile number.";
     if (!form.email.trim()) return "Please enter your email.";
     return null;
@@ -110,7 +114,7 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
     if (!form.agreed) return "Please read and accept the waiver to continue.";
     const validationError = validateIntakePayload(
       {
-        name: form.name,
+        name: displayName,
         mobile: form.mobile,
         email: form.email,
         emergencyContact: form.emergencyContact || undefined,
@@ -118,7 +122,7 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
         notes: form.notes || undefined,
         signedName: form.signedName,
       },
-      form.name
+      displayName
     );
     return validationError;
   };
@@ -156,7 +160,7 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
       setPending(true);
       try {
         await submitIntakeAction(coach.id, {
-          name: form.name.trim(),
+          name: displayName,
           mobile: form.mobile.trim(),
           email: form.email.trim(),
           emergencyContact: form.emergencyContact.trim() || undefined,
@@ -165,7 +169,7 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
           waiverAccepted: true,
           signedName: form.signedName.trim(),
         });
-        window.dispatchEvent(new Event("koaches-intake-updated"));
+        window.dispatchEvent(new Event("koaches-signup-updated"));
         setStep((s) => s + 1);
       } catch {
         setError("We couldn't submit your sign-up. Please try again in a moment.");
@@ -273,21 +277,34 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
 
             {current.id === "details" && (
               <div className="space-y-4">
-                <CoachSheetField label="Full name *" htmlFor="intake-name">
-                  <input
-                    id="intake-name"
-                    className="coach-input"
-                    required
-                    autoComplete="name"
-                    value={form.name}
-                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    placeholder="Juan dela Cruz"
-                  />
-                </CoachSheetField>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <CoachSheetField label="Mobile number *" htmlFor="intake-mobile">
+                  <CoachSheetField label="First name *" htmlFor="join-first-name">
                     <input
-                      id="intake-mobile"
+                      id="join-first-name"
+                      className="coach-input"
+                      required
+                      autoComplete="given-name"
+                      value={form.firstName}
+                      onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                      placeholder="Juan"
+                    />
+                  </CoachSheetField>
+                  <CoachSheetField label="Last name *" htmlFor="join-last-name">
+                    <input
+                      id="join-last-name"
+                      className="coach-input"
+                      required
+                      autoComplete="family-name"
+                      value={form.lastName}
+                      onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+                      placeholder="dela Cruz"
+                    />
+                  </CoachSheetField>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <CoachSheetField label="Mobile number *" htmlFor="join-mobile">
+                    <input
+                      id="join-mobile"
                       className="coach-input"
                       required
                       type="tel"
@@ -297,9 +314,9 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
                       placeholder="09171234567"
                     />
                   </CoachSheetField>
-                  <CoachSheetField label="Email *" htmlFor="intake-email">
+                  <CoachSheetField label="Email *" htmlFor="join-email">
                     <input
-                      id="intake-email"
+                      id="join-email"
                       className="coach-input"
                       required
                       type="email"
@@ -310,9 +327,9 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
                     />
                   </CoachSheetField>
                 </div>
-                <CoachSheetField label="Emergency contact (optional)" htmlFor="intake-emergency">
+                <CoachSheetField label="Emergency contact (optional)" htmlFor="join-emergency">
                   <input
-                    id="intake-emergency"
+                    id="join-emergency"
                     className="coach-input"
                     value={form.emergencyContact}
                     onChange={(e) => setForm((f) => ({ ...f, emergencyContact: e.target.value }))}
@@ -324,9 +341,9 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
 
             {current.id === "skill" && (
               <div className="space-y-4">
-                <CoachSheetField label="Your level" htmlFor="intake-skill">
+                <CoachSheetField label="Your level" htmlFor="join-skill">
                   <CoachSelect
-                    id="intake-skill"
+                    id="join-skill"
                     value={form.coachingLevel}
                     onChange={(level) =>
                       setForm((f) => ({ ...f, coachingLevel: level as CoachingLevelId }))
@@ -334,9 +351,9 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
                     options={STUDENT_COACHING_LEVEL_SELECT_OPTIONS}
                   />
                 </CoachSheetField>
-                <CoachSheetField label="Notes for your coach (optional)" htmlFor="intake-notes">
+                <CoachSheetField label="Notes for your coach (optional)" htmlFor="join-notes">
                   <textarea
-                    id="intake-notes"
+                    id="join-notes"
                     className="coach-input min-h-[96px] resize-none"
                     value={form.notes}
                     onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
@@ -384,17 +401,17 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
                 </div>
 
                 <CoachSheetField
-                  label="Sign waiver (type your full name) *"
-                  htmlFor="intake-signed-name"
-                  hint="Must match the name above"
+                  label="Sign waiver (type your first and last name) *"
+                  htmlFor="join-signed-name"
+                  hint="Must match the name you entered above"
                 >
                   <input
-                    id="intake-signed-name"
+                    id="join-signed-name"
                     className="coach-input font-medium italic"
                     required
                     value={form.signedName}
                     onChange={(e) => setForm((f) => ({ ...f, signedName: e.target.value }))}
-                    placeholder={form.name || "Juan dela Cruz"}
+                    placeholder={displayName || "Juan dela Cruz"}
                   />
                 </CoachSheetField>
               </div>
@@ -403,8 +420,8 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
             {current.id === "success" && (
               <div className="space-y-4 text-center">
                 <p className="text-sm leading-relaxed text-[#6B7280]">
-                  Thanks, {form.name.split(" ")[0]}. Coach {firstName} will review your sign-up and add you to the
-                  roster once approved.
+                  Thanks, {form.firstName.trim() || "there"}. Coach {firstName} will review your
+                  sign-up and add you to the roster once approved.
                 </p>
                 <p className="text-xs text-[#9CA3AF]">Your waiver has been recorded.</p>
                 <ol className="space-y-3 text-left">

@@ -89,7 +89,7 @@ export function buildCoachNotifications(
         counts.pendingIntakes === 1
           ? "1 new student sign-up"
           : `${counts.pendingIntakes} new student sign-ups`,
-      message: "Review intake forms and approve or decline.",
+      message: "Review new sign-ups and approve or decline.",
       tone: "green",
     });
   }

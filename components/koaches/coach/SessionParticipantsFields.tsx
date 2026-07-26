@@ -30,7 +30,7 @@ export function SessionParticipantsFields({
   roster,
   onChange,
   formatStudentLabel,
-  hint = "Pick from your roster. New players join via your intake link first.",
+  hint = "Pick from your roster. New players join via your join link first.",
 }: SessionParticipantsFieldsProps) {
   const rows = resizeParticipants(participants, playerCount);
 

@@ -37,10 +37,11 @@ import { isSessionRatingStep, type SessionDetailStep } from "@/lib/koaches/sessi
 import { sessionNeedsProgressReview } from "@/lib/koaches/session-lifecycle";
 import { isDoneStatus } from "@/lib/koaches/session-status";
 import { filterRatedSkills, resolveParticipantProgress } from "@/lib/koaches/session-progress";
-import { findProgressCardForSession, buildProgressCardUrl } from "@/lib/koaches/progress-cards";
+import { findProgressCardForSession } from "@/lib/koaches/progress-cards";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { SessionProgressSummary } from "@/components/koaches/SkillProgressDisplay";
 import { SendProgressCardEmailButton } from "@/components/koaches/coach/SendProgressCardEmailButton";
+import { ShareProgressCardMessageButton } from "@/components/koaches/coach/ShareProgressCardMessageButton";
 
 type SessionDetailViewProps = {
   session: Session;
@@ -460,27 +461,22 @@ function StandardSessionDetail({ session }: { session: Session }) {
                   )}
                   {card ? (
                     <div className="mt-4 space-y-2">
-                      <a
-                        href={`/progress/${card.id}`}
-                        className="coach-btn-secondary block w-full text-center text-sm"
-                      >
-                        View progress card
-                      </a>
-                      <button
-                        type="button"
-                        className="coach-btn-outline w-full text-sm"
-                        onClick={() => {
-                          void navigator.clipboard.writeText(buildProgressCardUrl(card.id));
-                          showToast("Link copied");
-                        }}
-                      >
-                        Copy share link
-                      </button>
+                      <ShareProgressCardMessageButton
+                        cardId={card.id}
+                        studentName={p.name}
+                        className="w-full"
+                      />
                       <SendProgressCardEmailButton
                         cardId={card.id}
                         emailSendCount={card.emailSendCount ?? 0}
                         className="w-full"
                       />
+                      <a
+                        href={`/progress/${card.id}`}
+                        className="coach-btn-ghost block w-full text-center text-sm text-[#6B7280]"
+                      >
+                        View progress card
+                      </a>
                     </div>
                   ) : null}
                 </div>

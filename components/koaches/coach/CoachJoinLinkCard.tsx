@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, Copy, QrCode } from "lucide-react";
+import { useState, useSyncExternalStore } from "react";
+import { Check, Copy, MessageSquareText, QrCode } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { CoachProfile } from "@/lib/koaches/types";
 import { buildJoinPath } from "@/lib/koaches/coach-routes";
+import { coachFirstName } from "@/lib/koaches/person-name";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
+import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { SaveCoachQrCta } from "@/components/koaches/shared/SaveCoachQrCta";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { cn } from "@/lib/utils";
@@ -15,27 +18,53 @@ type CoachJoinLinkCardProps = {
   className?: string;
 };
 
-/** Compact shortcut to the coach’s public student intake / join page. */
+function defaultJoinMessage(coachName: string, joinUrl: string) {
+  return `Hi! Please join Coach ${coachName}'s roster here so we can schedule and track your sessions:\n\n${joinUrl}\n\nIt only takes a minute. Thanks!`;
+}
+
+function usePageOrigin() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => window.location.origin,
+    () => ""
+  );
+}
+
+/** Compact shortcut to the coach’s public student join page. */
 export function CoachJoinLinkCard({ coach, className }: CoachJoinLinkCardProps) {
   const { showToast } = useCoachToast();
-  const [copied, setCopied] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedMessage, setCopiedMessage] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [origin, setOrigin] = useState("");
+  const [messageOpen, setMessageOpen] = useState(false);
+  const origin = usePageOrigin();
   const joinPath = buildJoinPath(coach.slug);
   const joinUrl = origin ? `${origin}${joinPath}` : joinPath;
   const ready = origin.length > 0;
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
+  const coachShort = coachFirstName(coach);
+  const [message, setMessage] = useState("");
 
   if (!coach.slug?.trim()) return null;
 
+  const openMessageSheet = () => {
+    setMessage((prev) => (prev.trim() ? prev : defaultJoinMessage(coachShort, joinUrl)));
+    setPreviewOpen(false);
+    setMessageOpen(true);
+  };
+
   const copyLink = async () => {
     await navigator.clipboard.writeText(joinUrl);
-    setCopied(true);
-    showToast("Join link copied!");
-    setTimeout(() => setCopied(false), 2000);
+    setCopiedLink(true);
+    showToast("Join link copied");
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const copyMessage = async () => {
+    const text = message.trim() || defaultJoinMessage(coachShort, joinUrl);
+    await navigator.clipboard.writeText(text);
+    setCopiedMessage(true);
+    showToast("Message copied. Paste it in Viber, WhatsApp, or Messenger.");
+    setTimeout(() => setCopiedMessage(false), 2000);
   };
 
   return (
@@ -85,29 +114,87 @@ export function CoachJoinLinkCard({ coach, className }: CoachJoinLinkCardProps) 
 
           <p className="max-w-full truncate px-2 text-center text-xs text-[#6B7280]">{joinUrl}</p>
 
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+          <div className="flex w-full flex-col gap-2">
             <button
               type="button"
-              onClick={() => void copyLink()}
-              className="coach-btn-outline inline-flex min-h-[44px] items-center justify-center gap-2"
+              onClick={openMessageSheet}
+              className="coach-btn-primary inline-flex min-h-[44px] items-center justify-center gap-2"
             >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-              {copied ? "Copied" : "Copy link"}
+              <MessageSquareText className="h-4 w-4" />
+              Message for students
             </button>
-            {ready ? (
-              <SaveCoachQrCta
-                coach={coach}
-                url={joinUrl}
-                variant="intake"
-                label="Save QR image"
-                filename={`${coach.slug}-join-qr.png`}
-                className="min-h-[44px]"
-                onSaved={() => showToast("Join QR saved. Show it at court.")}
-                onError={() => showToast("Could not save image", "error")}
-              />
-            ) : null}
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={() => void copyLink()}
+                className="coach-btn-outline inline-flex min-h-[44px] items-center justify-center gap-2"
+              >
+                {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copiedLink ? "Copied" : "Copy link"}
+              </button>
+              {ready ? (
+                <SaveCoachQrCta
+                  coach={coach}
+                  url={joinUrl}
+                  variant="join"
+                  label="Save QR image"
+                  filename={`${coach.slug}-join-qr.png`}
+                  className="min-h-[44px]"
+                  onSaved={() => showToast("Join QR saved. Show it at court.")}
+                  onError={() => showToast("Could not save image", "error")}
+                />
+              ) : null}
+            </div>
           </div>
         </div>
+      </CoachBottomSheet>
+
+      <CoachBottomSheet
+        open={messageOpen}
+        onClose={() => setMessageOpen(false)}
+        title="Message for students"
+        subtitle="Edit this, copy it, then paste into Viber, WhatsApp, Messenger, or SMS"
+        footer={
+          <CoachSheetFooter>
+            <CoachButton
+              type="button"
+              className="w-full"
+              onClick={() => void copyMessage()}
+            >
+              {copiedMessage ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copy message
+                </>
+              )}
+            </CoachButton>
+          </CoachSheetFooter>
+        }
+      >
+        <CoachSheetField
+          label="Your message"
+          htmlFor="join-share-message"
+          hint="Change the wording anytime. The join link should stay in the message."
+        >
+          <textarea
+            id="join-share-message"
+            className="coach-input min-h-[160px] resize-y"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+          />
+        </CoachSheetField>
+        <button
+          type="button"
+          className="mt-3 text-sm font-semibold text-[#4F8FF7]"
+          onClick={() => setMessage(defaultJoinMessage(coachShort, joinUrl))}
+        >
+          Reset to default
+        </button>
       </CoachBottomSheet>
     </>
   );

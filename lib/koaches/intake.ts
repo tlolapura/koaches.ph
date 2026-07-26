@@ -30,12 +30,14 @@ export function validateIntakePayload(
   payload: IntakeFormPayload,
   displayName: string
 ): string | null {
-  if (!payload.name.trim()) return "Name is required.";
+  if (!payload.name.trim()) return "First and last name are required.";
   if (!payload.mobile.trim()) return "Mobile number is required.";
   if (!payload.email.trim() || !payload.email.includes("@")) return "Valid email is required.";
-  if (!payload.signedName.trim()) return "Please sign the waiver with your full name.";
+  if (!payload.signedName.trim()) {
+    return "Please sign the waiver with your first and last name.";
+  }
   if (payload.signedName.trim().toLowerCase() !== displayName.trim().toLowerCase()) {
-    return "Signature must match your full name.";
+    return "Signature must match your first and last name.";
   }
   return null;
 }

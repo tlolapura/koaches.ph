@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, PartyPopper } from "lucide-react";
 import { SendProgressCardEmailButton } from "@/components/koaches/coach/SendProgressCardEmailButton";
+import { ShareProgressCardMessageButton } from "@/components/koaches/coach/ShareProgressCardMessageButton";
 import {
   ALL_SKILL_CATEGORIES,
   getSkillsForRubric,
@@ -18,7 +19,6 @@ import {
 import {
   suggestSessionFeedback,
   type SessionFeedback,
-  buildProgressCardUrl,
 } from "@/lib/koaches/progress-cards";
 import type { SkillCategory, SkillRating, SkillRubricId } from "@/lib/koaches/types";
 import type { SessionRatingStep } from "@/lib/koaches/session-detail-steps";
@@ -243,7 +243,6 @@ export function SkillRatingPanel({
   );
   const [saving, setSaving] = useState(false);
   const [savedCardId, setSavedCardId] = useState<string | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
   const [feedback, setFeedback] = useState<SessionFeedback>(() => ({
     strengths: initialFeedback?.strengths ?? "",
     toImprove: initialFeedback?.toImprove ?? "",
@@ -389,18 +388,12 @@ export function SkillRatingPanel({
             </p>
             {savedCardId ? (
               <div className="mt-6 space-y-2">
+                <ShareProgressCardMessageButton
+                  cardId={savedCardId}
+                  studentName={participantName}
+                  className="w-full"
+                />
                 <SendProgressCardEmailButton cardId={savedCardId} className="w-full" />
-                <button
-                  type="button"
-                  className="coach-btn-outline w-full"
-                  onClick={() => {
-                    void navigator.clipboard.writeText(buildProgressCardUrl(savedCardId));
-                    setLinkCopied(true);
-                    setTimeout(() => setLinkCopied(false), 3000);
-                  }}
-                >
-                  {linkCopied ? "Link copied!" : "Copy link to send"}
-                </button>
                 <a
                   href={`/progress/${savedCardId}`}
                   className="coach-btn-ghost block w-full text-center text-sm text-[#6B7280]"

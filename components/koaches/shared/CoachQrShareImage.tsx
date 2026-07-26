@@ -8,13 +8,13 @@ import { formatPricingSummary } from "@/lib/koaches/pricing";
 export const QR_SHARE_WIDTH = 400;
 export const QR_SHARE_HEIGHT = 560;
 
-export type QrShareVariant = "intake" | "profile";
+export type QrShareVariant = "join" | "profile";
 
 const VARIANT_COPY: Record<
   QrShareVariant,
   { eyebrow: string; headline: string; subline: string }
 > = {
-  intake: {
+  join: {
     eyebrow: "Student sign-up",
     headline: "Scan to join my roster",
     subline: "Sign up & complete the waiver",
@@ -22,7 +22,7 @@ const VARIANT_COPY: Record<
   profile: {
     eyebrow: "Coach profile",
     headline: "Scan to view my page",
-    subline: "Rates, programs & booking",
+    subline: "Rates, programs, and how to reach me",
   },
 };
 

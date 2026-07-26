@@ -101,12 +101,13 @@ function StudentsPageContent() {
   const refreshPending = useCallback(() => setPendingVersion((v) => v + 1), []);
 
   useEffect(() => {
+    window.addEventListener("koaches-signup-updated", refreshPending);
     window.addEventListener("koaches-intake-updated", refreshPending);
     window.addEventListener("koaches-roster-updated", refreshPending);
     return () => {
-      window.removeEventListener("koaches-roster-updated", refreshPending);
-      window.removeEventListener("storage", refreshPending);
+      window.removeEventListener("koaches-signup-updated", refreshPending);
       window.removeEventListener("koaches-intake-updated", refreshPending);
+      window.removeEventListener("koaches-roster-updated", refreshPending);
     };
   }, [refreshPending]);
 

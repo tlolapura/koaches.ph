@@ -7,7 +7,6 @@ import type { Session } from "@/lib/koaches/types";
 import { resolveParticipantProgress, hasRatingsForCard, filterRatedSkills, normalizeParticipantRatings, type ParticipantRatings } from "@/lib/koaches/session-progress";
 import {
   buildProgressCardDraft,
-  buildProgressCardUrl,
   countSkillImprovements,
   getProgressCardRatings,
   suggestSessionFeedback,
@@ -21,6 +20,7 @@ import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import { SendProgressCardEmailButton } from "@/components/koaches/coach/SendProgressCardEmailButton";
+import { ShareProgressCardMessageButton } from "@/components/koaches/coach/ShareProgressCardMessageButton";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { RadarChart, SkillComparisonTable } from "@/components/koaches/RadarChart";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
@@ -181,22 +181,17 @@ export function GenerateProgressCardSheet({
           </CoachSheetFooter>
         ) : (
           <CoachSheetFooter>
-            <Link href={`/progress/${generatedId}`} className="coach-btn-primary text-center">
+            <Link href={`/progress/${generatedId}`} className="coach-btn-outline text-center">
               View card
             </Link>
+            {generatedId ? (
+              <ShareProgressCardMessageButton
+                cardId={generatedId}
+                studentName={participant?.name}
+                className="flex-1"
+              />
+            ) : null}
             {generatedId ? <SendProgressCardEmailButton cardId={generatedId} /> : null}
-            <button
-              type="button"
-              className="coach-btn-outline"
-              onClick={() => {
-                if (generatedId) {
-                  navigator.clipboard.writeText(buildProgressCardUrl(generatedId));
-                  showToast("Link copied!");
-                }
-              }}
-            >
-              Copy link
-            </button>
           </CoachSheetFooter>
         )
       }

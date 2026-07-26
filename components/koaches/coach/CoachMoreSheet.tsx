@@ -2,23 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, ChevronRight, CreditCard, FileText, Settings, Share2, User } from "lucide-react";
+import { ChevronRight, CreditCard, FileText, Settings, Share2, User, UsersRound } from "lucide-react";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import { cn } from "@/lib/utils";
 
 const links = [
   {
+    href: "/coach/clinics",
+    label: "Clinics",
+    icon: UsersRound,
+    desc: "Group clinics with one roster across days",
+  },
+  {
     href: "/coach/programs",
     label: "Programs",
     icon: FileText,
     desc: "Packages, and the skills you score after sessions",
-  },
-  {
-    href: "/coach/reports",
-    label: "Earnings",
-    icon: BarChart3,
-    desc: "What you collected and what's still owed",
   },
   {
     href: "/coach/social",
@@ -59,7 +59,7 @@ export function CoachMoreSheet({ open, onClose }: CoachMoreSheetProps) {
       open={open}
       onClose={onClose}
       title="More"
-      subtitle="Programs, earnings, and the rest of your tools"
+      subtitle="Clinics, programs, and the rest of your tools"
     >
       <div className="space-y-2">
         {links.map((l) => {
