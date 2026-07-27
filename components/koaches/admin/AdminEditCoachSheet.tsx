@@ -10,7 +10,6 @@ import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { PricingTiersEditor } from "@/components/koaches/coach/PricingTiersEditor";
 import { CoachingLevelsPicker } from "@/components/koaches/shared/CoachingLevelsPicker";
-import { SpecializationPicker } from "@/components/koaches/shared/SpecializationPicker";
 import { joinPersonName } from "@/lib/koaches/person-name";
 import type { CoachingLevelId } from "@/lib/koaches/application-form";
 import type { CoachProfile } from "@/lib/koaches/types";
@@ -196,14 +195,6 @@ export function AdminEditCoachSheet({ coach, open, onClose, onSaved }: AdminEdit
             className="coach-input min-h-[100px] resize-none"
             value={form.bio}
             onChange={(e) => patch({ bio: e.target.value })}
-          />
-        </CoachSheetField>
-
-        <CoachSheetField label="Specialization">
-          <SpecializationPicker
-            id="edit-coach-specialization"
-            value={form.specialization}
-            onChange={(specialization) => patch({ specialization })}
           />
         </CoachSheetField>
 
