@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft } from "lucide-react";
 import type { ProgramDraft } from "@/lib/koaches/program-templates";
 import {
   PROGRAM_PRESETS,
@@ -152,8 +151,28 @@ export function ProgramCreateFlow({
     { id: "review", label: "Review" },
   ];
 
+  const handleBack = () => {
+    if (mode === "templates" && templateStep === "customize") {
+      setTemplateStep("pick");
+      return;
+    }
+    if (mode === "custom") {
+      if (customStep === "review") setCustomStep("rubric");
+      else if (customStep === "rubric") setCustomStep("details");
+    }
+  };
+
+  const showBack =
+    (mode === "templates" && templateStep === "customize") ||
+    (mode === "custom" && customStep !== "details");
+
   return (
-    <CoachBottomSheet open={open} onClose={handleClose} title={title}>
+    <CoachBottomSheet
+      open={open}
+      onClose={handleClose}
+      onBack={showBack ? handleBack : undefined}
+      title={title}
+    >
       {/* ── TEMPLATES: pick preset ── */}
       {mode === "templates" && templateStep === "pick" && (
         <div className="space-y-3">
@@ -187,7 +206,6 @@ export function ProgramCreateFlow({
         <TemplateCustomizeForm
           draft={draft}
           setDraft={setDraft}
-          onBack={() => setTemplateStep("pick")}
           onSave={() => void submitDraft(draft)}
           saving={saving}
         />
@@ -196,18 +214,6 @@ export function ProgramCreateFlow({
       {/* ── CUSTOM: 3-step wizard ── */}
       {mode === "custom" && draft && (
         <div className="space-y-4">
-          <button
-            type="button"
-            onClick={() => {
-              if (customStep === "details") handleClose();
-              else if (customStep === "rubric") setCustomStep("details");
-              else setCustomStep("rubric");
-            }}
-            className="inline-flex min-h-[44px] items-center gap-1 text-sm text-[#6B7280]"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back
-          </button>
-
           {/* Step indicator */}
           <CoachStepper
             card={false}
@@ -335,13 +341,11 @@ export function ProgramCreateFlow({
 function TemplateCustomizeForm({
   draft,
   setDraft,
-  onBack,
   onSave,
   saving = false,
 }: {
   draft: ProgramDraft;
   setDraft: (d: ProgramDraft) => void;
-  onBack: () => void;
   onSave: () => void;
   saving?: boolean;
 }) {
@@ -349,10 +353,6 @@ function TemplateCustomizeForm({
 
   return (
     <div className="space-y-4">
-      <button type="button" onClick={onBack} className="inline-flex min-h-[44px] items-center gap-1 text-sm text-[#6B7280]">
-        <ArrowLeft className="h-4 w-4" /> Back
-      </button>
-
       <CoachSheetField label="Program name" htmlFor="template-program-name">
         <input
           id="template-program-name"

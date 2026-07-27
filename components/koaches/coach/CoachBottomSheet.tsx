@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachSheetFooterActions } from "@/components/koaches/coach/CoachSheet";
@@ -18,6 +18,11 @@ type CoachBottomSheetProps = {
   footer?: React.ReactNode;
   /** Wider modal for schedule grids */
   wide?: boolean;
+  /** Sub-sheet or inner step: show Back on mobile (and desktop) instead of dismiss */
+  onBack?: () => void;
+  backLabel?: string;
+  /** Root sheet mobile dismiss label (default Done) */
+  dismissLabel?: string;
 };
 
 function useSheetBodyLock(open: boolean) {
@@ -44,6 +49,9 @@ export function CoachBottomSheet({
   children,
   footer,
   wide,
+  onBack,
+  backLabel = "Back",
+  dismissLabel = "Done",
 }: CoachBottomSheetProps) {
   const [mounted, setMounted] = useState(false);
   const titleId = useId();
@@ -55,19 +63,23 @@ export function CoachBottomSheet({
   // Keep a stable Escape handler without re-focusing the panel on every parent re-render
   // (inline onClose identities would otherwise steal focus from inputs on each keystroke).
   const onCloseRef = useRef(onClose);
+  const onBackRef = useRef(onBack);
   onCloseRef.current = onClose;
+  onBackRef.current = onBack;
 
   useEffect(() => {
     if (!open) return;
     panelRef.current?.focus();
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCloseRef.current();
+      if (e.key === "Escape") (onBackRef.current ?? onCloseRef.current)();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
   if (!open || !mounted) return null;
+
+  const dismiss = onBack ?? onClose;
 
   return createPortal(
     <div
@@ -79,8 +91,8 @@ export function CoachBottomSheet({
       <button
         type="button"
         className="absolute inset-0 bg-black/45 backdrop-blur-[1px]"
-        onClick={onClose}
-        aria-label="Close"
+        onClick={dismiss}
+        aria-label={onBack ? backLabel : dismissLabel}
       />
 
       <div
@@ -99,24 +111,65 @@ export function CoachBottomSheet({
         </div>
 
         {title && (
-          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[#F3F4F6] px-4 pt-2 pb-3 md:px-6 md:pt-5">
-            <div className="min-w-0 flex-1">
-              <h2 id={titleId} className="font-heading text-lg font-semibold text-[#111827]">
+          <>
+            <div className="flex shrink-0 items-center gap-2 border-b border-[#F3F4F6] px-4 pb-3 pt-1 md:hidden">
+              <div className="flex min-w-[4.5rem] shrink-0 justify-start">
+                {onBack ? (
+                  <button
+                    type="button"
+                    onClick={onBack}
+                    className="inline-flex min-h-[44px] items-center gap-0.5 pr-2 text-sm font-semibold text-[#4F8FF7]"
+                  >
+                    <ChevronLeft className="h-5 w-5 shrink-0" aria-hidden />
+                    <span className="max-w-[5.5rem] truncate">{backLabel}</span>
+                  </button>
+                ) : null}
+              </div>
+              <h2
+                id={titleId}
+                className="min-w-0 flex-1 truncate text-center font-heading text-base font-semibold text-[#111827]"
+              >
                 {title}
               </h2>
-              {subtitle && (
-                <p className="mt-0.5 hidden text-sm text-[#6B7280] md:block">{subtitle}</p>
+              <div className="flex min-w-[4.5rem] shrink-0 justify-end">
+                {!onBack ? (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="min-h-[44px] px-1 text-sm font-semibold text-[#4F8FF7]"
+                  >
+                    {dismissLabel}
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="hidden shrink-0 items-start justify-between gap-3 border-b border-[#F3F4F6] px-6 pt-5 pb-3 md:flex">
+              <div className="min-w-0 flex-1">
+                <h2 className="font-heading text-lg font-semibold text-[#111827]">{title}</h2>
+                {subtitle && <p className="mt-0.5 text-sm text-[#6B7280]">{subtitle}</p>}
+              </div>
+              {onBack ? (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="inline-flex min-h-[40px] shrink-0 items-center gap-1 rounded-xl px-2 text-sm font-semibold text-[#4F8FF7] hover:bg-[#EFF6FF]"
+                >
+                  <ChevronLeft className="h-5 w-5" aria-hidden />
+                  {backLabel}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex min-h-[40px] min-w-[40px] shrink-0 items-center justify-center rounded-xl text-[#6B7280] hover:bg-[#F3F4F6]"
+                  aria-label={dismissLabel}
+                >
+                  <X className="h-5 w-5" />
+                </button>
               )}
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="hidden min-h-[40px] min-w-[40px] shrink-0 items-center justify-center rounded-xl text-[#6B7280] hover:bg-[#F3F4F6] md:flex"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          </>
         )}
 
         <div className="coach-sheet-body min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 md:px-6">

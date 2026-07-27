@@ -408,6 +408,7 @@ export function AddSessionSheet({
     <CoachBottomSheet
       open={open}
       onClose={onClose}
+      onBack={step === "confirm" ? () => setStep("form") : undefined}
       title={step === "confirm" ? "Review" : "Book a session"}
       subtitle={
         step === "confirm"
@@ -417,9 +418,6 @@ export function AddSessionSheet({
       footer={
         step === "confirm" ? (
           <CoachSheetFooter>
-            <CoachButton type="button" variant="outline" disabled={saving} onClick={() => setStep("form")}>
-              Back
-            </CoachButton>
             <CoachButton
               type="button"
               loading={saving}

@@ -139,6 +139,7 @@ export function GenerateProgressCardSheet({
     <CoachBottomSheet
       open={open}
       onClose={onClose}
+      onBack={step > 1 && step < 4 ? () => setStep((s) => s - 1) : undefined}
       title={
         step === 1
           ? "Review progress"
@@ -160,11 +161,6 @@ export function GenerateProgressCardSheet({
       footer={
         step < 4 ? (
           <CoachSheetFooter>
-            {step > 1 && (
-              <CoachButton type="button" variant="outline" disabled={generating} onClick={() => setStep((s) => s - 1)}>
-                Back
-              </CoachButton>
-            )}
             <CoachButton
               type="button"
               loading={step === 3 && generating}

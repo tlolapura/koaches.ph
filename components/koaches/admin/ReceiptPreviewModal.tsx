@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
-import { CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 
 type ReceiptPreviewModalProps = {
   open: boolean;
@@ -78,13 +76,6 @@ export function ReceiptPreviewModal({
       onClose={onClose}
       title={title}
       subtitle={fileName ?? undefined}
-      footer={
-        <CoachSheetFooter>
-          <CoachButton type="button" variant="outline" className="w-full" onClick={onClose}>
-            Close
-          </CoachButton>
-        </CoachSheetFooter>
-      }
     >
       {loading ? (
         <div className="flex min-h-[240px] items-center justify-center text-[#9CA3AF]">

@@ -153,54 +153,39 @@ export function AddClinicSheet({ open, onClose }: AddClinicSheetProps) {
       </CoachSheetFooter>
     ) : step === "dates" ? (
       <CoachSheetFooter>
-        <div className="flex w-full gap-3">
-          <CoachButton
-            type="button"
-            variant="outline"
-            className="flex-1"
-            onClick={() => setStep("basics")}
-          >
-            Back
-          </CoachButton>
-          <CoachButton
-            type="button"
-            className="flex-[2]"
-            disabled={!datesReady}
-            onClick={() => setStep("players")}
-          >
-            Next: players
-          </CoachButton>
-        </div>
+        <CoachButton
+          type="button"
+          className="w-full"
+          disabled={!datesReady}
+          onClick={() => setStep("players")}
+        >
+          Next: players
+        </CoachButton>
       </CoachSheetFooter>
     ) : (
       <CoachSheetFooter>
-        <div className="flex w-full gap-3">
-          <CoachButton
-            type="button"
-            variant="outline"
-            className="flex-1"
-            disabled={saving}
-            onClick={() => setStep("dates")}
-          >
-            Back
-          </CoachButton>
-          <CoachButton
-            type="button"
-            className="flex-[2]"
-            loading={saving}
-            loadingLabel="Creating…"
-            onClick={() => void handleSave()}
-          >
-            Create clinic
-          </CoachButton>
-        </div>
+        <CoachButton
+          type="button"
+          className="w-full"
+          loading={saving}
+          loadingLabel="Creating…"
+          onClick={() => void handleSave()}
+        >
+          Create clinic
+        </CoachButton>
       </CoachSheetFooter>
     );
+
+  const handleBack = () => {
+    if (step === "players") setStep("dates");
+    else if (step === "dates") setStep("basics");
+  };
 
   return (
     <CoachBottomSheet
       open={open}
       onClose={handleClose}
+      onBack={step !== "basics" ? handleBack : undefined}
       title="New clinic"
       subtitle={subtitleByStep[step]}
       wide

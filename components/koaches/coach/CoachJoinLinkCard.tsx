@@ -22,6 +22,9 @@ function defaultJoinMessage(coachName: string, joinUrl: string) {
   return `Hi! Please join Coach ${coachName}'s roster here so we can schedule and track your sessions:\n\n${joinUrl}\n\nIt only takes a minute. Thanks!`;
 }
 
+/** QR block height (220px code + 16px padding each side) — keeps join sheets visually aligned */
+const JOIN_QR_BLOCK_HEIGHT = 252;
+
 function usePageOrigin() {
   return useSyncExternalStore(
     () => () => {},
@@ -45,6 +48,9 @@ export function CoachJoinLinkCard({ coach, className }: CoachJoinLinkCardProps) 
   const [message, setMessage] = useState("");
 
   if (!coach.slug?.trim()) return null;
+
+  const defaultMessage = defaultJoinMessage(coachShort, joinUrl);
+  const isMessageEdited = message.trim() !== defaultMessage.trim();
 
   const openMessageSheet = () => {
     setMessage((prev) => (prev.trim() ? prev : defaultJoinMessage(coachShort, joinUrl)));
@@ -107,12 +113,26 @@ export function CoachJoinLinkCard({ coach, className }: CoachJoinLinkCardProps) 
               />
             </div>
           ) : (
-            <div className="flex h-[252px] w-[252px] items-center justify-center rounded-2xl bg-[#F3F4F6] text-sm text-[#9CA3AF]">
+            <div
+              className="flex items-center justify-center rounded-2xl bg-[#F3F4F6] text-sm text-[#9CA3AF]"
+              style={{ height: JOIN_QR_BLOCK_HEIGHT, width: JOIN_QR_BLOCK_HEIGHT }}
+            >
               Preparing…
             </div>
           )}
 
-          <p className="max-w-full truncate px-2 text-center text-xs text-[#6B7280]">{joinUrl}</p>
+          <div className="flex w-full max-w-full items-center gap-1.5 rounded-xl bg-[#F9FAFB] px-3 py-2 ring-1 ring-[#E5E7EB]">
+            <p className="min-w-0 flex-1 truncate text-xs text-[#6B7280]">{joinUrl}</p>
+            <button
+              type="button"
+              onClick={() => void copyLink()}
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#4F8FF7] hover:bg-[#EFF6FF]"
+              aria-label={copiedLink ? "Copied" : "Copy link"}
+              title={copiedLink ? "Copied" : "Copy link"}
+            >
+              {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </button>
+          </div>
 
           <div className="flex w-full flex-col gap-2">
             <button
@@ -123,28 +143,18 @@ export function CoachJoinLinkCard({ coach, className }: CoachJoinLinkCardProps) 
               <MessageSquareText className="h-4 w-4" />
               Message for students
             </button>
-            <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
-              <button
-                type="button"
-                onClick={() => void copyLink()}
-                className="coach-btn-outline inline-flex min-h-[44px] items-center justify-center gap-2"
-              >
-                {copiedLink ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copiedLink ? "Copied" : "Copy link"}
-              </button>
-              {ready ? (
-                <SaveCoachQrCta
-                  coach={coach}
-                  url={joinUrl}
-                  variant="join"
-                  label="Save QR image"
-                  filename={`${coach.slug}-join-qr.png`}
-                  className="min-h-[44px]"
-                  onSaved={() => showToast("Join QR saved. Show it at court.")}
-                  onError={() => showToast("Could not save image", "error")}
-                />
-              ) : null}
-            </div>
+            {ready ? (
+              <SaveCoachQrCta
+                coach={coach}
+                url={joinUrl}
+                variant="join"
+                label="Save QR image"
+                filename={`${coach.slug}-join-qr.png`}
+                className="min-h-[44px]"
+                onSaved={() => showToast("Join QR saved. Show it at court.")}
+                onError={() => showToast("Could not save image", "error")}
+              />
+            ) : null}
           </div>
         </div>
       </CoachBottomSheet>
@@ -152,6 +162,10 @@ export function CoachJoinLinkCard({ coach, className }: CoachJoinLinkCardProps) 
       <CoachBottomSheet
         open={messageOpen}
         onClose={() => setMessageOpen(false)}
+        onBack={() => {
+          setMessageOpen(false);
+          setPreviewOpen(true);
+        }}
         title="Message for students"
         subtitle="Edit this, copy it, then paste into Viber, WhatsApp, Messenger, or SMS"
         footer={
@@ -176,25 +190,30 @@ export function CoachJoinLinkCard({ coach, className }: CoachJoinLinkCardProps) 
           </CoachSheetFooter>
         }
       >
-        <CoachSheetField
-          label="Your message"
-          htmlFor="join-share-message"
-          hint="Change the wording anytime. The join link should stay in the message."
-        >
-          <textarea
-            id="join-share-message"
-            className="coach-input min-h-[160px] resize-y"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-        </CoachSheetField>
-        <button
-          type="button"
-          className="mt-3 text-sm font-semibold text-[#4F8FF7]"
-          onClick={() => setMessage(defaultJoinMessage(coachShort, joinUrl))}
-        >
-          Reset to default
-        </button>
+        <div className="flex flex-col gap-4 py-2">
+          <CoachSheetField
+            label="Your message"
+            htmlFor="join-share-message"
+            hint="Change the wording anytime. The join link should stay in the message."
+          >
+            <textarea
+              id="join-share-message"
+              className="coach-input resize-none"
+              style={{ height: JOIN_QR_BLOCK_HEIGHT }}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+          </CoachSheetField>
+          {isMessageEdited ? (
+            <button
+              type="button"
+              className="self-start text-sm font-semibold text-[#4F8FF7]"
+              onClick={() => setMessage(defaultMessage)}
+            >
+              Reset to default
+            </button>
+          ) : null}
+        </div>
       </CoachBottomSheet>
     </>
   );

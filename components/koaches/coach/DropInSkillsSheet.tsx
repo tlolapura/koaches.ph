@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetFooter } from "@/components/koaches/coach/CoachSheet";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
@@ -454,6 +454,7 @@ export function DropInSkillsSheet({
     <CoachBottomSheet
       open={open}
       onClose={onClose}
+      onBack={step === 2 ? () => setStep(1) : undefined}
       title={step === 1 ? "1. Pick skills" : "2. Names & ratings"}
       subtitle={
         step === 1
@@ -481,27 +482,16 @@ export function DropInSkillsSheet({
               Next · {count} skill{count === 1 ? "" : "s"}
             </CoachButton>
           ) : (
-            <>
-              <CoachButton
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => setStep(1)}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back
-              </CoachButton>
-              <CoachButton
-                type="button"
-                className="w-full"
-                loading={saving}
-                loadingLabel="Saving…"
-                disabled={count === 0}
-                onClick={() => void handleSave()}
-              >
-                Save skills
-              </CoachButton>
-            </>
+            <CoachButton
+              type="button"
+              className="w-full"
+              loading={saving}
+              loadingLabel="Saving…"
+              disabled={count === 0}
+              onClick={() => void handleSave()}
+            >
+              Save skills
+            </CoachButton>
           )}
         </CoachSheetFooter>
       }

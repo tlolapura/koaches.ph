@@ -36,6 +36,7 @@ export function CoachCourtsCard({
 
   const [editOpen, setEditOpen] = useState(initialOpen);
   const [requestOpen, setRequestOpen] = useState(false);
+  const [requestFromEdit, setRequestFromEdit] = useState(false);
   const [draftIds, setDraftIds] = useState<string[]>(() => [...coach.courtIds]);
   const [saving, setSaving] = useState(false);
   const [requesting, setRequesting] = useState(false);
@@ -210,7 +211,10 @@ export function CoachCourtsCard({
 
         <button
           type="button"
-          onClick={() => setRequestOpen(true)}
+          onClick={() => {
+            setRequestFromEdit(false);
+            setRequestOpen(true);
+          }}
           className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-1.5 text-sm font-semibold text-[#16A34A]"
         >
           <Plus className="h-4 w-4" />
@@ -304,6 +308,7 @@ export function CoachCourtsCard({
           type="button"
           onClick={() => {
             if (!name && search.trim()) setName(search.trim());
+            setRequestFromEdit(true);
             setEditOpen(false);
             setRequestOpen(true);
           }}
@@ -316,7 +321,19 @@ export function CoachCourtsCard({
 
       <CoachBottomSheet
         open={requestOpen}
-        onClose={() => setRequestOpen(false)}
+        onClose={() => {
+          setRequestOpen(false);
+          setRequestFromEdit(false);
+        }}
+        onBack={
+          requestFromEdit
+            ? () => {
+                setRequestOpen(false);
+                setEditOpen(true);
+              }
+            : undefined
+        }
+        backLabel="Your courts"
         title="Request a court"
         subtitle="We'll add it after a quick review"
         footer={
