@@ -51,6 +51,7 @@ import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { CoachStepper } from "@/components/koaches/coach/CoachStepper";
 import { formatDisplayDate, formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { ClipboardList } from "lucide-react";
 
 const ADD_SESSION_FORM_ID = "add-session-form";
 
@@ -428,7 +429,7 @@ export function AddSessionSheet({
               Book session
             </CoachButton>
           </CoachSheetFooter>
-        ) : (
+        ) : sessionType === "program" && programs.length === 0 ? undefined : (
           <CoachSheetFooter>
             <CoachButton type="button" disabled={!canSave} onClick={() => setStep("confirm")}>
               Review session
@@ -437,16 +438,18 @@ export function AddSessionSheet({
         )
       }
     >
-      <CoachStepper
-        card={false}
-        variant="compact"
-        steps={ADD_SESSION_STEPS.map((s) =>
-          s.id === "confirm" ? { ...s, disabled: !canSave && step === "form" } : s
-        )}
-        currentStepId={step}
-        onStepChange={(id) => setStep(id as AddSessionStep)}
-        className="mb-4"
-      />
+      {step !== "confirm" && !(sessionType === "program" && programs.length === 0) ? (
+        <CoachStepper
+          card={false}
+          variant="compact"
+          steps={ADD_SESSION_STEPS.map((s) =>
+            s.id === "confirm" ? { ...s, disabled: !canSave && step === "form" } : s
+          )}
+          currentStepId={step}
+          onStepChange={(id) => setStep(id as AddSessionStep)}
+          className="mb-4"
+        />
+      ) : null}
 
       {step === "confirm" ? (
         <div className="coach-card space-y-4 p-4">
@@ -555,6 +558,32 @@ export function AddSessionSheet({
           </div>
         </CoachSheetField>
 
+        {sessionType === "program" && programs.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-[#BBF7D0] bg-[#F0FDF4]/40 px-4 py-8 text-center">
+            <ClipboardList className="mx-auto h-8 w-8 text-[#16A34A]" strokeWidth={1.75} />
+            <p className="font-heading mt-3 text-base font-semibold text-[#111827]">
+              No programs yet
+            </p>
+            <p className="mt-1 text-sm text-[#6B7280]">
+              You need a program before you can book a program session. Create one first, then come back here.
+            </p>
+            <Link
+              href="/coach/programs"
+              onClick={onClose}
+              className="coach-btn-primary mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 px-5"
+            >
+              Create a program
+            </Link>
+            <button
+              type="button"
+              onClick={() => handleSessionTypeChange("drop-in")}
+              className="mt-3 block w-full text-sm font-semibold text-[#4F8FF7]"
+            >
+              Or book a drop-in instead
+            </button>
+          </div>
+        ) : (
+          <>
         {sessionType === "program" && (
           <CoachSheetField label="Program">
             <CoachSelect
@@ -602,7 +631,7 @@ export function AddSessionSheet({
           }
         />
 
-        {sessionType === "program" && (
+        {sessionType === "program" && selectedProgram ? (
           <>
             {!primaryStudent ? (
               <p className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-2 text-xs font-medium text-[#6B7280]">
@@ -613,7 +642,7 @@ export function AddSessionSheet({
                 const banner = formatProgramBookingBanner({
                   studentName: primaryStudent.name,
                   sessionNumber: nextSessionNumber,
-                  sessionCount: selectedProgram?.sessionCount ?? nextSessionNumber,
+                  sessionCount: selectedProgram.sessionCount,
                   isFirst: isFirstProgramSession,
                 });
                 return (
@@ -633,7 +662,7 @@ export function AddSessionSheet({
               </p>
             )}
           </>
-        )}
+        ) : null}
 
         <SessionPriceFields
           sessionType={sessionType}
@@ -813,7 +842,8 @@ export function AddSessionSheet({
             </div>
           ) : null}
         </div>
-
+          </>
+        )}
       </form>
       )}
     </CoachBottomSheet>

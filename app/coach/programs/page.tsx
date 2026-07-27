@@ -47,6 +47,7 @@ function ProgramsPageContent() {
     }
   }, [searchParams, router, pathname]);
 
+
   const dropInSkillCount = coach
     ? resolveSkills({
         rubricId: coach.customSkillIds?.length ? "custom" : coach.skillTemplateId,

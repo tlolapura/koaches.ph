@@ -381,61 +381,81 @@ function FirstRunChecklist({
       done: hasSkills,
       href: "/coach/profile?skills=1",
       icon: Sparkles,
+      short: "Skills",
       label: "Pick skills you score",
-      detail: "Choose what you rate after every session",
+      detail: "Choose what you rate after every session. Takes about a minute.",
+      cta: "Set up skills",
     },
     {
       key: "student",
       done: hasStudent,
       href: "/coach/students?add=1",
       icon: UserPlus,
+      short: "Student",
       label: "Add your first student",
-      detail: "Just a name is enough to start",
+      detail: "Just a name is enough to get them on your roster.",
+      cta: "Add student",
     },
     {
       key: "session",
       done: hasSession,
       href: "/coach/sessions?add=1",
       icon: Plus,
+      short: "Session",
       label: "Book your first session",
-      detail: "Pick the student, a date, and a time",
+      detail: "Pick the student, a date, and a time.",
+      cta: "Book session",
     },
-  ];
+  ] as const;
+
+  const doneCount = steps.filter((s) => s.done).length;
+  const current = steps.find((s) => !s.done) ?? steps[steps.length - 1];
+  const percent = Math.round((doneCount / steps.length) * 100);
 
   return (
     <section className="mt-4 px-4">
-      <div className="rounded-2xl border border-[#BBF7D0] bg-gradient-to-br from-[#F0FDF4] to-white p-4">
-        <h2 className="font-heading text-sm font-bold text-[#111827]">Let&apos;s get you started</h2>
-        <p className="mt-0.5 text-xs text-[#6B7280]">
-          Three quick steps and you&apos;re coaching with everything in one place.
-        </p>
+      <div className="rounded-2xl border border-[#E5E7EB] bg-[#FAFAFA] p-3.5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-heading text-[15px] font-semibold text-[#1F2937]">
+            Let&apos;s get you started
+          </h2>
+          <span className="text-xs font-medium text-[#6B7280]">
+            {doneCount}/{steps.length} done
+          </span>
+        </div>
+
+        <p className="mt-1 text-xs text-[#6B7280]">Three quick steps to finish setup.</p>
+
+        <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[#E5E7EB]">
+          <div
+            className="h-full rounded-full bg-[#16A34A] transition-[width] duration-500 ease-out"
+            style={{ width: `${Math.max(percent, 8)}%` }}
+          />
+        </div>
+
         <div className="mt-3 space-y-2">
           {steps.map((s) => {
             const Icon = s.icon;
-            const content = (
+            const row = (
               <>
                 <span
                   className={cn(
-                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                    s.done ? "bg-[#16A34A] text-white" : "bg-white text-[#16A34A] shadow-sm"
+                    "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                    s.done ? "bg-[#DCFCE7] text-[#16A34A]" : "bg-white text-[#6B7280] ring-1 ring-[#E5E7EB]"
                   )}
                 >
-                  {s.done ? (
-                    <Check className="h-4 w-4" strokeWidth={3} />
-                  ) : (
-                    <Icon className="h-4 w-4" strokeWidth={2.25} />
-                  )}
+                  {s.done ? <Check className="h-4 w-4" strokeWidth={3} /> : <Icon className="h-4 w-4" />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span
                     className={cn(
-                      "font-heading block text-sm font-semibold",
-                      s.done ? "text-[#6B7280] line-through" : "text-[#111827]"
+                      "block text-sm",
+                      s.done ? "font-medium text-[#6B7280]" : "font-semibold text-[#111827]"
                     )}
                   >
                     {s.label}
                   </span>
-                  {!s.done ? <span className="block text-xs text-[#6B7280]">{s.detail}</span> : null}
+                  {!s.done ? <span className="block text-xs text-[#9CA3AF]">{s.detail}</span> : null}
                 </span>
                 {!s.done ? <ChevronRight className="h-4 w-4 shrink-0 text-[#9CA3AF]" /> : null}
               </>
@@ -443,25 +463,31 @@ function FirstRunChecklist({
 
             if (s.done) {
               return (
-                <div key={s.key} className="flex items-center gap-3 rounded-xl p-2">
-                  {content}
+                <div key={s.key} className="flex items-center gap-2.5 rounded-xl bg-transparent px-1 py-1">
+                  {row}
                 </div>
               );
             }
+
+            const isCurrent = s.key === current.key;
             return (
               <Link
                 key={s.key}
                 href={s.href}
-                className="flex items-center gap-3 rounded-xl border border-[#E5E7EB] bg-white p-2 transition-transform active:scale-[0.99]"
+                className={cn(
+                  "flex items-center gap-2.5 rounded-xl border px-2.5 py-2 transition-colors",
+                  isCurrent
+                    ? "border-[#BBF7D0] bg-[#F0FDF4]"
+                    : "border-[#E5E7EB] bg-white hover:bg-[#F9FAFB]"
+                )}
               >
-                {content}
+                {row}
               </Link>
             );
           })}
         </div>
-        <p className="mt-3 text-xs text-[#6B7280]">
-          Once these are done, you&apos;re set for your next lesson.
-        </p>
+
+        <p className="mt-2 text-[11px] text-[#9CA3AF]">You can do these in any order.</p>
       </div>
     </section>
   );
