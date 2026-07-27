@@ -3,14 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Calendar,
-  CalendarClock,
+  CalendarPlus,
+  ChevronDown,
   MapPin,
   Pencil,
   Plus,
+  Power,
   Search,
   Trash2,
-  Users,
 } from "lucide-react";
 import type { CoachProfile } from "@/lib/koaches/types";
 import type { Court } from "@/lib/koaches/types";
@@ -28,10 +28,14 @@ import {
   getSubscriptionBillingInfo,
   type SubscriptionBillingStatus,
 } from "@/lib/koaches/subscription-billing";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
-import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
-import { SITE_DOMAIN } from "@/lib/koaches/constants";
+import {
+  AdminPageHeader,
+  AdminPageShell,
+  adminListClass,
+  adminListEmptyClass,
+  adminListRowClass,
+} from "@/components/koaches/admin/AdminPageLayout";
 import { cn, formatCurrency, formatDisplayDate } from "@/lib/utils";
 
 type AdminCoachesClientProps = {
@@ -68,12 +72,11 @@ export function AdminCoachesClient({
   const [editCoach, setEditCoach] = useState<CoachProfile | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [courtEditId, setCourtEditId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [courtDraft, setCourtDraft] = useState<string[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<CoachProfile | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
-  const courtById = new Map(courts.map((c) => [c.id, c]));
 
   useEffect(() => {
     setCoaches(initialCoaches);
@@ -140,8 +143,12 @@ export function AdminCoachesClient({
     }
   };
 
-  const startCourtEdit = (coach: CoachProfile) => {
-    setCourtEditId(coach.id);
+  const toggleExpanded = (coach: CoachProfile) => {
+    if (expandedId === coach.id) {
+      setExpandedId(null);
+      return;
+    }
+    setExpandedId(coach.id);
     setCourtDraft([...coach.courtIds]);
     setErrorMessage(null);
   };
@@ -159,7 +166,6 @@ export function AdminCoachesClient({
     setBusyId(null);
     if (result.ok) {
       updateCoach(coachId, { courtIds: courtDraft });
-      setCourtEditId(null);
     } else {
       setErrorMessage(result.error);
     }
@@ -175,7 +181,7 @@ export function AdminCoachesClient({
   const filters: { id: FilterId; label: string; count: number }[] = [
     { id: "all", label: "All", count: stats.total },
     { id: "active", label: "Active", count: stats.active },
-    { id: "attention", label: "Needs attention", count: stats.attention },
+    { id: "attention", label: "Attention", count: stats.attention },
     { id: "inactive", label: "Inactive", count: stats.inactive },
   ];
 
@@ -183,7 +189,6 @@ export function AdminCoachesClient({
     <AdminPageShell>
       <AdminPageHeader
         title="Coaches"
-        subtitle={`${stats.total} on the platform`}
         className="mb-6"
         actions={
           <button
@@ -215,35 +220,14 @@ export function AdminCoachesClient({
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-white p-4 ring-1 ring-[#BBF7D0]/80">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#166534]/70">
-            Active
-          </p>
-          <p className="font-heading mt-1 text-2xl font-bold text-[#14532D]">{stats.active}</p>
-        </div>
-        <div className="rounded-2xl bg-gradient-to-br from-[#FFF7ED] to-white p-4 ring-1 ring-[#FED7AA]/80">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9A3412]/70">
-            Attention
-          </p>
-          <p className="font-heading mt-1 text-2xl font-bold text-[#9A3412]">{stats.attention}</p>
-        </div>
-        <div className="rounded-2xl bg-gradient-to-br from-[#F8FAFC] to-white p-4 ring-1 ring-[#E2E8F0]">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
-            Inactive
-          </p>
-          <p className="font-heading mt-1 text-2xl font-bold text-[#334155]">{stats.inactive}</p>
-        </div>
-      </div>
-
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or slug…"
+            placeholder="Search name or slug…"
             className="h-11 w-full rounded-xl border border-[#E5E7EB] bg-white pl-10 pr-3 text-sm text-[#111827] outline-none ring-[#16A34A]/30 placeholder:text-[#9CA3AF] focus:border-[#86EFAC] focus:ring-2"
           />
         </label>
@@ -274,260 +258,196 @@ export function AdminCoachesClient({
         </div>
       </div>
 
-      <div className="mt-5 space-y-4">
+      <div className={cn(adminListClass, "mt-5")}>
         {filteredCoaches.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] px-4 py-12 text-center">
-            <p className="text-sm font-medium text-[#374151]">No coaches match</p>
-            <p className="mt-1 text-sm text-[#6B7280]">Try a different search or filter.</p>
-          </div>
+          <div className={cn(adminListEmptyClass, "border-0")}>No coaches</div>
         ) : (
-          filteredCoaches.map((c) => {
-            const billing = getSubscriptionBillingInfo(c);
-            const styles = BILLING_STATUS_STYLES[billing.status];
-            const assignedCourts = c.courtIds.map((id) => courtById.get(id)).filter(Boolean);
-            const isBusy = busyId === c.id;
-            const attention = needsAttention(billing.status);
+          <ul className="divide-y divide-[#F3F4F6]">
+            {filteredCoaches.map((c) => {
+              const billing = getSubscriptionBillingInfo(c);
+              const styles = BILLING_STATUS_STYLES[billing.status];
+              const isBusy = busyId === c.id;
+              const attention = needsAttention(billing.status);
+              const expanded = expandedId === c.id;
 
-            return (
-              <article
-                key={c.id}
-                className={cn(
-                  "overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.06)] ring-1",
-                  attention ? "ring-[#FDBA74]/70" : "ring-[#E5E7EB]/80"
-                )}
-              >
-                <div className="p-4 sm:p-5">
-                  <div className="flex gap-3 sm:gap-4">
+              return (
+                <li
+                  key={c.id}
+                  className={adminListRowClass({
+                    muted: !c.isActive,
+                    alert: attention,
+                  })}
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(c)}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
                     <div className="relative shrink-0">
                       {c.photo ? (
                         // eslint-disable-next-line @next/next/no-img-element -- coach photo URL
                         <img
                           src={c.photo}
                           alt=""
-                          className="h-14 w-14 rounded-2xl object-cover ring-1 ring-black/5 sm:h-16 sm:w-16"
+                          className="h-10 w-10 rounded-xl object-cover ring-1 ring-black/5"
                         />
                       ) : (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] text-sm font-bold text-white sm:h-16 sm:w-16 sm:text-base">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] text-[11px] font-bold text-white">
                           {coachInitials(c.name)}
                         </div>
                       )}
                       <span
                         className={cn(
-                          "absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full ring-2 ring-white",
+                          "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-white",
                           c.isActive ? "bg-[#16A34A]" : "bg-[#9CA3AF]"
                         )}
-                        title={c.isActive ? "Active" : "Inactive"}
                       />
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <h3 className="font-heading truncate text-base font-semibold text-[#111827] sm:text-lg">
-                            {c.name}
-                          </h3>
-                          <p className="mt-0.5 truncate text-xs text-[#6B7280] sm:text-sm">
-                            {SITE_DOMAIN}/coach/{c.slug}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-heading text-base font-bold text-[#14532D]">
-                            {formatCurrency(billing.amount)}
-                            <span className="text-xs font-normal text-[#6B7280]">/mo</span>
-                          </p>
-                          <p className="text-[11px] text-[#6B7280]">{billing.planLabel} plan</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <p className="font-heading truncate text-sm font-semibold text-[#111827]">
+                          {c.name}
+                        </p>
                         <span
                           className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                            c.isActive
-                              ? "bg-[#E5EFE8] text-[#3D5C47]"
-                              : "bg-[#F3F4F6] text-[#6B7280]"
-                          )}
-                        >
-                          {c.isActive ? "Active" : "Inactive"}
-                        </span>
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                            "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
                             styles.badge
                           )}
                         >
                           {billing.label}
                         </span>
-                        {c.specialization && (
-                          <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#1D4ED8]">
-                            {c.specialization}
-                          </span>
+                      </div>
+                      <p className="mt-0.5 truncate text-xs text-[#6B7280]">
+                        /{c.slug}
+                        <span className="text-[#D1D5DB]"> · </span>
+                        {c.totalStudents} stu
+                        <span className="text-[#D1D5DB]"> · </span>
+                        {c.totalSessions} sess
+                        {billing.renewalDate ? (
+                          <>
+                            <span className="text-[#D1D5DB]"> · </span>
+                            {formatDisplayDate(billing.renewalDate)}
+                          </>
+                        ) : null}
+                      </p>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-2">
+                      <p className="font-heading text-sm font-bold tabular-nums text-[#14532D]">
+                        {formatCurrency(billing.amount)}
+                      </p>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 text-[#9CA3AF] transition-transform",
+                          expanded && "rotate-180"
                         )}
-                      </div>
+                      />
                     </div>
-                  </div>
+                  </button>
 
-                  {attention && (
-                    <div
-                      className={cn(
-                        "mt-4 rounded-xl px-3 py-2.5 text-xs leading-relaxed",
-                        styles.panel
-                      )}
-                    >
-                      {billing.adminNote}
-                    </div>
-                  )}
+                  {expanded ? (
+                    <div className="mt-3 space-y-3 border-t border-[#F3F4F6] pt-3">
+                      {attention ? (
+                        <p className={cn("rounded-lg px-2.5 py-1.5 text-xs", styles.panel)}>
+                          {billing.adminNote}
+                        </p>
+                      ) : null}
 
-                  <div className="mt-4 grid grid-cols-3 gap-2">
-                    <div className="rounded-xl bg-[#F9FAFB] px-3 py-2.5">
-                      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                        <Users className="h-3 w-3" />
-                        Students
-                      </div>
-                      <p className="mt-1 text-sm font-semibold text-[#111827]">{c.totalStudents}</p>
-                    </div>
-                    <div className="rounded-xl bg-[#F9FAFB] px-3 py-2.5">
-                      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                        <CalendarClock className="h-3 w-3" />
-                        Sessions
-                      </div>
-                      <p className="mt-1 text-sm font-semibold text-[#111827]">{c.totalSessions}</p>
-                    </div>
-                    <div className="rounded-xl bg-[#F9FAFB] px-3 py-2.5">
-                      <div className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                        <Calendar className="h-3 w-3" />
-                        Renews
-                      </div>
-                      <p className="mt-1 text-sm font-semibold text-[#111827]">
-                        {billing.renewalDate
-                          ? formatDisplayDate(billing.renewalDate)
-                          : "—"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                        <MapPin className="h-3 w-3" />
-                        Courts
-                      </p>
-                      {courtEditId !== c.id ? (
-                        <button
-                          type="button"
-                          className="text-xs font-semibold text-[#4F8FF7] hover:underline"
-                          onClick={() => startCourtEdit(c)}
-                        >
-                          Edit
-                        </button>
-                      ) : (
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            className="text-xs font-semibold text-[#6B7280] hover:underline"
-                            onClick={() => setCourtEditId(null)}
-                          >
-                            Cancel
-                          </button>
+                      <div>
+                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                          <p className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                            <MapPin className="h-3 w-3" />
+                            Courts
+                          </p>
                           <button
                             type="button"
                             disabled={isBusy}
-                            className="text-xs font-semibold text-[#4F8FF7] hover:underline"
+                            className="text-xs font-semibold text-[#4F8FF7] disabled:opacity-50"
                             onClick={() => void saveCourtEdit(c.id)}
                           >
-                            Save
+                            Save courts
                           </button>
                         </div>
-                      )}
-                    </div>
-                    {courtEditId === c.id ? (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {courts.map((court) => {
-                          const selected = courtDraft.includes(court.id);
-                          return (
-                            <button
-                              key={court.id}
-                              type="button"
-                              onClick={() => toggleCourtDraft(court.id)}
-                              className={cn(
-                                "rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
-                                selected
-                                  ? "bg-[#4F8FF7] text-white"
-                                  : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
-                              )}
-                            >
-                              {court.name}
-                            </button>
-                          );
-                        })}
+                        <div className="flex flex-wrap gap-1.5">
+                          {courts.length === 0 ? (
+                            <p className="text-xs text-[#9CA3AF]">No courts in directory</p>
+                          ) : (
+                            courts.map((court) => {
+                              const selected = courtDraft.includes(court.id);
+                              return (
+                                <button
+                                  key={court.id}
+                                  type="button"
+                                  onClick={() => toggleCourtDraft(court.id)}
+                                  className={cn(
+                                    "min-h-9 rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors",
+                                    selected
+                                      ? "bg-[#4F8FF7] text-white"
+                                      : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"
+                                  )}
+                                >
+                                  {court.name}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
                       </div>
-                    ) : assignedCourts.length === 0 ? (
-                      <p className="mt-1.5 text-sm text-[#9CA3AF]">No courts assigned</p>
-                    ) : (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {assignedCourts.map((court) => (
-                          <span
-                            key={court!.id}
-                            className="rounded-full bg-[#F3F4F6] px-2.5 py-1 text-xs font-medium text-[#374151]"
-                          >
-                            {court!.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-2 border-t border-[#F3F4F6] bg-[#FAFBFC] px-4 py-3 sm:px-5">
-                  <CoachButton
-                    type="button"
-                    variant="outline"
-                    className="!h-10 !min-h-0 !w-auto px-3.5 py-0 text-sm"
-                    onClick={() => setEditCoach(c)}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Edit
-                  </CoachButton>
-                  <CoachButton
-                    type="button"
-                    variant={c.isActive ? "outline" : "primary"}
-                    className={cn(
-                      "!h-10 !min-h-0 !w-auto px-3.5 py-0 text-sm",
-                      c.isActive && "border-[#FECACA] text-[#B91C1C] hover:bg-[#FEF2F2]"
-                    )}
-                    loading={isBusy}
-                    loadingLabel="Saving…"
-                    onClick={() => void handleToggleActive(c)}
-                  >
-                    {c.isActive ? "Deactivate" : "Reactivate"}
-                  </CoachButton>
-                  {attention && (
-                    <CoachButton
-                      type="button"
-                      variant="outline"
-                      className="!h-10 !min-h-0 !w-auto px-3.5 py-0 text-sm"
-                      disabled={isBusy}
-                      onClick={() => void handleExtend(c.id)}
-                    >
-                      Extend 1 mo
-                    </CoachButton>
-                  )}
-                  <button
-                    type="button"
-                    disabled={isBusy}
-                    className="ml-auto inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-[#B91C1C] transition-colors hover:bg-[#FEF2F2] disabled:opacity-50"
-                    onClick={() => {
-                      setErrorMessage(null);
-                      setDeleteTarget(c);
-                    }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Delete
-                  </button>
-                </div>
-              </article>
-            );
-          })
+                      <div className="flex flex-wrap gap-1.5">
+                        <button
+                          type="button"
+                          className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#F3F4F6] px-2.5 text-xs font-semibold text-[#374151] hover:bg-[#E5E7EB]"
+                          onClick={() => setEditCoach(c)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          className={cn(
+                            "inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold disabled:opacity-50",
+                            c.isActive
+                              ? "bg-[#FEF2F2] text-[#B91C1C] hover:bg-[#FECACA]/40"
+                              : "bg-[#F0FDF4] text-[#166534] hover:bg-[#DCFCE7]"
+                          )}
+                          onClick={() => void handleToggleActive(c)}
+                        >
+                          <Power className="h-3.5 w-3.5" />
+                          {c.isActive ? "Deactivate" : "Activate"}
+                        </button>
+                        {attention ? (
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#EFF6FF] px-2.5 text-xs font-semibold text-[#1D4ED8] hover:bg-[#DBEAFE] disabled:opacity-50"
+                            onClick={() => void handleExtend(c.id)}
+                          >
+                            <CalendarPlus className="h-3.5 w-3.5" />
+                            Extend 1 mo
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          disabled={isBusy}
+                          className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#B91C1C] hover:bg-[#FEF2F2] disabled:opacity-50"
+                          onClick={() => {
+                            setErrorMessage(null);
+                            setDeleteTarget(c);
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
 
@@ -543,7 +463,7 @@ export function AdminCoachesClient({
         onClose={() => setEditCoach(null)}
         onSaved={(updated) => {
           updateCoach(updated.id, updated);
-          setSuccessMessage(`Saved changes for ${updated.name}.`);
+          setSuccessMessage(`Saved ${updated.name}.`);
           router.refresh();
         }}
       />
@@ -569,7 +489,7 @@ export function AdminCoachesClient({
             throw new Error(result.error);
           }
           setCoaches((prev) => prev.filter((coach) => coach.id !== deleteTarget.id));
-          setSuccessMessage(`Deleted ${deleteTarget.name} and all related data.`);
+          setSuccessMessage(`Deleted ${deleteTarget.name}.`);
           router.refresh();
         }}
       />

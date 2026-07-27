@@ -54,11 +54,7 @@ export function ApproveCoachApplicationSheet({
       open={Boolean(application)}
       onClose={onClose}
       title="Approve coach"
-      subtitle={
-        application
-          ? `Create login for ${application.fullName}. They can change their password after signing in.`
-          : undefined
-      }
+      subtitle={application ? application.fullName : undefined}
       footer={
         <CoachSheetFooter>
           <CoachButton

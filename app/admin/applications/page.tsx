@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Mail, Phone, Users, X } from "lucide-react";
+import { Check, ChevronDown, X } from "lucide-react";
 import {
   fetchApplicationsAction,
   rejectApplicationAction,
@@ -9,7 +9,13 @@ import {
 } from "@/lib/koaches/actions/applications";
 import { ApproveCoachApplicationSheet } from "@/components/koaches/admin/ApproveCoachApplicationSheet";
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
-import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
+import {
+  AdminPageHeader,
+  AdminPageShell,
+  adminListClass,
+  adminListEmptyClass,
+  adminListRowClass,
+} from "@/components/koaches/admin/AdminPageLayout";
 import { AdminApplicationListSkeleton } from "@/components/koaches/admin/AdminSkeletons";
 import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
 import type { CoachApplication } from "@/lib/koaches/types";
@@ -32,6 +38,7 @@ export default function ApplicationsPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("pending");
   const [apps, setApps] = useState<CoachApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [approveTarget, setApproveTarget] = useState<CoachApplication | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<CoachApplication | null>(null);
@@ -39,6 +46,7 @@ export default function ApplicationsPage() {
 
   useEffect(() => {
     setLoading(true);
+    setExpandedId(null);
     void fetchApplicationsAction(tab).then((data) => {
       setApps(data);
       setLoading(false);
@@ -50,7 +58,7 @@ export default function ApplicationsPage() {
       setApps((prev) => prev.filter((a) => a.id !== approveTarget.id));
     }
     setSuccessMessage(
-      `${approveTarget?.fullName ?? "Coach"} approved. Login: ${result.loginEmail} · profile /coach/${result.slug}`
+      `${approveTarget?.fullName ?? "Coach"} approved. Login: ${result.loginEmail} · /coach/${result.slug}`
     );
     setApproveTarget(null);
   };
@@ -71,11 +79,7 @@ export default function ApplicationsPage() {
 
   return (
     <AdminPageShell>
-      <AdminPageHeader
-        title="Applications"
-        subtitle="Review and onboard new coaches"
-        className="mb-6"
-      />
+      <AdminPageHeader title="Applications" className="mb-6" />
 
       {successMessage && (
         <div className="mb-4 rounded-xl border border-[#E5EFE8] bg-[#F5FAF6] px-4 py-3 text-sm text-[#3D5C47]">
@@ -104,140 +108,145 @@ export default function ApplicationsPage() {
         ))}
       </div>
 
-      <div className="mt-5 space-y-4">
-        {apps.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] px-4 py-12 text-center">
-            <p className="text-sm font-medium text-[#374151]">No {tab} applications</p>
-            <p className="mt-1 text-sm text-[#6B7280]">New coach applications will show up here.</p>
-          </div>
-        )}
+      <div className={cn(adminListClass, "mt-5")}>
+        {apps.length === 0 ? (
+          <div className={cn(adminListEmptyClass, "border-0")}>No {tab} applications</div>
+        ) : (
+          <ul className="divide-y divide-[#F3F4F6]">
+            {apps.map((a) => {
+              const levels = a.coachingLevels
+                .map((id) => SKILL_RUBRICS[id as keyof typeof SKILL_RUBRICS]?.name ?? id)
+                .filter(Boolean);
+              const links = socialLinks(a);
+              const expanded = expandedId === a.id;
 
-        {apps.map((a) => {
-          const levels = a.coachingLevels
-            .map((id) => SKILL_RUBRICS[id as keyof typeof SKILL_RUBRICS]?.name ?? id)
-            .filter(Boolean);
-          const links = socialLinks(a);
-
-          return (
-            <article
-              key={a.id}
-              className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-[#E5E7EB]/80"
-            >
-              <div className="p-4 sm:p-5">
-                <div className="flex gap-3 sm:gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] text-sm font-bold text-white">
-                    {coachInitials(a.fullName)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-heading text-base font-semibold text-[#111827] sm:text-lg">
-                          {a.fullName}
-                        </h3>
-                        {a.specialization && (
-                          <p className="mt-0.5 text-sm font-medium text-[#4F8FF7]">
-                            {a.specialization}
-                          </p>
-                        )}
-                      </div>
-                      {a.currentStudentCount > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-[#F0FDF4] px-2.5 py-1 text-[11px] font-semibold text-[#166534]">
-                          <Users className="h-3 w-3" />
-                          {a.currentStudentCount} students
-                        </span>
+              return (
+                <li key={a.id} className={adminListRowClass()}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(expanded ? null : a.id)}
+                    className="flex w-full items-center gap-3 text-left"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] text-[11px] font-bold text-white">
+                      {coachInitials(a.fullName)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-heading truncate text-sm font-semibold text-[#111827]">
+                        {a.fullName}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-[#6B7280]">
+                        {a.specialization || "Coach"}
+                        {a.currentStudentCount > 0 ? (
+                          <>
+                            <span className="text-[#D1D5DB]"> · </span>
+                            {a.currentStudentCount} students
+                          </>
+                        ) : null}
+                        <span className="text-[#D1D5DB]"> · </span>
+                        {a.email}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 shrink-0 text-[#9CA3AF] transition-transform",
+                        expanded && "rotate-180"
                       )}
-                    </div>
+                    />
+                  </button>
 
-                    {levels.length > 0 && (
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">
-                        {levels.map((level) => (
-                          <span
-                            key={level}
-                            className="rounded-full bg-[#111827] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white"
-                          >
-                            {level}
-                          </span>
-                        ))}
+                  {expanded ? (
+                    <div className="mt-3 space-y-3 border-t border-[#F3F4F6] pt-3">
+                      {a.bio ? (
+                        <p className="text-sm leading-relaxed text-[#6B7280]">{a.bio}</p>
+                      ) : null}
+
+                      <div className="space-y-1 text-xs text-[#6B7280]">
+                        <p>
+                          <span className="font-semibold text-[#374151]">Mobile</span> {a.mobile}
+                        </p>
+                        {a.preferredSlug ? (
+                          <p>
+                            <span className="font-semibold text-[#374151]">Slug</span> /coach/
+                            {a.preferredSlug}
+                          </p>
+                        ) : null}
+                        {levels.length > 0 ? (
+                          <p>
+                            <span className="font-semibold text-[#374151]">Levels</span>{" "}
+                            {levels.join(", ")}
+                          </p>
+                        ) : null}
+                        {links.length > 0 ? (
+                          <p className="flex flex-wrap gap-x-2 gap-y-1">
+                            {links.map((link) => (
+                              <a
+                                key={link}
+                                href={link.startsWith("http") ? link : `https://${link}`}
+                                className="font-semibold text-[#4F8FF7] hover:underline"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {link}
+                              </a>
+                            ))}
+                          </p>
+                        ) : null}
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                <p className="mt-4 text-sm leading-relaxed text-[#6B7280]">{a.bio}</p>
-
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  <div className="rounded-xl bg-[#F9FAFB] px-3 py-2.5">
-                    <p className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                      <Mail className="h-3 w-3" />
-                      Email
-                    </p>
-                    <p className="mt-1 truncate text-sm font-medium text-[#111827]">{a.email}</p>
-                  </div>
-                  <div className="rounded-xl bg-[#F9FAFB] px-3 py-2.5">
-                    <p className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                      <Phone className="h-3 w-3" />
-                      Mobile
-                    </p>
-                    <p className="mt-1 truncate text-sm font-medium text-[#111827]">{a.mobile}</p>
-                  </div>
-                  {a.preferredSlug && (
-                    <div className="rounded-xl bg-[#F9FAFB] px-3 py-2.5 sm:col-span-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                        Preferred slug
-                      </p>
-                      <p className="mt-1 text-sm font-medium text-[#111827]">
-                        /coach/{a.preferredSlug}
-                      </p>
+                      {tab === "pending" ? (
+                        <div className="flex flex-wrap gap-1.5">
+                          <button
+                            type="button"
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 text-xs font-semibold text-white hover:bg-[#15803D]"
+                            onClick={() => {
+                              setSuccessMessage(null);
+                              setApproveTarget(a);
+                            }}
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            disabled={rejectingId === a.id}
+                            className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-[#B91C1C] hover:bg-[#FEF2F2] disabled:opacity-50"
+                            onClick={() => setRejectTarget(a)}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            {rejectingId === a.id ? "…" : "Reject"}
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
-                  )}
-                </div>
-
-                {links.length > 0 && (
-                  <p className="mt-3 text-xs text-[#9CA3AF]">
-                    {links.map((link, i) => (
-                      <span key={link}>
-                        {i > 0 && " · "}
-                        <a
-                          href={link.startsWith("http") ? link : `https://${link}`}
-                          className="font-semibold text-[#4F8FF7] hover:underline"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {link}
-                        </a>
-                      </span>
-                    ))}
-                  </p>
-                )}
-              </div>
-
-              {tab === "pending" && (
-                <div className="flex flex-wrap items-center gap-2 border-t border-[#F3F4F6] bg-[#FAFBFC] px-4 py-3 sm:px-5">
-                  <button
-                    type="button"
-                    className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-[#16A34A] px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#15803D]"
-                    onClick={() => {
-                      setSuccessMessage(null);
-                      setApproveTarget(a);
-                    }}
-                  >
-                    <Check className="h-4 w-4" />
-                    Approve
-                  </button>
-                  <button
-                    type="button"
-                    disabled={rejectingId === a.id}
-                    className="inline-flex h-10 items-center gap-1.5 rounded-xl px-3.5 text-sm font-semibold text-[#B91C1C] transition-colors hover:bg-[#FEF2F2] disabled:opacity-50"
-                    onClick={() => setRejectTarget(a)}
-                  >
-                    <X className="h-4 w-4" />
-                    {rejectingId === a.id ? "Rejecting…" : "Reject"}
-                  </button>
-                </div>
-              )}
-            </article>
-          );
-        })}
+                  ) : tab === "pending" ? (
+                    <div className="mt-2.5 flex flex-wrap gap-1.5 pl-[52px]">
+                      <button
+                        type="button"
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#16A34A] px-3 text-xs font-semibold text-white hover:bg-[#15803D]"
+                        onClick={() => {
+                          setSuccessMessage(null);
+                          setApproveTarget(a);
+                        }}
+                      >
+                        <Check className="h-3.5 w-3.5" />
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        disabled={rejectingId === a.id}
+                        className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-[#B91C1C] hover:bg-[#FEF2F2] disabled:opacity-50"
+                        onClick={() => setRejectTarget(a)}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Reject
+                      </button>
+                    </div>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       <ApproveCoachApplicationSheet
@@ -249,7 +258,7 @@ export default function ApplicationsPage() {
       <ConfirmSheet
         open={Boolean(rejectTarget)}
         onClose={() => setRejectTarget(null)}
-        message={rejectTarget ? `Reject application from ${rejectTarget.fullName}?` : ""}
+        message={rejectTarget ? `Reject ${rejectTarget.fullName}?` : ""}
         confirmLabel="Reject"
         onConfirm={async () => {
           if (!rejectTarget) return;

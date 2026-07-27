@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Check, CreditCard, Eye, X } from "lucide-react";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { Check, Eye, X } from "lucide-react";
 import { ReceiptPreviewModal } from "@/components/koaches/admin/ReceiptPreviewModal";
 import {
   approvePaymentSubmissionAction,
@@ -10,8 +9,14 @@ import {
   rejectPaymentSubmissionAction,
   type AdminPendingPayment,
 } from "@/lib/koaches/actions/admin-billing";
+import {
+  adminListClass,
+  adminListEmptyClass,
+  adminListRowClass,
+} from "@/components/koaches/admin/AdminPageLayout";
 import { formatCurrency, formatDisplayDate } from "@/lib/utils";
 import { paymentMethodLabel } from "@/lib/koaches/billing-constants";
+import { cn } from "@/lib/utils";
 
 type AdminPendingPaymentsProps = {
   initialPayments: AdminPendingPayment[];
@@ -70,15 +75,7 @@ export function AdminPendingPayments({
 
   if (payments.length === 0) {
     if (!emptyMessage) return null;
-    return (
-      <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] px-4 py-12 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F0FDF4]">
-          <CreditCard className="h-5 w-5 text-[#166534]" />
-        </div>
-        <p className="mt-3 text-sm font-medium text-[#374151]">All clear</p>
-        <p className="mt-1 text-sm text-[#6B7280]">{emptyMessage}</p>
-      </div>
-    );
+    return <div className={adminListEmptyClass}>{emptyMessage}</div>;
   }
 
   return (
@@ -89,86 +86,67 @@ export function AdminPendingPayments({
         </p>
       )}
 
-      <div className="space-y-4">
-        {payments.map((payment) => {
-          const isBusy = busyId === payment.id;
-          return (
-            <article
-              key={payment.id}
-              className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-[#FED7AA]/70"
-            >
-              <div className="p-4 sm:p-5">
-                <div className="flex gap-3 sm:gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] text-sm font-bold text-white">
+      <div className={adminListClass}>
+        <ul className="divide-y divide-[#F3F4F6]">
+          {payments.map((payment) => {
+            const isBusy = busyId === payment.id;
+            return (
+              <li key={payment.id} className={cn(adminListRowClass({ alert: true }))}>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#16A34A] to-[#4F8FF7] text-[11px] font-bold text-white">
                     {coachInitials(payment.coachName)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-heading truncate text-base font-semibold text-[#111827]">
-                          {payment.coachName}
-                        </h3>
-                        <p className="mt-0.5 text-sm text-[#6B7280]">
-                          {payment.invoiceNumber}
-                        </p>
-                      </div>
-                      <p className="font-heading text-lg font-bold text-[#14532D]">
-                        {formatCurrency(payment.amount)}
+                    <div className="flex items-center gap-2">
+                      <p className="font-heading truncate text-sm font-semibold text-[#111827]">
+                        {payment.coachName}
                       </p>
-                    </div>
-                    <div className="mt-2.5 flex flex-wrap gap-1.5">
-                      <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#9A3412]">
+                      <span className="shrink-0 rounded-full bg-[#FFF7ED] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#9A3412]">
                         Pending
                       </span>
-                      <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#1D4ED8]">
-                        {paymentMethodLabel(payment.method)}
-                      </span>
-                      <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-medium text-[#6B7280]">
-                        {formatDisplayDate(payment.submittedAt)}
-                      </span>
                     </div>
-                    {payment.notes && (
-                      <p className="mt-2 text-xs text-[#6B7280]">Ref: {payment.notes}</p>
-                    )}
+                    <p className="mt-0.5 truncate text-xs text-[#6B7280]">
+                      {formatCurrency(payment.amount)}
+                      <span className="text-[#D1D5DB]"> · </span>
+                      {paymentMethodLabel(payment.method)}
+                      <span className="text-[#D1D5DB]"> · </span>
+                      {formatDisplayDate(payment.submittedAt)}
+                    </p>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-2 border-t border-[#F3F4F6] bg-[#FAFBFC] px-4 py-3 sm:px-5">
-                <button
-                  type="button"
-                  className="inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-[#4F8FF7] transition-colors hover:bg-[#EFF6FF]"
-                  onClick={() => setPreview(payment)}
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  View receipt
-                </button>
-                <div className="ml-auto flex flex-wrap gap-2">
-                  <CoachButton
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  <button
                     type="button"
-                    variant="outline"
-                    className="!h-10 !min-h-0 !w-auto px-3.5 py-0 text-sm text-[#6B7280]"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#EFF6FF] px-2.5 text-xs font-semibold text-[#1D4ED8] hover:bg-[#DBEAFE]"
+                    onClick={() => setPreview(payment)}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    Receipt
+                  </button>
+                  <button
+                    type="button"
                     disabled={isBusy}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#6B7280] hover:bg-[#F3F4F6] disabled:opacity-50"
                     onClick={() => void handleReject(payment)}
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" />
                     Reject
-                  </CoachButton>
-                  <CoachButton
+                  </button>
+                  <button
                     type="button"
-                    className="!h-10 !min-h-0 !w-auto px-3.5 py-0 text-sm"
-                    loading={isBusy}
-                    loadingLabel="Saving…"
+                    disabled={isBusy}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#16A34A] px-2.5 text-xs font-semibold text-white hover:bg-[#15803D] disabled:opacity-50"
                     onClick={() => void handleApprove(payment)}
                   >
-                    <Check className="h-4 w-4" />
-                    Approve & extend
-                  </CoachButton>
+                    <Check className="h-3.5 w-3.5" />
+                    {isBusy ? "…" : "Approve"}
+                  </button>
                 </div>
-              </div>
-            </article>
-          );
-        })}
+              </li>
+            );
+          })}
+        </ul>
       </div>
 
       <ReceiptPreviewModal

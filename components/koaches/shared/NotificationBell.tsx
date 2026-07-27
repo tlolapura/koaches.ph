@@ -65,7 +65,7 @@ export function NotificationBell({
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "relative flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+          "relative flex h-10 w-10 items-center justify-center rounded-full transition-colors",
           open
             ? "bg-[#EFF6FF] text-[#4F8FF7]"
             : "text-[#6B7280] hover:bg-[#EFF6FF] hover:text-[#4F8FF7]"
@@ -97,7 +97,7 @@ export function NotificationBell({
             aria-label="Notifications"
             className={cn(
               "coach-card fixed z-[70] flex max-h-[min(70vh,28rem)] flex-col overflow-hidden shadow-xl",
-              "inset-x-3 top-[3.75rem] md:absolute md:inset-x-auto md:top-full md:mt-2 md:w-[min(100vw-2rem,22rem)]",
+              "inset-x-3 top-[calc(3.75rem+env(safe-area-inset-top))] md:absolute md:inset-x-auto md:top-full md:mt-2 md:w-[min(100vw-2rem,22rem)]",
               align === "left" ? "md:left-0" : "md:right-0"
             )}
           >

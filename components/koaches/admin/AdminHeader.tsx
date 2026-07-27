@@ -18,15 +18,17 @@ export function AdminHeader({ pathname }: { pathname: string }) {
 
   return (
     <header className="sticky top-0 z-30 md:hidden">
-      <div className="flex min-h-[56px] items-center justify-between border-b border-[#E5E7EB] bg-[#F9FAFB]/95 px-4 py-3 backdrop-blur">
-        <h1 className="font-heading text-lg font-semibold text-[#111827]">{title}</h1>
-        <div className="flex shrink-0 items-center gap-2">
-          <AdminNotificationBell />
-          <div
-            className="font-heading flex h-10 w-10 items-center justify-center rounded-full bg-[#4F8FF7] text-sm font-semibold text-white"
-            title="PickleKoach Admin"
-          >
-            {getInitials("PickleKoach Admin")}
+      <div className="border-b border-[#E5E7EB] bg-[#F9FAFB]/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <div className="flex min-h-[56px] items-center justify-between px-4 py-3">
+          <h1 className="font-heading text-lg font-semibold text-[#111827]">{title}</h1>
+          <div className="flex shrink-0 items-center gap-2">
+            <AdminNotificationBell />
+            <div
+              className="font-heading flex h-10 w-10 items-center justify-center rounded-full bg-[#4F8FF7] text-sm font-semibold text-white"
+              title="PickleKoach Admin"
+            >
+              {getInitials("PickleKoach Admin")}
+            </div>
           </div>
         </div>
       </div>

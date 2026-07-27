@@ -11,24 +11,9 @@ import { adminBadgeForNavHref } from "@/lib/koaches/nav-badge-utils";
 import { cn } from "@/lib/utils";
 
 const links = [
-  {
-    href: "/admin/analytics",
-    label: "Analytics",
-    icon: TrendingUp,
-    desc: "Validation metrics and trends",
-  },
-  {
-    href: "/admin/applications",
-    label: "Applications",
-    icon: FileText,
-    desc: "Review coach applications",
-  },
-  {
-    href: "/admin/courts",
-    label: "Courts",
-    icon: MapPin,
-    desc: "Platform court directory",
-  },
+  { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/admin/applications", label: "Applications", icon: FileText },
+  { href: "/admin/courts", label: "Courts", icon: MapPin },
 ] as const;
 
 export const adminMoreSectionPrefixes = links.map((l) => l.href);
@@ -47,7 +32,6 @@ export function AdminMoreSheet({ open, onClose }: AdminMoreSheetProps) {
       open={open}
       onClose={onClose}
       title="More"
-      subtitle="Analytics, applications, and courts"
     >
       <div className="space-y-2">
         {links.map((l) => {
@@ -62,7 +46,7 @@ export function AdminMoreSheet({ open, onClose }: AdminMoreSheetProps) {
               prefetch={false}
               onClick={onClose}
               className={cn(
-                "coach-card flex min-h-[64px] items-center gap-4 p-4 transition-colors",
+                "coach-card flex min-h-[52px] items-center gap-4 px-4 py-3 transition-colors",
                 active && "ring-2 ring-[#16A34A]/30"
               )}
             >
@@ -70,10 +54,7 @@ export function AdminMoreSheet({ open, onClose }: AdminMoreSheetProps) {
                 <Icon className="h-5 w-5 text-[#166534]" />
                 <NavCountBadge count={badge} pinned />
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-heading font-semibold text-[#111827]">{l.label}</p>
-                <p className="text-xs text-[#6B7280]">{l.desc}</p>
-              </div>
+              <p className="font-heading min-w-0 flex-1 font-semibold text-[#111827]">{l.label}</p>
               <ChevronRight className="h-5 w-5 shrink-0 text-[#D1D5DB]" />
             </Link>
           );

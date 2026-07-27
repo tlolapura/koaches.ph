@@ -72,7 +72,6 @@ export function AdminAddCoachSheet({ open, onClose, onCreated }: AdminAddCoachSh
       open={open}
       onClose={onClose}
       title="Add coach"
-      subtitle="Create a coach account directly. No application required."
       footer={
         <CoachSheetFooter>
           <CoachButton

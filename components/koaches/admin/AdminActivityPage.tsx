@@ -1,16 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  CalendarCheck2,
-  Mail,
-  MailWarning,
-  Sparkles,
-  Users,
-} from "lucide-react";
 import type { AdminActivityData, AdminSessionActivityRow } from "@/lib/koaches/admin-activity";
 import { PROGRESS_CARD_EMAIL_MAX_SENDS } from "@/lib/koaches/progress-card-email-limits";
-import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
+import {
+  AdminPageHeader,
+  AdminPageShell,
+  adminListClass,
+  adminListEmptyClass,
+  adminListRowClass,
+} from "@/components/koaches/admin/AdminPageLayout";
 import { cn, formatDisplayDate } from "@/lib/utils";
 
 type AdminActivityPageProps = {
@@ -21,37 +20,6 @@ type FilterKey = "all" | "missing" | "rated" | "emailed" | "limit";
 
 const cardClass =
   "overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-[#E5E7EB]/80";
-
-function MetricTile({
-  label,
-  value,
-  sub,
-  tone = "green",
-}: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  tone?: "green" | "blue" | "amber" | "slate";
-}) {
-  const valueColor =
-    tone === "blue"
-      ? "text-[#1D4ED8]"
-      : tone === "amber"
-        ? "text-[#9A3412]"
-        : tone === "slate"
-          ? "text-[#334155]"
-          : "text-[#14532D]";
-
-  return (
-    <div className={cn(cardClass, "p-4")}>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</p>
-      <p className={cn("font-heading mt-1.5 text-2xl font-bold leading-none", valueColor)}>
-        {value}
-      </p>
-      {sub ? <p className="mt-1.5 text-xs text-[#6B7280]">{sub}</p> : null}
-    </div>
-  );
-}
 
 function typeLabel(type: AdminSessionActivityRow["type"]): string {
   if (type === "drop-in") return "Drop-in";
@@ -76,7 +44,7 @@ function StatusChips({ row }: { row: AdminSessionActivityRow }) {
           row.progressCardId ? "bg-[#EFF6FF] text-[#1D4ED8]" : "bg-[#FFF7ED] text-[#C2410C]"
         )}
       >
-        {row.progressCardId ? "Card created" : "Missing card"}
+        {row.progressCardId ? "Card" : "No card"}
       </span>
       {row.progressCardId ? (
         <span
@@ -90,7 +58,7 @@ function StatusChips({ row }: { row: AdminSessionActivityRow }) {
           )}
         >
           {row.atEmailLimit
-            ? `Email limit ${PROGRESS_CARD_EMAIL_MAX_SENDS}/${PROGRESS_CARD_EMAIL_MAX_SENDS}`
+            ? `Limit ${PROGRESS_CARD_EMAIL_MAX_SENDS}/${PROGRESS_CARD_EMAIL_MAX_SENDS}`
             : row.emailSendCount > 0
               ? `Emailed ${row.emailSendCount}×`
               : "Not emailed"}
@@ -108,7 +76,7 @@ export function AdminActivityPage({ data }: AdminActivityPageProps) {
     { key: "all", label: "All", count: sessions.length },
     {
       key: "missing",
-      label: "Missing card",
+      label: "No card",
       count: sessions.filter((s) => !s.progressCardId).length,
     },
     { key: "rated", label: "Rated", count: sessions.filter((s) => s.hasRatings).length },
@@ -119,7 +87,7 @@ export function AdminActivityPage({ data }: AdminActivityPageProps) {
     },
     {
       key: "limit",
-      label: "Email limit",
+      label: "At limit",
       count: sessions.filter((s) => s.atEmailLimit).length,
     },
   ];
@@ -141,54 +109,39 @@ export function AdminActivityPage({ data }: AdminActivityPageProps) {
 
   return (
     <AdminPageShell>
-      <AdminPageHeader
-        title="Sessions"
-        subtitle="Coaching activity — completed sessions and progress card follow-through"
-        className="mb-6"
-      />
+      <AdminPageHeader title="Sessions" className="mb-6" />
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <MetricTile
-          label="Sessions · 7d"
-          value={summary.sessionsDone7d}
-          sub={`${summary.sessionsDone30d} in 30 days`}
-        />
-        <MetricTile
-          label="With card · 30d"
-          value={summary.withCard30d}
-          sub={`${summary.withRatings30d} rated`}
-          tone="blue"
-        />
-        <MetricTile
-          label="Missing card · 30d"
-          value={summary.missingCard30d}
-          sub="Done sessions without a card"
-          tone="amber"
-        />
-        <MetricTile
-          label="Emailed · 30d"
-          value={summary.cardsEmailed30d}
-          sub={`${summary.atEmailLimit} at ${PROGRESS_CARD_EMAIL_MAX_SENDS}-send limit`}
-          tone="slate"
-        />
+        <div className={cn(cardClass, "p-4")}>
+          <p className="text-xs font-medium text-[#6B7280]">Sessions · 7d</p>
+          <p className="font-heading mt-1.5 text-2xl font-bold text-[#14532D]">
+            {summary.sessionsDone7d}
+          </p>
+        </div>
+        <div className={cn(cardClass, "p-4")}>
+          <p className="text-xs font-medium text-[#6B7280]">With card · 30d</p>
+          <p className="font-heading mt-1.5 text-2xl font-bold text-[#1D4ED8]">
+            {summary.withCard30d}
+          </p>
+        </div>
+        <div className={cn(cardClass, "p-4")}>
+          <p className="text-xs font-medium text-[#6B7280]">Missing · 30d</p>
+          <p className="font-heading mt-1.5 text-2xl font-bold text-[#9A3412]">
+            {summary.missingCard30d}
+          </p>
+        </div>
+        <div className={cn(cardClass, "p-4")}>
+          <p className="text-xs font-medium text-[#6B7280]">Emailed · 30d</p>
+          <p className="font-heading mt-1.5 text-2xl font-bold text-[#111827]">
+            {summary.cardsEmailed30d}
+          </p>
+        </div>
       </section>
 
       {coachesNeedingFollowThrough.length > 0 ? (
         <section className={cn(cardClass, "mt-4 p-5")}>
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#FFF7ED] text-[#C2410C]">
-              <Users className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="font-heading font-semibold text-[#111827]">
-                Coaches needing follow-through
-              </h2>
-              <p className="mt-0.5 text-sm text-[#6B7280]">
-                ≥2 done sessions in 30 days with under 50% progress-card rate
-              </p>
-            </div>
-          </div>
-          <ul className="mt-4 divide-y divide-[#F3F4F6]">
+          <h2 className="font-heading font-semibold text-[#111827]">Low card rate</h2>
+          <ul className="mt-3 divide-y divide-[#F3F4F6]">
             {coachesNeedingFollowThrough.map((coach) => (
               <li
                 key={coach.coachId}
@@ -199,7 +152,7 @@ export function AdminActivityPage({ data }: AdminActivityPageProps) {
                     {coach.coachName}
                   </p>
                   <p className="text-xs text-[#6B7280]">
-                    {coach.withCard30d}/{coach.doneSessions30d} cards · last 30 days
+                    {coach.withCard30d}/{coach.doneSessions30d} cards
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full bg-[#FFF7ED] px-2.5 py-1 text-xs font-bold text-[#9A3412]">
@@ -212,13 +165,6 @@ export function AdminActivityPage({ data }: AdminActivityPageProps) {
       ) : null}
 
       <section className="mt-6">
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-          <div>
-            <h2 className="font-heading font-semibold text-[#111827]">Recent sessions</h2>
-            <p className="text-sm text-[#6B7280]">Completed in the last 90 days</p>
-          </div>
-        </div>
-
         <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
           {filters.map((f) => (
             <button
@@ -241,58 +187,54 @@ export function AdminActivityPage({ data }: AdminActivityPageProps) {
         </div>
 
         {filtered.length === 0 ? (
-          <div className={cn(cardClass, "flex flex-col items-center px-6 py-12 text-center")}>
-            <CalendarCheck2 className="h-8 w-8 text-[#9CA3AF]" />
-            <p className="font-heading mt-3 font-semibold text-[#111827]">No sessions match</p>
-            <p className="mt-1 text-sm text-[#6B7280]">
-              Try another filter, or check back after coaches complete sessions.
-            </p>
-          </div>
+          <div className={adminListEmptyClass}>No sessions</div>
         ) : (
           <>
-            <div className="space-y-3 md:hidden">
-              {filtered.map((row) => (
-                <article key={row.sessionId} className={cn(cardClass, "p-4")}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-heading text-sm font-semibold text-[#111827]">
-                        {row.playerLabel}
-                      </p>
-                      <p className="mt-0.5 text-xs text-[#6B7280]">
-                        {row.coachName} · {typeLabel(row.type)}
-                        {row.playerCount > 1 ? ` · ${row.playerCount} players` : ""}
+            <div className={cn(adminListClass, "md:hidden")}>
+              <ul className="divide-y divide-[#F3F4F6]">
+                {filtered.map((row) => (
+                  <li key={row.sessionId} className={adminListRowClass()}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-heading truncate text-sm font-semibold text-[#111827]">
+                          {row.playerLabel}
+                        </p>
+                        <p className="mt-0.5 truncate text-xs text-[#6B7280]">
+                          {row.coachName} · {typeLabel(row.type)}
+                          {row.playerCount > 1 ? ` · ${row.playerCount}` : ""}
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-right text-xs font-medium text-[#374151]">
+                        {row.date ? formatDisplayDate(row.date) : "—"}
+                        <span className="mt-0.5 block font-normal text-[#9CA3AF]">
+                          {row.time}
+                          {row.endTime ? `–${row.endTime}` : ""}
+                        </span>
                       </p>
                     </div>
-                    <p className="shrink-0 text-right text-xs font-medium text-[#374151]">
-                      {row.date ? formatDisplayDate(row.date) : "—"}
-                      <span className="mt-0.5 block font-normal text-[#9CA3AF]">
-                        {row.time}
-                        {row.endTime ? `–${row.endTime}` : ""}
-                      </span>
-                    </p>
-                  </div>
-                  <div className="mt-3">
-                    <StatusChips row={row} />
-                  </div>
-                </article>
-              ))}
+                    <div className="mt-2">
+                      <StatusChips row={row} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <div className={cn(cardClass, "hidden overflow-x-auto md:block")}>
+            <div className={cn(adminListClass, "hidden overflow-x-auto md:block")}>
               <table className="w-full min-w-[720px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-[#E5E7EB] text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-                    <th className="px-5 py-3">Date</th>
-                    <th className="px-5 py-3">Players</th>
-                    <th className="px-5 py-3">Coach</th>
-                    <th className="px-5 py-3">Type</th>
-                    <th className="px-5 py-3">Progress</th>
+                    <th className="px-4 py-2.5">Date</th>
+                    <th className="px-4 py-2.5">Players</th>
+                    <th className="px-4 py-2.5">Coach</th>
+                    <th className="px-4 py-2.5">Type</th>
+                    <th className="px-4 py-2.5">Progress</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F3F4F6]">
                   {filtered.map((row) => (
                     <tr key={row.sessionId} className="align-top">
-                      <td className="px-5 py-3 whitespace-nowrap">
+                      <td className="px-4 py-2.5 whitespace-nowrap">
                         <p className="font-medium text-[#111827]">
                           {row.date ? formatDisplayDate(row.date) : "—"}
                         </p>
@@ -301,15 +243,15 @@ export function AdminActivityPage({ data }: AdminActivityPageProps) {
                           {row.endTime ? `–${row.endTime}` : ""}
                         </p>
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-2.5">
                         <p className="font-medium text-[#111827]">{row.playerLabel}</p>
                         {row.playerCount > 1 ? (
                           <p className="text-xs text-[#9CA3AF]">{row.playerCount} players</p>
                         ) : null}
                       </td>
-                      <td className="px-5 py-3 text-[#374151]">{row.coachName}</td>
-                      <td className="px-5 py-3 text-[#6B7280]">{typeLabel(row.type)}</td>
-                      <td className="px-5 py-3">
+                      <td className="px-4 py-2.5 text-[#374151]">{row.coachName}</td>
+                      <td className="px-4 py-2.5 text-[#6B7280]">{typeLabel(row.type)}</td>
+                      <td className="px-4 py-2.5">
                         <StatusChips row={row} />
                       </td>
                     </tr>
@@ -320,18 +262,6 @@ export function AdminActivityPage({ data }: AdminActivityPageProps) {
           </>
         )}
       </section>
-
-      <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#9CA3AF]">
-        <span className="inline-flex items-center gap-1">
-          <Sparkles className="h-3.5 w-3.5" /> Ratings enable progress cards
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <Mail className="h-3.5 w-3.5" /> Email sends are capped at {PROGRESS_CARD_EMAIL_MAX_SENDS}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <MailWarning className="h-3.5 w-3.5" /> Missing cards = coaching value not delivered
-        </span>
-      </p>
     </AdminPageShell>
   );
 }

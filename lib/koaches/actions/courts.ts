@@ -441,6 +441,39 @@ export async function updateCourtActiveAction(
   return { ok: true };
 }
 
+export async function updateCourtAction(
+  courtId: string,
+  input: Omit<Court, "id" | "isActive">
+): Promise<CourtMutationResult> {
+  try {
+    await requireAdmin();
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Not authorized." };
+  }
+
+  const name = input.name.trim();
+  const address = input.address.trim();
+  if (!name || !address) {
+    return { ok: false, error: "Name and address are required." };
+  }
+
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("courts")
+    .update({
+      name,
+      address,
+      city: input.city?.trim() ?? "",
+      region: input.region?.trim() ?? "",
+      maps_url: input.mapsUrl?.trim() || null,
+    })
+    .eq("id", courtId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin/courts");
+  revalidatePath("/coach");
+  return { ok: true };
+}
+
 export async function deleteCourtAction(courtId: string): Promise<CourtMutationResult> {
   try {
     await requireAdmin();

@@ -17,3 +17,18 @@ export function AdminPageShell({ children, className }: AdminPageShellProps) {
     <CoachPageShell className={cn("max-w-6xl", className)}>{children}</CoachPageShell>
   );
 }
+
+/** Compact list shell — use across coaches, courts, payments, applications. */
+export const adminListClass =
+  "overflow-hidden rounded-2xl border border-[#E5E7EB] bg-white";
+
+export const adminListEmptyClass =
+  "rounded-2xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] px-4 py-12 text-center text-sm font-medium text-[#374151]";
+
+export function adminListRowClass(opts?: { muted?: boolean; alert?: boolean }) {
+  return cn(
+    "px-3.5 py-3 sm:px-4",
+    opts?.muted && "bg-[#FAFAFA]",
+    opts?.alert && "bg-[#FFFBEB]/50"
+  );
+}

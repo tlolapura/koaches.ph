@@ -89,8 +89,8 @@ function ProgramsPageContent() {
             <p className="font-heading text-sm font-semibold">Skills you score</p>
             <p className="text-xs text-[#6B7280]">
               {skillsCustomized
-                ? `${dropInSkillCount} skills for one-off sessions`
-                : "Pick what you rate after drop-in lessons — most important setup"}
+                ? `${dropInSkillCount} skills selected`
+                : "Choose the skills you rate after sessions"}
             </p>
           </div>
           <span className="text-xs font-semibold text-[#4F8FF7]">
@@ -191,7 +191,6 @@ function ProgramsPageContent() {
           onClose={() => setDropInOpen(false)}
           coach={coach}
           onSaved={() => void refreshCoach()}
-          forcePick={!skillsCustomized}
         />
       )}
     </CoachPageShell>

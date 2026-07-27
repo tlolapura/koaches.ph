@@ -199,8 +199,8 @@ function ProfilePageContent() {
                 skillLabelOverrides: coach.skillLabelOverrides,
               }).length;
               return coachHasCustomizedSessionSkills(coach)
-                ? `${count} skills for one-off sessions`
-                : "Not set yet — pick what you rate after drop-ins";
+                ? `${count} skills selected`
+                : "Choose the skills you rate after sessions";
             })()}
           </p>
         </div>
@@ -372,7 +372,6 @@ function ProfilePageContent() {
           invalidateCoachProfile(coachId);
           void refresh();
         }}
-        forcePick={!coachHasCustomizedSessionSkills(coach)}
       />
     </CoachPageShell>
   );

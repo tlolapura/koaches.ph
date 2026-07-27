@@ -98,13 +98,17 @@ export function ReceiptPreviewModal({
       ) : url ? (
         <div className="overflow-hidden rounded-2xl bg-[#F3F4F6] ring-1 ring-[#E5E7EB]">
           {isPdf ? (
-            <iframe title={title} src={url} className="h-[70vh] w-full bg-white" />
+            <iframe
+              title={title}
+              src={url}
+              className="h-[min(50vh,24rem)] w-full bg-white md:h-[70vh]"
+            />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element -- signed receipt URL
             <img
               src={url}
               alt={title}
-              className="mx-auto max-h-[70vh] w-auto max-w-full object-contain"
+              className="mx-auto max-h-[min(50vh,24rem)] w-auto max-w-full object-contain md:max-h-[70vh]"
             />
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ExternalLink, MapPin, Plus, Search, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import type { Court, CourtRequest } from "@/lib/koaches/types";
 import {
   approveCourtRequestAction,
@@ -10,13 +10,20 @@ import {
   deleteCourtAction,
   linkCourtRequestToExistingAction,
   rejectCourtRequestAction,
+  updateCourtAction,
   updateCourtActiveAction,
 } from "@/lib/koaches/actions/courts";
 import { CoachButton } from "@/components/koaches/coach/CoachButton";
-import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
+import {
+  AdminPageHeader,
+  AdminPageShell,
+  adminListClass,
+  adminListEmptyClass,
+  adminListRowClass,
+} from "@/components/koaches/admin/AdminPageLayout";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
-import { cn, formatDisplayDate } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 type AdminCourtsClientProps = {
   initialCourts: Court[];
@@ -24,9 +31,10 @@ type AdminCourtsClientProps = {
 };
 
 const ADD_COURT_FORM_ID = "admin-add-court-form";
+const EDIT_COURT_FORM_ID = "admin-edit-court-form";
 const REVIEW_COURT_FORM_ID = "admin-review-court-form";
 
-type ReviewDraft = {
+type CourtDraft = {
   name: string;
   address: string;
   city: string;
@@ -95,7 +103,15 @@ export function AdminCourtsClient({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<FilterId>("all");
   const [reviewing, setReviewing] = useState<CourtRequest | null>(null);
-  const [reviewDraft, setReviewDraft] = useState<ReviewDraft>({
+  const [reviewDraft, setReviewDraft] = useState<CourtDraft>({
+    name: "",
+    address: "",
+    city: "",
+    region: "",
+    mapsUrl: "",
+  });
+  const [editing, setEditing] = useState<Court | null>(null);
+  const [editDraft, setEditDraft] = useState<CourtDraft>({
     name: "",
     address: "",
     city: "",
@@ -204,6 +220,58 @@ export function AdminCourtsClient({
         return;
       }
       setCourtList((prev) => prev.filter((c) => c.id !== id));
+      if (editing?.id === id) setEditing(null);
+      router.refresh();
+    } finally {
+      setBusyCourtId(null);
+    }
+  };
+
+  const openEdit = (court: Court) => {
+    setError(null);
+    setEditing(court);
+    setEditDraft({
+      name: court.name,
+      address: court.address,
+      city: court.city ?? "",
+      region: court.region ?? "",
+      mapsUrl: court.mapsUrl ?? "",
+    });
+  };
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    if (!editDraft.name.trim() || !editDraft.address.trim()) return;
+    setBusyCourtId(editing.id);
+    setError(null);
+    try {
+      const result = await updateCourtAction(editing.id, {
+        name: editDraft.name.trim(),
+        address: editDraft.address.trim(),
+        city: editDraft.city.trim(),
+        region: editDraft.region.trim(),
+        mapsUrl: editDraft.mapsUrl.trim() || undefined,
+      });
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setCourtList((prev) =>
+        prev.map((c) =>
+          c.id === editing.id
+            ? {
+                ...c,
+                name: editDraft.name.trim(),
+                address: editDraft.address.trim(),
+                city: editDraft.city.trim(),
+                region: editDraft.region.trim(),
+                mapsUrl: editDraft.mapsUrl.trim() || undefined,
+              }
+            : c
+        )
+      );
+      setEditing(null);
       router.refresh();
     } finally {
       setBusyCourtId(null);
@@ -327,7 +395,6 @@ export function AdminCourtsClient({
     <AdminPageShell>
       <AdminPageHeader
         title="Courts"
-        subtitle="Platform directory for coach assignments"
         className="mb-6"
         actions={
           <button
@@ -353,11 +420,8 @@ export function AdminCourtsClient({
       {requests.length > 0 ? (
         <section className="mb-6 overflow-hidden rounded-2xl border border-[#FDE68A] bg-[#FFFBEB]">
           <div className="border-b border-[#FDE68A] px-4 py-3 sm:px-5">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-[#92400E]">
-              Coach requests
-            </p>
-            <h2 className="font-heading mt-0.5 text-lg font-bold text-[#78350F]">
-              {requests.length} waiting for review
+            <h2 className="font-heading text-base font-semibold text-[#78350F]">
+              {requests.length} request{requests.length === 1 ? "" : "s"}
             </h2>
           </div>
           <ul className="divide-y divide-[#FDE68A]/70">
@@ -366,65 +430,54 @@ export function AdminCourtsClient({
               const duplicates = duplicatesByRequestId.get(req.id) ?? [];
               const topDuplicate = duplicates[0];
               return (
-                <li key={req.id} className="px-4 py-4 sm:px-5">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <li key={req.id} className="px-3.5 py-3 sm:px-4">
+                  <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-heading font-semibold text-[#111827]">{req.name}</p>
+                        <p className="font-heading truncate text-sm font-semibold text-[#111827]">
+                          {req.name}
+                        </p>
                         {topDuplicate ? (
-                          <span className="rounded-full bg-[#92400E] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-                            Duplicate
+                          <span className="rounded-full bg-[#92400E] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                            Dup
                           </span>
                         ) : null}
                       </div>
-                      <p className="mt-0.5 text-sm text-[#6B7280]">{req.address}</p>
-                      <p className="mt-0.5 text-xs text-[#9CA3AF]">
-                        {[req.city, req.region].filter(Boolean).join(", ")}
-                        {req.coachName ? ` · from ${req.coachName}` : ""}
-                        {req.createdAt ? ` · ${formatDisplayDate(req.createdAt.slice(0, 10))}` : ""}
+                      <p className="mt-0.5 truncate text-xs text-[#6B7280]">
+                        {[req.city || req.address, req.region].filter(Boolean).join(" · ")}
+                        {req.coachName ? ` · ${req.coachName}` : ""}
                       </p>
                       {topDuplicate ? (
-                        <p className="mt-1.5 text-xs font-medium text-[#92400E]">
-                          Matches existing: {topDuplicate.name}
-                          {topDuplicate.city ? ` · ${topDuplicate.city}` : ""}
+                        <p className="mt-0.5 truncate text-xs font-medium text-[#92400E]">
+                          Matches {topDuplicate.name}
                         </p>
                       ) : null}
-                      {req.mapsUrl ? (
-                        <a
-                          href={req.mapsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#4F8FF7]"
-                        >
-                          Maps <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : null}
                     </div>
-                    <div className="flex shrink-0 flex-wrap gap-2">
+                    <div className="flex shrink-0 flex-wrap gap-1">
                       {topDuplicate ? (
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => void assignExistingCourt(req.id, topDuplicate.id)}
-                          className="inline-flex h-10 items-center rounded-xl bg-[#92400E] px-3.5 text-sm font-semibold text-white hover:bg-[#78350F] disabled:opacity-50"
+                          className="inline-flex h-9 items-center rounded-lg bg-[#92400E] px-2.5 text-xs font-semibold text-white hover:bg-[#78350F] disabled:opacity-50"
                         >
-                          {busy ? "…" : "Use existing court"}
+                          {busy ? "…" : "Use existing"}
                         </button>
                       ) : (
                         <button
                           type="button"
                           disabled={busy}
                           onClick={() => openReview(req, true)}
-                          className="inline-flex h-10 items-center rounded-xl px-3.5 text-sm font-semibold text-[#92400E] ring-1 ring-[#FDE68A] hover:bg-[#FFFBEB] disabled:opacity-50"
+                          className="inline-flex h-9 items-center rounded-lg px-2.5 text-xs font-semibold text-[#92400E] ring-1 ring-[#FDE68A] hover:bg-[#FFFBEB] disabled:opacity-50"
                         >
-                          Mark as duplicate
+                          Duplicate
                         </button>
                       )}
                       <button
                         type="button"
                         disabled={busy}
                         onClick={() => void rejectRequest(req.id)}
-                        className="inline-flex h-10 items-center rounded-xl px-3.5 text-sm font-semibold text-[#B91C1C] hover:bg-[#FEF2F2] disabled:opacity-50"
+                        className="inline-flex h-9 items-center rounded-lg px-2.5 text-xs font-semibold text-[#B91C1C] hover:bg-[#FEF2F2] disabled:opacity-50"
                       >
                         Reject
                       </button>
@@ -432,7 +485,7 @@ export function AdminCourtsClient({
                         type="button"
                         disabled={busy}
                         onClick={() => openReview(req)}
-                        className="inline-flex h-10 items-center rounded-xl bg-[#16A34A] px-3.5 text-sm font-semibold text-white hover:bg-[#15803D] disabled:opacity-50"
+                        className="inline-flex h-9 items-center rounded-lg bg-[#16A34A] px-2.5 text-xs font-semibold text-white hover:bg-[#15803D] disabled:opacity-50"
                       >
                         {busy ? "…" : "Review"}
                       </button>
@@ -445,28 +498,7 @@ export function AdminCourtsClient({
         </section>
       ) : null}
 
-      <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-white p-4 ring-1 ring-[#BBF7D0]/80">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#166534]/70">
-            Total
-          </p>
-          <p className="font-heading mt-1 text-2xl font-bold text-[#14532D]">{stats.total}</p>
-        </div>
-        <div className="rounded-2xl bg-gradient-to-br from-[#EFF6FF] to-white p-4 ring-1 ring-[#BFDBFE]/80">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#1D4ED8]/70">
-            Active
-          </p>
-          <p className="font-heading mt-1 text-2xl font-bold text-[#1D4ED8]">{stats.active}</p>
-        </div>
-        <div className="rounded-2xl bg-gradient-to-br from-[#F8FAFC] to-white p-4 ring-1 ring-[#E2E8F0]">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
-            Inactive
-          </p>
-          <p className="font-heading mt-1 text-2xl font-bold text-[#334155]">{stats.inactive}</p>
-        </div>
-      </div>
-
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <label className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
           <input
@@ -511,13 +543,13 @@ export function AdminCourtsClient({
           setReviewing(null);
           setPickingDuplicate(false);
         }}
-        title={pickingDuplicate ? "Mark as duplicate" : "Review court request"}
+        title={pickingDuplicate ? "Link to existing" : "Review request"}
         subtitle={
           pickingDuplicate
-            ? "Pick the existing court to assign to this coach."
+            ? undefined
             : reviewing?.coachName
-              ? `From ${reviewing.coachName}. Fix any details before adding it.`
-              : "Fix any details before adding it."
+              ? `From ${reviewing.coachName}`
+              : undefined
         }
         footer={
           pickingDuplicate ? (
@@ -716,7 +748,6 @@ export function AdminCourtsClient({
           resetForm();
         }}
         title="Add court"
-        subtitle="Create a new court for coach assignments"
         footer={
           <div className="flex gap-2">
             <CoachButton
@@ -795,106 +826,170 @@ export function AdminCourtsClient({
         </form>
       </CoachBottomSheet>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      <CoachBottomSheet
+        open={!!editing}
+        onClose={() => {
+          if (busyCourtId === editing?.id) return;
+          setEditing(null);
+        }}
+        title="Edit court"
+        footer={
+          <div className="flex gap-2">
+            <CoachButton
+              type="button"
+              variant="outline"
+              className="flex-1"
+              disabled={busyCourtId === editing?.id}
+              onClick={() => setEditing(null)}
+            >
+              Cancel
+            </CoachButton>
+            <CoachButton
+              type="submit"
+              form={EDIT_COURT_FORM_ID}
+              className="flex-1"
+              loading={busyCourtId === editing?.id}
+              loadingLabel="Saving…"
+            >
+              Save changes
+            </CoachButton>
+          </div>
+        }
+      >
+        <form id={EDIT_COURT_FORM_ID} className="coach-form" onSubmit={(e) => void handleEdit(e)}>
+          <CoachSheetField label="Court name" htmlFor="edit-court-name">
+            <input
+              id="edit-court-name"
+              className="coach-input"
+              value={editDraft.name}
+              onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
+              required
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Address" htmlFor="edit-court-address">
+            <input
+              id="edit-court-address"
+              className="coach-input"
+              value={editDraft.address}
+              onChange={(e) => setEditDraft((d) => ({ ...d, address: e.target.value }))}
+              required
+            />
+          </CoachSheetField>
+          <CoachSheetField label="City" htmlFor="edit-court-city">
+            <input
+              id="edit-court-city"
+              className="coach-input"
+              value={editDraft.city}
+              onChange={(e) => setEditDraft((d) => ({ ...d, city: e.target.value }))}
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Region" htmlFor="edit-court-region">
+            <input
+              id="edit-court-region"
+              className="coach-input"
+              value={editDraft.region}
+              onChange={(e) => setEditDraft((d) => ({ ...d, region: e.target.value }))}
+            />
+          </CoachSheetField>
+          <CoachSheetField label="Google Maps link (optional)" htmlFor="edit-court-maps">
+            <input
+              id="edit-court-maps"
+              className="coach-input"
+              type="url"
+              value={editDraft.mapsUrl}
+              onChange={(e) => setEditDraft((d) => ({ ...d, mapsUrl: e.target.value }))}
+              placeholder="https://maps.google.com/..."
+            />
+          </CoachSheetField>
+        </form>
+      </CoachBottomSheet>
+
+      <div className={cn(adminListClass, "mt-5")}>
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] px-4 py-12 text-center lg:col-span-2">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F0FDF4]">
-              <MapPin className="h-5 w-5 text-[#166534]" />
-            </div>
-            <p className="mt-3 text-sm font-medium text-[#374151]">
-              {courtList.length === 0 ? "No courts yet" : "No courts match"}
-            </p>
-            <p className="mt-1 text-sm text-[#6B7280]">
-              {courtList.length === 0
-                ? "Add your first court to get started."
-                : "Try a different search or filter."}
-            </p>
+          <div className={cn(adminListEmptyClass, "border-0")}>
+            {courtList.length === 0 ? "No courts yet" : "No courts match"}
           </div>
         ) : (
-          filtered.map((c) => {
-            const isActive = c.isActive !== false;
-            const busy = busyCourtId === c.id;
-            return (
-              <article
-                key={c.id}
-                className={cn(
-                  "overflow-hidden rounded-2xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.06)] ring-1 ring-[#E5E7EB]/80",
-                  !isActive && "opacity-75"
-                )}
-              >
-                <div className="p-4 sm:p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F0FDF4] to-[#EFF6FF]">
-                      <MapPin className="h-5 w-5 text-[#166534]" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <h3 className="font-heading truncate text-base font-semibold text-[#111827]">
-                            {c.name}
-                          </h3>
-                          <p className="mt-0.5 text-sm text-[#6B7280]">{c.address}</p>
-                          {(c.city || c.region) && (
-                            <p className="mt-0.5 text-xs text-[#9CA3AF]">
-                              {[c.city, c.region].filter(Boolean).join(", ")}
-                            </p>
-                          )}
-                        </div>
-                        {c.mapsUrl && (
-                          <a
-                            href={c.mapsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[#4F8FF7] transition-colors hover:bg-[#EFF6FF]"
-                            title="Open in Maps"
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
+          <ul className="divide-y divide-[#F3F4F6]">
+            {filtered.map((c) => {
+              const isActive = c.isActive !== false;
+              const busy = busyCourtId === c.id;
+              return (
+                <li
+                  key={c.id}
+                  className={cn(
+                    adminListRowClass({ muted: !isActive }),
+                    "flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
+                  )}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-heading truncate text-sm font-semibold text-[#111827]">
+                        {c.name}
+                      </p>
+                      <span
+                        className={cn(
+                          "shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                          isActive
+                            ? "bg-[#E5EFE8] text-[#3D5C47]"
+                            : "bg-[#F3F4F6] text-[#6B7280]"
                         )}
-                      </div>
-                      <div className="mt-2.5">
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                            isActive
-                              ? "bg-[#E5EFE8] text-[#3D5C47]"
-                              : "bg-[#F3F4F6] text-[#6B7280]"
-                          )}
-                        >
-                          {isActive ? "Active" : "Inactive"}
-                        </span>
-                      </div>
+                      >
+                        {isActive ? "Active" : "Off"}
+                      </span>
                     </div>
+                    <p className="mt-0.5 truncate text-xs text-[#6B7280]">
+                      {[c.city || c.address, c.region].filter(Boolean).join(" · ")}
+                    </p>
                   </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 border-t border-[#F3F4F6] bg-[#FAFBFC] px-4 py-3 sm:px-5">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className={cn(
-                      "inline-flex h-10 items-center rounded-xl px-3.5 text-sm font-semibold transition-colors disabled:opacity-50",
-                      isActive
-                        ? "text-[#B91C1C] hover:bg-[#FEF2F2]"
-                        : "text-[#166534] hover:bg-[#F0FDF4]"
-                    )}
-                    onClick={() => void toggleActive(c)}
-                  >
-                    {busy ? "…" : isActive ? "Deactivate" : "Activate"}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className="ml-auto inline-flex h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-[#B91C1C] transition-colors hover:bg-[#FEF2F2] disabled:opacity-50"
-                    onClick={() => void removeCourt(c.id)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {busy ? "…" : "Remove"}
-                  </button>
-                </div>
-              </article>
-            );
-          })
+                  <div className="flex shrink-0 flex-wrap items-center gap-1">
+                    {c.mapsUrl ? (
+                      <a
+                        href={c.mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#4F8FF7] hover:bg-[#EFF6FF]"
+                        title="Maps"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    ) : null}
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => openEdit(c)}
+                      className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-[#374151] hover:bg-[#F3F4F6] disabled:opacity-50"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void toggleActive(c)}
+                      className={cn(
+                        "inline-flex h-9 items-center rounded-lg px-2 text-xs font-semibold disabled:opacity-50",
+                        isActive
+                          ? "text-[#B91C1C] hover:bg-[#FEF2F2]"
+                          : "text-[#166534] hover:bg-[#F0FDF4]"
+                      )}
+                    >
+                      {busy ? "…" : isActive ? "Off" : "On"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void removeCourt(c.id)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#B91C1C] hover:bg-[#FEF2F2] disabled:opacity-50"
+                      title="Remove"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
     </AdminPageShell>

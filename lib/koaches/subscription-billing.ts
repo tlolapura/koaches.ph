@@ -64,7 +64,7 @@ export function getSubscriptionBillingInfo(
       return {
         status: "inactive",
         label: "Account inactive",
-        adminNote: "Coach portal and public profile are off. Reactivate when ready.",
+        adminNote: "Portal and profile are off.",
         renewalDate: null,
         invoiceByDate: null,
         daysUntilRenewal: null,
@@ -75,7 +75,7 @@ export function getSubscriptionBillingInfo(
     return {
       status: "not_set",
       label: "Renewal not set",
-      adminNote: "Set a renewal date after the first invoice is paid.",
+      adminNote: "Set renewal after first payment.",
       renewalDate: null,
       invoiceByDate: null,
       daysUntilRenewal: null,
@@ -88,7 +88,6 @@ export function getSubscriptionBillingInfo(
   const daysUntil = differenceInCalendarDays(renewal, now);
   const renewalDate = format(renewal, "yyyy-MM-dd");
   const invoiceBy = format(addDays(renewal, -SUBSCRIPTION_INVOICE_LEAD_DAYS), "yyyy-MM-dd");
-  const invoiceByDisplay = formatDisplayDate(invoiceBy);
   const renewalDisplay = formatDisplayDate(renewalDate);
 
   // Past grace → lapsed (even if is_active was flipped off for lockout)
@@ -96,7 +95,7 @@ export function getSubscriptionBillingInfo(
     return {
       status: "lapsed",
       label: coach.isActive ? "Lapsed" : "Account locked",
-      adminNote: `Subscription lapsed after ${SUBSCRIPTION_PAYMENT_GRACE_DAYS}-day grace. Payment overdue since ${renewalDisplay}. Pay and wait for admin confirmation to restore access.`,
+      adminNote: `Overdue since ${renewalDisplay}. Approve payment to restore.`,
       renewalDate,
       invoiceByDate: invoiceBy,
       daysUntilRenewal: daysUntil,
@@ -110,7 +109,7 @@ export function getSubscriptionBillingInfo(
     return {
       status: "inactive",
       label: "Account inactive",
-      adminNote: "Coach portal and public profile are off. Reactivate when ready.",
+      adminNote: "Portal and profile are off.",
       renewalDate,
       invoiceByDate: invoiceBy,
       daysUntilRenewal: daysUntil,
@@ -123,7 +122,7 @@ export function getSubscriptionBillingInfo(
     return {
       status: "active",
       label: "Active",
-      adminNote: `Renews ${renewalDisplay}. Invoice opens around ${invoiceByDisplay}.`,
+      adminNote: `Renews ${renewalDisplay}.`,
       renewalDate,
       invoiceByDate: invoiceBy,
       daysUntilRenewal: daysUntil,
@@ -136,7 +135,7 @@ export function getSubscriptionBillingInfo(
     return {
       status: "send_invoice",
       label: "Invoice ready",
-      adminNote: `${daysUntil} day${daysUntil === 1 ? "" : "s"} until renewal (${renewalDisplay}). Pay now to keep uninterrupted access.`,
+      adminNote: `Renews ${renewalDisplay} (${daysUntil}d).`,
       renewalDate,
       invoiceByDate: invoiceBy,
       daysUntilRenewal: daysUntil,
@@ -149,7 +148,7 @@ export function getSubscriptionBillingInfo(
     return {
       status: "payment_due",
       label: "Payment due",
-      adminNote: `Payment due today (${renewalDisplay}). ${SUBSCRIPTION_PAYMENT_GRACE_DAYS}-day grace before the account locks.`,
+      adminNote: `Due today. ${SUBSCRIPTION_PAYMENT_GRACE_DAYS}-day grace.`,
       renewalDate,
       invoiceByDate: invoiceBy,
       daysUntilRenewal: 0,
@@ -162,7 +161,7 @@ export function getSubscriptionBillingInfo(
   return {
     status: "overdue",
     label: "Overdue",
-    adminNote: `Payment was due ${renewalDisplay} (${daysOverdue} day${daysOverdue === 1 ? "" : "s"} ago). Grace ends in ${SUBSCRIPTION_PAYMENT_GRACE_DAYS - daysOverdue} day${SUBSCRIPTION_PAYMENT_GRACE_DAYS - daysOverdue === 1 ? "" : "s"}.`,
+    adminNote: `${daysOverdue}d overdue. Grace ends in ${SUBSCRIPTION_PAYMENT_GRACE_DAYS - daysOverdue}d.`,
     renewalDate,
     invoiceByDate: invoiceBy,
     daysUntilRenewal: daysUntil,
