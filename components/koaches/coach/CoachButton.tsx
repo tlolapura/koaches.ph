@@ -4,7 +4,7 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type CoachButtonVariant = "primary" | "secondary" | "outline" | "soft" | "danger";
+export type CoachButtonVariant = "primary" | "secondary" | "outline" | "soft" | "danger";
 
 const variantClass: Record<CoachButtonVariant, string> = {
   primary: "coach-btn-primary",

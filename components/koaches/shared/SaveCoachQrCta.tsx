@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Download } from "lucide-react";
-import { CoachButton } from "@/components/koaches/coach/CoachButton";
+import { CoachButton, type CoachButtonVariant } from "@/components/koaches/coach/CoachButton";
 import { exportStoryAsPng } from "@/lib/koaches/social-story-export";
 import { CoachQrShareImage, type QrShareVariant } from "@/components/koaches/shared/CoachQrShareImage";
 import type { CoachProfile } from "@/lib/koaches/types";
@@ -15,6 +15,7 @@ type SaveCoachQrCtaProps = {
   label: string;
   filename: string;
   className?: string;
+  buttonVariant?: CoachButtonVariant;
   onSaved?: () => void;
   onError?: () => void;
 };
@@ -26,6 +27,7 @@ export function SaveCoachQrCta({
   label,
   filename,
   className,
+  buttonVariant = "primary",
   onSaved,
   onError,
 }: SaveCoachQrCtaProps) {
@@ -53,6 +55,7 @@ export function SaveCoachQrCta({
     <>
       <CoachButton
         type="button"
+        variant={buttonVariant}
         onClick={handleSave}
         loading={saving}
         loadingLabel="Saving…"

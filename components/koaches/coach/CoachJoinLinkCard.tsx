@@ -150,7 +150,8 @@ export function CoachJoinLinkCard({ coach, className }: CoachJoinLinkCardProps) 
                 variant="join"
                 label="Save QR image"
                 filename={`${coach.slug}-join-qr.png`}
-                className="min-h-[44px]"
+                buttonVariant="outline"
+                className="min-h-[44px] w-full"
                 onSaved={() => showToast("Join QR saved. Show it at court.")}
                 onError={() => showToast("Could not save image", "error")}
               />
