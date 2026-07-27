@@ -168,7 +168,7 @@ export function CoachDashboard() {
       key: "skills",
       href: "/coach/profile?skills=1",
       label: "Set the skills you score",
-      detail: "Pick a starter pack — used on every drop-in session",
+      detail: "Choose what you rate after every session",
       icon: Sparkles,
       tone: "navy",
     });
@@ -382,7 +382,7 @@ function FirstRunChecklist({
       href: "/coach/profile?skills=1",
       icon: Sparkles,
       label: "Pick skills you score",
-      detail: "Beginner, Intermediate, or Advanced — 30 seconds",
+      detail: "Choose what you rate after every session",
     },
     {
       key: "student",

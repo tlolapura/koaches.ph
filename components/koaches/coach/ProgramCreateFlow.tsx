@@ -269,7 +269,7 @@ export function ProgramCreateFlow({
               <SkillRubricPicker
                 value={draftToSkillRubric(draft)}
                 onChange={(value) => setDraft(applySkillRubricToDraft(draft, value))}
-                hint="These are the skills you'll score after each session. Pick from the list, add your own, or rename anything."
+                hint="Check the skills you'll score after each session. You can also add your own."
                 defaultExpanded
               />
 

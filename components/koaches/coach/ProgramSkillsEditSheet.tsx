@@ -63,7 +63,7 @@ export function ProgramSkillsEditSheet({
       <SkillRubricPicker
         value={value}
         onChange={setValue}
-        hint="Pick catalog skills, add your own per category, or rename anything."
+        hint="Check the skills for this program. You can also add your own."
         defaultExpanded
       />
 
