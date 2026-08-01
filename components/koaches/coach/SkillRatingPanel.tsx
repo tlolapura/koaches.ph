@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, PartyPopper } from "lucide-react";
+import { Check, History, PartyPopper } from "lucide-react";
 import { SendProgressCardEmailButton } from "@/components/koaches/coach/SendProgressCardEmailButton";
 import { ShareProgressCardMessageButton } from "@/components/koaches/coach/ShareProgressCardMessageButton";
 import {
@@ -20,9 +20,25 @@ import {
   suggestSessionFeedback,
   type SessionFeedback,
 } from "@/lib/koaches/progress-cards";
+import type { LastKnownSkillSource } from "@/lib/koaches/student-progress";
 import type { SkillCategory, SkillRating, SkillRubricId } from "@/lib/koaches/types";
 import type { SessionRatingStep } from "@/lib/koaches/session-detail-steps";
-import { cn } from "@/lib/utils";
+import { cn, parseDateValue } from "@/lib/utils";
+import { format as formatDateFns, isValid } from "date-fns";
+
+function formatBaselineDate(date?: string): string | null {
+  if (!date) return null;
+  const d = parseDateValue(date);
+  if (!isValid(d)) return date;
+  return formatDateFns(d, "MMM d");
+}
+
+function formatBaselineSourceLabel(source: LastKnownSkillSource): string {
+  const shortDate = formatBaselineDate(source.date);
+  if (shortDate && source.label) return `${source.label} · ${shortDate}`;
+  if (shortDate) return shortDate;
+  return source.label || "last session";
+}
 
 export type SkillRatingActions = {
   canContinueFromRatings: boolean;
@@ -39,6 +55,10 @@ type SkillRatingPanelProps = {
   onActionsChange?: (actions: SkillRatingActions | null) => void;
   initialBefore?: SkillRating[];
   initialAfter?: SkillRating[];
+  /** Most recent prior session used to seed start scores */
+  baselineSource?: LastKnownSkillSource | null;
+  /** Per-skill source for “from last session” hints on Start scores */
+  baselineSkillSources?: Record<string, LastKnownSkillSource>;
   /** Covered lesson IDs from another player with the same lesson set — applied only via button. */
   copyCoveredSkillIds?: string[];
   copyCoveredFromName?: string;
@@ -70,7 +90,7 @@ function defaultRatings(
     skillId: s.id,
     skillName: s.name,
     category: s.category,
-    score: 3,
+    score: 0,
     skipped: true,
   }));
 }
@@ -80,12 +100,14 @@ function ScorePicker({
   onChange,
   tone,
   label,
+  hint,
   labels,
 }: {
   value: number;
   onChange: (score: number) => void;
   tone: "start" | "after";
   label: string;
+  hint?: string;
   labels: Record<SkillScore, string>;
 }) {
   const selected =
@@ -99,14 +121,19 @@ function ScorePicker({
 
   return (
     <div>
-      <p
-        className={cn(
-          "text-xs font-semibold",
-          tone === "start" ? "text-[#6B7280]" : "text-[#166534]"
-        )}
-      >
-        {label}
-      </p>
+      <div className="flex items-baseline justify-between gap-2">
+        <p
+          className={cn(
+            "text-xs font-semibold",
+            tone === "start" ? "text-[#6B7280]" : "text-[#166534]"
+          )}
+        >
+          {label}
+        </p>
+        {hint ? (
+          <p className="truncate text-[11px] font-medium text-[#4F8FF7]">{hint}</p>
+        ) : null}
+      </div>
       <div className="mt-1.5 flex gap-1" role="group" aria-label={label}>
         {([0, 1, 2, 3, 4, 5] as const).map((n) => (
           <button
@@ -137,6 +164,7 @@ function SkillRatingRow({
   afterScore,
   skipped,
   scoreLabels,
+  startHint,
   onBefore,
   onAfter,
   onToggleSkipped,
@@ -146,6 +174,7 @@ function SkillRatingRow({
   afterScore: number;
   skipped: boolean;
   scoreLabels: Record<SkillScore, string>;
+  startHint?: string;
   onBefore: (n: number) => void;
   onAfter: (n: number) => void;
   onToggleSkipped: (skipped: boolean) => void;
@@ -155,7 +184,14 @@ function SkillRatingRow({
   if (skipped) {
     return (
       <div className="rounded-xl border border-dashed border-[#D1D5DB] bg-[#F9FAFB] p-3.5">
-        <p className="text-sm font-medium text-[#9CA3AF]">{skillName}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-sm font-medium text-[#9CA3AF]">{skillName}</p>
+          {startHint ? (
+            <span className="shrink-0 rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#2563EB]">
+              {startHint}
+            </span>
+          ) : null}
+        </div>
         <button
           type="button"
           onClick={() => onToggleSkipped(false)}
@@ -188,6 +224,7 @@ function SkillRatingRow({
           onChange={onBefore}
           tone="start"
           label="Start of session"
+          hint={startHint}
           labels={scoreLabels}
         />
         <ScorePicker
@@ -214,6 +251,8 @@ export function SkillRatingPanel({
   onStepChange,
   initialBefore,
   initialAfter,
+  baselineSource,
+  baselineSkillSources,
   copyCoveredSkillIds,
   copyCoveredFromName,
   rubricId,
@@ -434,6 +473,21 @@ export function SkillRatingPanel({
               {step === "feedback" && "Anything you want to tell your player"}
             </p>
 
+            {baselineSource && (step === "coverage" || step === "ratings") ? (
+              <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-2.5">
+                <History className="mt-0.5 h-4 w-4 shrink-0 text-[#2563EB]" strokeWidth={2.25} />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[#1E3A8A]">
+                    Start scores from last session
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#3B82F6]">
+                    {formatBaselineSourceLabel(baselineSource)}. Adjust today&apos;s end scores as
+                    they improve.
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
         {step === "coverage" ? (
           <div className="mt-5 space-y-6">
             {canCopyCovered ? (
@@ -460,6 +514,7 @@ export function SkillRatingPanel({
                 <div className="mt-2 space-y-2">
                   {skills.map((skill) => {
                     const covered = skill.skipped === false;
+                    const prior = baselineSkillSources?.[skill.skillId];
                     return (
                       <div
                         key={skill.skillId}
@@ -485,7 +540,14 @@ export function SkillRatingPanel({
                           >
                             <Check className="h-3.5 w-3.5" strokeWidth={3} />
                           </span>
-                          <p className="text-sm font-medium text-[#111827]">{skill.skillName}</p>
+                          <span className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-[#111827]">{skill.skillName}</p>
+                            {prior ? (
+                              <p className="mt-0.5 text-[11px] font-medium text-[#4F8FF7]">
+                                Last scored {formatBaselineDate(prior.date) ?? prior.label}
+                              </p>
+                            ) : null}
+                          </span>
                         </button>
                       </div>
                     );
@@ -548,6 +610,10 @@ export function SkillRatingPanel({
                 <div className="mt-3 space-y-3">
                   {skills.map((skill) => {
                     const afterSkill = after.find((a) => a.skillId === skill.skillId)!;
+                    const source = baselineSkillSources?.[skill.skillId];
+                    const startHint = source
+                      ? `From ${formatBaselineDate(source.date) ?? source.label}`
+                      : undefined;
                     return (
                       <SkillRatingRow
                         key={skill.skillId}
@@ -560,6 +626,7 @@ export function SkillRatingPanel({
                           skill.category,
                           skillLabelOverrides
                         )}
+                        startHint={startHint}
                         onBefore={(n) => setBeforeScore(skill.skillId, n)}
                         onAfter={(n) => setAfterScore(skill.skillId, n)}
                         onToggleSkipped={(skipped) => setSkipped(skill.skillId, skipped)}

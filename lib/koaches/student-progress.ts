@@ -1,10 +1,11 @@
-import type { Session, SkillRating } from "./types";
+import type { Session, SkillDefinition, SkillRating, SkillRubricId } from "./types";
 import {
   filterRatedSkills,
   getStudentSessionRatings,
   hasRatingsForCard,
   type ParticipantRatings,
 } from "./session-progress";
+import { resolveSkills } from "./constants";
 
 export type StudentSessionProgressEntry = {
   session: Session;
@@ -140,4 +141,98 @@ export function collectSkillsAcrossSnapshots(
   return [...map.entries()]
     .map(([id, name]) => ({ id, name }))
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Last known score per skill for a student (newest first).
+ * Prefers ratingsAfter, then ratingsBefore. Skips the current session when provided.
+ */
+export type LastKnownSkillSource = {
+  sessionId: string;
+  date?: string;
+  label: string;
+};
+
+export type LastKnownSkillBaseline = {
+  scores: Record<string, number>;
+  /** Where each skill score came from */
+  sources: Record<string, LastKnownSkillSource>;
+  /** Most recent session that contributed any score (for the banner) */
+  latestSource: LastKnownSkillSource | null;
+};
+
+export function getLastKnownSkillBaseline(
+  sessions: Session[],
+  studentId: string,
+  excludeSessionId?: string
+): LastKnownSkillBaseline {
+  const scoped = excludeSessionId
+    ? sessions.filter((s) => s.id !== excludeSessionId)
+    : sessions;
+  const history = buildStudentProgressHistory(scoped, studentId);
+  const scores: Record<string, number> = {};
+  const sources: Record<string, LastKnownSkillSource> = {};
+
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    const source: LastKnownSkillSource = {
+      sessionId: entry.session.id,
+      date: entry.session.date,
+      label: formatSessionProgressLabel(entry.session),
+    };
+    for (const rating of filterRatedSkills(entry.ratings.ratingsAfter ?? [])) {
+      if (scores[rating.skillId] === undefined) {
+        scores[rating.skillId] = rating.score;
+        sources[rating.skillId] = source;
+      }
+    }
+    for (const rating of filterRatedSkills(entry.ratings.ratingsBefore ?? [])) {
+      if (scores[rating.skillId] === undefined) {
+        scores[rating.skillId] = rating.score;
+        sources[rating.skillId] = source;
+      }
+    }
+  }
+
+  const latestSource =
+    history.length > 0
+      ? {
+          sessionId: history[history.length - 1].session.id,
+          date: history[history.length - 1].session.date,
+          label: formatSessionProgressLabel(history[history.length - 1].session),
+        }
+      : null;
+
+  return { scores, sources, latestSource: Object.keys(scores).length ? latestSource : null };
+}
+
+/** @deprecated Prefer getLastKnownSkillBaseline */
+export function getLastKnownSkillScores(
+  sessions: Session[],
+  studentId: string,
+  excludeSessionId?: string
+): Record<string, number> {
+  return getLastKnownSkillBaseline(sessions, studentId, excludeSessionId).scores;
+}
+
+/** Seed start/end ratings: last known score per skill, else 0. Skills stay skipped until covered. */
+export function seedSkillRatings(options: {
+  rubricId: SkillRubricId;
+  customSkillIds?: string[];
+  customSkills?: SkillDefinition[];
+  skillLabelOverrides?: Record<string, string>;
+  lastKnownScores?: Record<string, number>;
+}): SkillRating[] {
+  return resolveSkills({
+    rubricId: options.rubricId,
+    customSkillIds: options.customSkillIds,
+    customSkills: options.customSkills,
+    skillLabelOverrides: options.skillLabelOverrides,
+  }).map((skill) => ({
+    skillId: skill.id,
+    skillName: skill.name,
+    category: skill.category,
+    score: options.lastKnownScores?.[skill.id] ?? 0,
+    skipped: true,
+  }));
 }

@@ -13,10 +13,16 @@ import {
   hasRatingsForCard,
   resolveParticipantProgress,
 } from "@/lib/koaches/session-progress";
+import {
+  getLastKnownSkillBaseline,
+  seedSkillRatings,
+  type LastKnownSkillBaseline,
+} from "@/lib/koaches/student-progress";
 import { buildProgressCardDraft, findProgressCardForSession } from "@/lib/koaches/progress-cards";
 import { useParticipantProgress } from "@/hooks/useParticipantProgress";
 import { useProgressCards } from "@/hooks/useProgressCards";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
+import { useCoachSessions } from "@/hooks/useCoachSessions";
 import { SkillRatingPanel, type SkillRatingActions } from "@/components/koaches/coach/SkillRatingPanel";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
 import { cn } from "@/lib/utils";
@@ -93,6 +99,35 @@ function ParticipantProgressPanel({
   const { ratings, saveRatings } = useParticipantProgress(session, participant.id);
   const { cards, saveCard } = useProgressCards(session.coachId);
   const { coach } = useCoachProfile(session.coachId);
+  const { sessions: allSessions } = useCoachSessions(session.coachId);
+
+  const hasSavedRatings =
+    Boolean(ratings.ratingsBefore?.length) || Boolean(ratings.ratingsAfter?.length);
+
+  const baseline = useMemo((): LastKnownSkillBaseline | null => {
+    if (hasSavedRatings || !participant.studentId) return null;
+    const next = getLastKnownSkillBaseline(allSessions, participant.studentId, session.id);
+    return Object.keys(next.scores).length > 0 ? next : null;
+  }, [hasSavedRatings, participant.studentId, allSessions, session.id]);
+
+  const seededRatings = useMemo(() => {
+    if (hasSavedRatings) return undefined;
+
+    return seedSkillRatings({
+      rubricId: ctx.rubricId,
+      customSkillIds: ctx.customSkillIds,
+      customSkills: ctx.customSkills,
+      skillLabelOverrides: ctx.skillLabelOverrides,
+      lastKnownScores: baseline?.scores ?? {},
+    });
+  }, [
+    hasSavedRatings,
+    baseline,
+    ctx.rubricId,
+    ctx.customSkillIds,
+    ctx.customSkills,
+    ctx.skillLabelOverrides,
+  ]);
 
   const existingCard = participant.studentId
     ? findProgressCardForSession(cards, session.id, participant.studentId)
@@ -116,8 +151,10 @@ function ParticipantProgressPanel({
       onStepChange={onStepChange}
       onActionsChange={onRatingActionsChange}
       participantName={participant.name}
-      initialBefore={ratings.ratingsBefore}
-      initialAfter={ratings.ratingsAfter}
+      initialBefore={ratings.ratingsBefore?.length ? ratings.ratingsBefore : seededRatings}
+      initialAfter={ratings.ratingsAfter?.length ? ratings.ratingsAfter : seededRatings}
+      baselineSource={baseline?.latestSource ?? null}
+      baselineSkillSources={baseline?.sources}
       copyCoveredSkillIds={copyCoveredSkillIds}
       copyCoveredFromName={copyCoveredFromName}
       rubricId={ctx.rubricId}
