@@ -2,13 +2,8 @@
 
 import { useState } from "react";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
-import type { Student } from "@/lib/koaches/types";
-import {
-  coachingLevelFromDupr,
-  defaultDuprForCoachingLevel,
-  STUDENT_COACHING_LEVEL_SELECT_OPTIONS,
-  type CoachingLevelId,
-} from "@/lib/koaches/application-form";
+import type { DuprLevel, Student } from "@/lib/koaches/types";
+import { isDuprLevel, STUDENT_DUPR_LEVEL_SELECT_OPTIONS } from "@/lib/koaches/application-form";
 import { updateStudentProfileAction } from "@/lib/koaches/actions/students";
 import { notifyRosterUpdated } from "@/hooks/useCoachStudents";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
@@ -54,13 +49,14 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
           setSaving(true);
           try {
             const fd = new FormData(e.currentTarget);
-            const coachingLevel = String(fd.get("coachingLevel") ?? coachingLevelFromDupr(student.skillLevel)) as CoachingLevelId;
+            const rawLevel = String(fd.get("skillLevel") ?? student.skillLevel);
+            const skillLevel: DuprLevel = isDuprLevel(rawLevel) ? rawLevel : student.skillLevel;
             await updateStudentProfileAction(student.id, {
               firstName: String(fd.get("firstName") ?? ""),
               lastName: String(fd.get("lastName") ?? ""),
               mobile: String(fd.get("mobile") ?? ""),
               email: String(fd.get("email") ?? ""),
-              skillLevel: defaultDuprForCoachingLevel(coachingLevel),
+              skillLevel,
             });
             notifyRosterUpdated(coachId);
             showToast(crudToast.updated("Student"));
@@ -102,9 +98,9 @@ export function EditStudentSheet({ open, onClose, student }: EditStudentSheetPro
         </CoachSheetField>
         <CoachSheetField label="Player level">
           <CoachSelect
-            name="coachingLevel"
-            defaultValue={coachingLevelFromDupr(student.skillLevel)}
-            options={STUDENT_COACHING_LEVEL_SELECT_OPTIONS}
+            name="skillLevel"
+            defaultValue={student.skillLevel}
+            options={STUDENT_DUPR_LEVEL_SELECT_OPTIONS}
           />
         </CoachSheetField>
       </form>

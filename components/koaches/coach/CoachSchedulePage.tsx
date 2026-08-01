@@ -264,7 +264,10 @@ export function CoachSchedulePage() {
         </>
       )}
 
-      <CoachFab onClick={() => openAddSession()} label="Book a session" />
+      {/* Calendar: tap a date/time slot to book. List still needs the FAB on mobile. */}
+      {viewMode === "list" ? (
+        <CoachFab onClick={() => openAddSession()} label="Book a session" />
+      ) : null}
 
       <AddSessionSheet
         open={addOpen}

@@ -196,7 +196,7 @@ export function CoachStudentsByLevelChart({ levels }: StudentsByLevelChartProps)
               return (
                 <div className="rounded-xl border border-[#E5E7EB] bg-white px-3 py-2 text-sm shadow-md">
                   <p className="font-heading font-semibold text-[#111827]">{row.label}</p>
-                  <p className="text-xs text-[#9CA3AF]">{row.helper} DUPR</p>
+                  <p className="text-xs text-[#9CA3AF]">{row.helper}</p>
                   <p className="text-[#6B7280]">
                     {row.count} student{row.count === 1 ? "" : "s"}
                   </p>

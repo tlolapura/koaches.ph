@@ -1,5 +1,6 @@
 import type { CoachProfile, CoachSessionPricing, DuprLevel, SkillRubricId } from "@/lib/koaches/types";
 import type { SubmitApplicationInput } from "@/lib/koaches/actions/applications";
+import { DUPR_LEVELS } from "@/lib/koaches/constants";
 import { joinPersonName } from "@/lib/koaches/person-name";
 import { DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
 import { SKILL_RUBRICS } from "@/lib/koaches/program-templates";
@@ -11,10 +12,26 @@ export const COACHING_LEVEL_OPTIONS: {
   id: CoachingLevelId;
   label: string;
   dupr: string;
+  description: string;
 }[] = [
-  { id: "beginner", label: "Beginner", dupr: SKILL_RUBRICS.beginner.duprRange },
-  { id: "intermediate", label: "Intermediate", dupr: SKILL_RUBRICS.intermediate.duprRange },
-  { id: "advanced", label: "Advanced", dupr: SKILL_RUBRICS.advanced.duprRange },
+  {
+    id: "beginner",
+    label: "Beginner",
+    dupr: SKILL_RUBRICS.beginner.duprRange,
+    description: "Kitchen Cruisers — fundamentals and first rallies",
+  },
+  {
+    id: "intermediate",
+    label: "Intermediate",
+    dupr: SKILL_RUBRICS.intermediate.duprRange,
+    description: "Dinkers — soft game, third shot, and consistency",
+  },
+  {
+    id: "advanced",
+    label: "Advanced",
+    dupr: SKILL_RUBRICS.advanced.duprRange,
+    description: "Smashers — strategy, hands battles, tournament prep",
+  },
 ];
 
 const DUPR_TO_COACHING_LEVEL: Record<DuprLevel, CoachingLevelId> = {
@@ -28,44 +45,65 @@ const DUPR_TO_COACHING_LEVEL: Record<DuprLevel, CoachingLevelId> = {
 
 const COACHING_LEVEL_DEFAULT_DUPR: Record<CoachingLevelId, DuprLevel> = {
   beginner: "2.5",
-  intermediate: "3.0",
+  intermediate: "3.5",
   advanced: "4.0",
 };
 
-/** Map stored DUPR to beginner / intermediate / advanced bucket. */
+const DUPR_LEVEL_BY_ID = Object.fromEntries(DUPR_LEVELS.map((d) => [d.level, d])) as Record<
+  DuprLevel,
+  (typeof DUPR_LEVELS)[number]
+>;
+
+/** Map stored DUPR to beginner / intermediate / advanced bucket (program rubrics). */
 export function coachingLevelFromDupr(level: DuprLevel): CoachingLevelId {
   return DUPR_TO_COACHING_LEVEL[level] ?? "intermediate";
 }
 
-/** Human label for a student's level (Beginner, Intermediate, Advanced). */
-export function formatStudentCoachingLevelLabel(level: DuprLevel): string {
-  const id = coachingLevelFromDupr(level);
-  return COACHING_LEVEL_OPTIONS.find((o) => o.id === id)?.label ?? id;
+/** USA Pickleball half-point name for a stored rating. */
+export function formatStudentDuprLevelLabel(level: DuprLevel): string {
+  return DUPR_LEVEL_BY_ID[level]?.label ?? level;
 }
 
-/** Primary level label + DUPR rating as secondary helper text. */
+/** @deprecated Prefer formatStudentDuprLevelLabel — kept for coaching-bucket UIs. */
+export function formatStudentCoachingLevelLabel(level: DuprLevel): string {
+  return formatStudentDuprLevelLabel(level);
+}
+
+/** Primary USA Pickleball label + rating as secondary helper. */
 export function formatStudentLevelDisplay(level: DuprLevel): { label: string; helper: string } {
+  const entry = DUPR_LEVEL_BY_ID[level];
   return {
-    label: formatStudentCoachingLevelLabel(level),
-    helper: `${level} DUPR`,
+    label: entry?.label ?? level,
+    helper: entry?.range ?? level,
   };
 }
 
-/** Inline text: "Intermediate · 3.0 DUPR" */
+/** Inline text: "Intermediate · 3.5" */
 export function formatStudentLevelWithDuprHelper(level: DuprLevel): string {
   const { label, helper } = formatStudentLevelDisplay(level);
-  return `${label} · ${helper}`;
+  return `${helper} · ${label}`;
 }
 
-/** Form select options — level first, DUPR range as helper. */
-export const STUDENT_COACHING_LEVEL_SELECT_OPTIONS = COACHING_LEVEL_OPTIONS.map((o) => ({
-  value: o.id,
-  label: `${o.label} · ${o.dupr} DUPR`,
+/**
+ * Student / intake select — USA Pickleball half-point levels.
+ * value is the stored DuprLevel (e.g. "3.5").
+ */
+export const STUDENT_DUPR_LEVEL_SELECT_OPTIONS = DUPR_LEVELS.map((d) => ({
+  value: d.level,
+  label: `${d.range} · ${d.label}`,
+  description: d.description,
 }));
+
+/** @deprecated Use STUDENT_DUPR_LEVEL_SELECT_OPTIONS */
+export const STUDENT_COACHING_LEVEL_SELECT_OPTIONS = STUDENT_DUPR_LEVEL_SELECT_OPTIONS;
 
 /** Default DUPR stored when coach picks a coaching level bucket. */
 export function defaultDuprForCoachingLevel(id: CoachingLevelId): DuprLevel {
   return COACHING_LEVEL_DEFAULT_DUPR[id];
+}
+
+export function isDuprLevel(value: string): value is DuprLevel {
+  return value in DUPR_LEVEL_BY_ID;
 }
 
 export type ApplicationDraft = {
@@ -127,7 +165,7 @@ const COACHING_LEVEL_ORDER: CoachingLevelId[] = ["beginner", "intermediate", "ad
 const COACHING_LEVEL_DUPR_BOUNDS: Record<CoachingLevelId, { start: string; end: string }> = {
   beginner: { start: "2.0", end: "2.5" },
   intermediate: { start: "3.0", end: "3.5" },
-  advanced: { start: "3.5+", end: "3.5+" },
+  advanced: { start: "4.0", end: "4.5+" },
 };
 
 /** Compact label + DUPR span for public coach profiles. */

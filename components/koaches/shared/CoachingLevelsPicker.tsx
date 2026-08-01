@@ -49,8 +49,13 @@ export function CoachingLevelsPicker({
                 onChange={() => toggle(option.id)}
               />
               <div className="min-w-0 flex-1">
-                <span className="text-sm font-medium text-[#111827]">{option.label}</span>
-                <span className="ml-2 text-xs text-[#9CA3AF]">{option.dupr} DUPR</span>
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                  <span className="text-sm font-medium text-[#111827]">{option.label}</span>
+                  <span className="text-xs text-[#9CA3AF]">{option.dupr}</span>
+                </div>
+                {option.description ? (
+                  <p className="mt-0.5 text-xs leading-snug text-[#6B7280]">{option.description}</p>
+                ) : null}
               </div>
             </label>
           );

@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 export type CoachSelectOption = {
   value: string;
   label: string;
+  description?: string;
   disabled?: boolean;
 };
 
@@ -49,6 +50,7 @@ export function CoachSelect({
   useDismissible(open, () => setOpen(false), anchorRef, menuRef);
 
   const selected = options.find((o) => o.value === value && !o.disabled);
+  const hasDescriptions = options.some((o) => o.description);
 
   const select = (next: string) => {
     const option = options.find((o) => o.value === next);
@@ -86,7 +88,12 @@ export function CoachSelect({
         />
       </button>
 
-      <CoachFloatingMenu open={open} anchorRef={anchorRef} menuRef={menuRef} estimatedHeight={224}>
+      <CoachFloatingMenu
+        open={open}
+        anchorRef={anchorRef}
+        menuRef={menuRef}
+        estimatedHeight={hasDescriptions ? 320 : 224}
+      >
         <ul role="listbox" aria-labelledby={fieldId}>
           {options.map((option) => {
             const active = option.value === value;
@@ -97,15 +104,27 @@ export function CoachSelect({
                   disabled={option.disabled}
                   onClick={() => select(option.value)}
                   className={cn(
-                    "flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors",
+                    "flex w-full items-start justify-between gap-2 px-3 py-2.5 text-left text-sm transition-colors",
                     option.disabled && "cursor-not-allowed text-[#9CA3AF]",
                     active
                       ? "bg-[#F0FDF4] font-semibold text-[#166534]"
                       : "text-[#374151] hover:bg-[#F9FAFB]"
                   )}
                 >
-                  <span className="min-w-0 truncate">{option.label}</span>
-                  {active && <Check className="h-4 w-4 shrink-0 text-[#4F8FF7]" />}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate">{option.label}</span>
+                    {option.description ? (
+                      <span
+                        className={cn(
+                          "mt-0.5 block text-xs font-normal leading-snug",
+                          active ? "text-[#166534]/80" : "text-[#9CA3AF]"
+                        )}
+                      >
+                        {option.description}
+                      </span>
+                    ) : null}
+                  </span>
+                  {active && <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#4F8FF7]" />}
                 </button>
               </li>
             );

@@ -48,13 +48,50 @@ export const RESERVED_SLUGS = new Set([
   "_next",
 ]);
 
-export const DUPR_LEVELS: { level: DuprLevel; label: string; description: string }[] = [
-  { level: "2.0", label: "Beginner", description: "Just learning rules, basic strokes unreliable" },
-  { level: "2.5", label: "Advanced Beginner", description: "Basic consistency developing, limited strategy" },
-  { level: "3.0", label: "Intermediate", description: "Can rally, understands positioning, learning third shot" },
-  { level: "3.5", label: "Solid Intermediate", description: "Developing drops, dinking with control, basic strategy" },
-  { level: "4.0", label: "Advanced Intermediate", description: "Strong shot control, tactical awareness, resets" },
-  { level: "4.5+", label: "Advanced / Expert", description: "Tournament-level, elite strategy and consistency" },
+/** USA Pickleball half-point skill labels (self-assessment scale clubs/tournaments use). */
+export const DUPR_LEVELS: {
+  level: DuprLevel;
+  label: string;
+  /** Rating band shown in picks (half-point levels are the band). */
+  range: string;
+  description: string;
+}[] = [
+  {
+    level: "2.0",
+    label: "True Beginner",
+    range: "2.0",
+    description: "New to the game; learning rules, contact, and short rallies",
+  },
+  {
+    level: "2.5",
+    label: "Beginner",
+    range: "2.5",
+    description: "Sustains short rallies; basic serve, return, and scorekeeping",
+  },
+  {
+    level: "3.0",
+    label: "Advanced Beginner",
+    range: "3.0",
+    description: "Medium-paced shots; developing dinks and court position",
+  },
+  {
+    level: "3.5",
+    label: "Intermediate",
+    range: "3.5",
+    description: "Soft game emerging; purposeful kitchen play and shot choice",
+  },
+  {
+    level: "4.0",
+    label: "Advanced Intermediate",
+    range: "4.0",
+    description: "Soft and hard game; strategy, anticipation, and resets",
+  },
+  {
+    level: "4.5+",
+    label: "Advanced",
+    range: "4.5+",
+    description: "Tournament-ready consistency, placement, and tactics",
+  },
 ];
 
 export const SKILL_CATEGORY_LABELS: Record<SkillCategory, string> = {
@@ -162,7 +199,7 @@ export const SKILL_RUBRICS_META: Record<Exclude<SkillRubricId, "custom">, { name
     categories: ["third-shot", "groundstrokes", "kitchen", "volleys", "movement"],
   },
   advanced: {
-    name: "Advanced (3.5+)",
+    name: "Advanced (4.0+)",
     categories: ALL_SKILL_CATEGORIES,
   },
 };

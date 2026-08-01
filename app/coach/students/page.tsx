@@ -10,13 +10,12 @@ import { useCoachSessions } from "@/hooks/useCoachSessions";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { approveIntakeAction, fetchIntakeSubmissionsAction, rejectIntakeAction } from "@/lib/koaches/actions/intake";
 import {
-  coachingLevelFromDupr,
-  defaultDuprForCoachingLevel,
-  formatStudentCoachingLevelLabel,
+  formatStudentDuprLevelLabel,
   formatStudentLevelWithDuprHelper,
-  STUDENT_COACHING_LEVEL_SELECT_OPTIONS,
-  type CoachingLevelId,
+  isDuprLevel,
+  STUDENT_DUPR_LEVEL_SELECT_OPTIONS,
 } from "@/lib/koaches/application-form";
+import type { DuprLevel } from "@/lib/koaches/types";
 import { createStudentAction } from "@/lib/koaches/actions/students";
 import { notifyRosterUpdated, useCoachStudents } from "@/hooks/useCoachStudents";
 import {
@@ -383,7 +382,7 @@ function StudentsPageContent() {
                         )}
                       </div>
                       <span className="shrink-0 rounded-full bg-[#E5EFE8] px-2 py-0.5 text-[10px] font-semibold text-[#3D5C47]">
-                        {formatStudentCoachingLevelLabel(s.skillLevel)}
+                        {formatStudentDuprLevelLabel(s.skillLevel)}
                       </span>
                     </div>
 
@@ -445,13 +444,14 @@ function StudentsPageContent() {
             setSavingStudent(true);
             try {
               const fd = new FormData(e.currentTarget);
-              const coachingLevel = String(fd.get("coachingLevel") ?? "intermediate") as CoachingLevelId;
+              const rawLevel = String(fd.get("skillLevel") ?? "3.0");
+              const skillLevel: DuprLevel = isDuprLevel(rawLevel) ? rawLevel : "3.0";
               await createStudentAction(coachId, {
                 firstName: String(fd.get("firstName") ?? ""),
                 lastName: String(fd.get("lastName") ?? ""),
                 mobile: String(fd.get("mobile") ?? ""),
                 email: String(fd.get("email") ?? ""),
-                skillLevel: defaultDuprForCoachingLevel(coachingLevel),
+                skillLevel,
               });
               notifyRosterUpdated(coachId);
               showToast(crudToast.created("Student"));
@@ -479,9 +479,9 @@ function StudentsPageContent() {
           </CoachSheetField>
           <CoachSheetField label="Player level">
             <CoachSelect
-              name="coachingLevel"
-              defaultValue={coachingLevelFromDupr("3.0")}
-              options={STUDENT_COACHING_LEVEL_SELECT_OPTIONS}
+              name="skillLevel"
+              defaultValue="3.0"
+              options={STUDENT_DUPR_LEVEL_SELECT_OPTIONS}
             />
           </CoachSheetField>
         </form>

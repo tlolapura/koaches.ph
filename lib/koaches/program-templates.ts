@@ -11,7 +11,7 @@ export const SKILL_RUBRICS: Record<Exclude<SkillRubricId, "custom">, SkillRubric
   beginner: {
     id: "beginner",
     name: "Beginner",
-    subtitle: "2.0 – 2.5 DUPR",
+    subtitle: "2.0 – 2.5",
     duprRange: "2.0 – 2.5",
     description:
       "Foundation rubric for new players. Covers grip, rules, serve & return basics, and court movement: the essentials before open play.",
@@ -20,7 +20,7 @@ export const SKILL_RUBRICS: Record<Exclude<SkillRubricId, "custom">, SkillRubric
   intermediate: {
     id: "intermediate",
     name: "Intermediate",
-    subtitle: "3.0 – 3.5 DUPR",
+    subtitle: "3.0 – 3.5",
     duprRange: "3.0 – 3.5",
     description:
       "Core competitive skills rubric. Third shot, drives, kitchen game, volleys, and athletic movement: the shots that separate recreational from solid intermediate play.",
@@ -29,8 +29,8 @@ export const SKILL_RUBRICS: Record<Exclude<SkillRubricId, "custom">, SkillRubric
   advanced: {
     id: "advanced",
     name: "Advanced",
-    subtitle: "3.5+ DUPR",
-    duprRange: "3.5+",
+    subtitle: "4.0+",
+    duprRange: "4.0+",
     description:
       "Full assessment across all skill categories including game IQ and mental game, for tournament-ready and competitive players.",
     categories: ALL_SKILL_CATEGORIES,

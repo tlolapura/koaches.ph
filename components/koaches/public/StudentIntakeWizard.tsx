@@ -18,11 +18,7 @@ import { CoachSelect } from "@/components/koaches/coach/CoachSelect";
 import { CoachSheetField } from "@/components/koaches/coach/CoachSheet";
 import { KoachesWordmark } from "@/components/koaches/KoachesLogo";
 import { PickleballBallBackdrop } from "@/components/koaches/shared/PickleballBallVector";
-import {
-  defaultDuprForCoachingLevel,
-  type CoachingLevelId,
-  STUDENT_COACHING_LEVEL_SELECT_OPTIONS,
-} from "@/lib/koaches/application-form";
+import { isDuprLevel, STUDENT_DUPR_LEVEL_SELECT_OPTIONS } from "@/lib/koaches/application-form";
 import {
   INTAKE_WAIVER_BODY,
   INTAKE_WAIVER_TITLE,
@@ -31,7 +27,7 @@ import {
 import { submitIntakeAction } from "@/lib/koaches/actions/intake";
 import { buildPublicCoachPath } from "@/lib/koaches/coach-routes";
 import { coachFirstName, joinPersonName } from "@/lib/koaches/person-name";
-import type { CoachProfile } from "@/lib/koaches/types";
+import type { CoachProfile, DuprLevel } from "@/lib/koaches/types";
 import { cn } from "@/lib/utils";
 
 const STEPS = [
@@ -85,7 +81,7 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
     mobile: "",
     email: "",
     emergencyContact: "",
-    coachingLevel: "intermediate" as CoachingLevelId,
+    skillLevel: "3.0" as DuprLevel,
     notes: "",
     signedName: "",
     agreed: false,
@@ -108,7 +104,7 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
     return null;
   };
 
-  const skillLevel = defaultDuprForCoachingLevel(form.coachingLevel);
+  const skillLevel = form.skillLevel;
 
   const validateWaiver = () => {
     if (!form.agreed) return "Please read and accept the waiver to continue.";
@@ -344,11 +340,14 @@ export function StudentIntakeWizard({ coach }: StudentIntakeWizardProps) {
                 <CoachSheetField label="Your level" htmlFor="join-skill">
                   <CoachSelect
                     id="join-skill"
-                    value={form.coachingLevel}
+                    value={form.skillLevel}
                     onChange={(level) =>
-                      setForm((f) => ({ ...f, coachingLevel: level as CoachingLevelId }))
+                      setForm((f) => ({
+                        ...f,
+                        skillLevel: isDuprLevel(level) ? level : f.skillLevel,
+                      }))
                     }
-                    options={STUDENT_COACHING_LEVEL_SELECT_OPTIONS}
+                    options={STUDENT_DUPR_LEVEL_SELECT_OPTIONS}
                   />
                 </CoachSheetField>
                 <CoachSheetField label="Notes for your coach (optional)" htmlFor="join-notes">
