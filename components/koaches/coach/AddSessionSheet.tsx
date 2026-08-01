@@ -229,9 +229,7 @@ export function AddSessionSheet({
     setDate(day);
     setCourtId(courts[0]?.id ?? "");
     setPrice(suggestSessionPrice({ type: "drop-in", playerCount: 1, pricing: coach?.sessionPricing }));
-    if (roster[0]) {
-      setParticipants([participantFromStudent(roster[0])]);
-    }
+    setParticipants(resizeParticipants([], 1));
 
     if (initialStartTime && initialEndTime) {
       const initialDuration = minutesBetweenTimeValues(initialStartTime, initialEndTime);
@@ -379,7 +377,7 @@ export function AddSessionSheet({
         price,
         tip,
         playerCount,
-        participants,
+        participants: resizeParticipants(participants, playerCount),
         notes: notes.trim() || undefined,
       };
 
@@ -620,9 +618,10 @@ export function AddSessionSheet({
           onChange={setParticipants}
           hint={
             sessionType === "program"
-              ? "Each student shows which program session you’d book next."
-              : undefined
+              ? "Each student shows which program session you'd book next."
+              : "Optional. Leave blank if they'll join your roster later."
           }
+          optional={sessionType === "drop-in"}
           formatStudentLabel={
             sessionType === "program" && selectedProgram
               ? (student) =>

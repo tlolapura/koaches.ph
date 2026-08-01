@@ -36,6 +36,14 @@ const CATEGORY_SCORE_LABELS: Record<SkillCategory, Record<SkillScore, string>> =
     4: "Uses drop/drive intentionally by ball quality",
     5: "Third-shot choices consistently win transition",
   },
+  groundstrokes: {
+    0: "Not introduced yet",
+    1: "Drives and lobs often miss or sit up",
+    2: "Can hit basic drives/lobs with mixed control",
+    3: "Produces usable pace and shape from baseline/mid",
+    4: "Places drives and lobs with intent under pressure",
+    5: "Uses groundstroke variety to dictate rallies",
+  },
   kitchen: {
     0: "Not introduced yet",
     1: "Dinks/resets break down quickly",

@@ -10,6 +10,7 @@ const SKILL_CATEGORIES = new Set<SkillCategory>([
   "fundamentals",
   "serve-return",
   "third-shot",
+  "groundstrokes",
   "kitchen",
   "volleys",
   "movement",

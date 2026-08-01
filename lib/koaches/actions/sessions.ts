@@ -9,6 +9,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import type { Session, SessionPaymentStatus, SessionStatus } from "@/lib/koaches/types";
 import { mapSession, sessionToDb, type DbSession } from "@/lib/koaches/db/mappers";
 import { SESSION_DETAIL_COLUMNS, SESSION_LIST_COLUMNS } from "@/lib/koaches/db/columns";
+import { resizeParticipants } from "@/lib/koaches/session-participants";
 
 /** Default list window: past year + next year (covers schedule / reports). */
 const DEFAULT_PAST_DAYS = 365;
@@ -131,6 +132,42 @@ export async function deleteSessionAction(sessionId: string) {
   revalidatePath("/coach/dashboard");
   revalidatePath("/coach/students");
   revalidatePath("/coach/reports");
+}
+
+export async function updateSessionPlayersAction(
+  sessionId: string,
+  patch: {
+    playerCount: number;
+    participants: Session["participants"];
+    studentId: string;
+    price?: number;
+  }
+) {
+  await assertCoachOwnsSession(sessionId);
+  const playerCount = Math.max(1, Math.round(patch.playerCount));
+  if (!Number.isFinite(playerCount)) {
+    throw new Error("Player count must be at least 1.");
+  }
+  const participants = resizeParticipants(patch.participants, playerCount);
+  const primaryStudentId =
+    participants.find((p) => p.studentId)?.studentId ?? patch.studentId ?? "";
+
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("sessions")
+    .update({
+      player_count: playerCount,
+      participants,
+      student_id: primaryStudentId || null,
+      ...(typeof patch.price === "number" ? { price: Math.round(patch.price) } : {}),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", sessionId);
+  if (error) throw error;
+  revalidatePath(`/coach/sessions/${sessionId}`);
+  revalidatePath("/coach/sessions");
+  revalidatePath("/coach/dashboard");
+  revalidatePath("/coach/students");
 }
 
 export async function updateSessionScheduleAction(

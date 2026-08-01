@@ -31,6 +31,7 @@ export function resizeParticipants(
 
 export function getSessionParticipants(session: Session): SessionParticipant[] {
   if (session.participants?.length) return session.participants;
+  if (!session.studentId) return [];
   return [{ id: `legacy-${session.studentId}`, name: "Student", studentId: session.studentId }];
 }
 

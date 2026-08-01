@@ -2,6 +2,7 @@ export type SkillCategory =
   | "fundamentals"
   | "serve-return"
   | "third-shot"
+  | "groundstrokes"
   | "kitchen"
   | "volleys"
   | "movement"

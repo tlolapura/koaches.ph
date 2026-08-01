@@ -18,13 +18,13 @@ import { SessionNotesCard } from "@/components/koaches/coach/SessionNotesCard";
 import { ClinicSessionAttendance } from "@/components/koaches/coach/ClinicSessionAttendance";
 import { ConfirmSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { ScheduleTbdSessionSheet } from "@/components/koaches/coach/ScheduleTbdSessionSheet";
+import { EditSessionPlayersSheet } from "@/components/koaches/coach/EditSessionPlayersSheet";
 import { useSessionStatus } from "@/hooks/useSessionStatus";
 import { deleteSessionAction } from "@/lib/koaches/actions/sessions";
 import { invalidateCoachSessions } from "@/lib/koaches/queries/invalidate";
 import { formatSessionTimeRange } from "@/lib/koaches/session-time";
 import { isSessionDateScheduled } from "@/lib/koaches/session-schedule";
 import {
-  formatSessionParticipantList,
   formatSessionParticipantNames,
   getSessionParticipants,
 } from "@/lib/koaches/session-participants";
@@ -54,6 +54,7 @@ function SessionInfoCard({
   participants,
   displayStatus,
   onDelete,
+  onEditPlayers,
 }: {
   session: Session;
   primaryName: string;
@@ -61,6 +62,7 @@ function SessionInfoCard({
   participants: ReturnType<typeof getSessionParticipants>;
   displayStatus: ReturnType<typeof useSessionStatus>["displayStatus"];
   onDelete?: () => void;
+  onEditPlayers?: () => void;
 }) {
   const isClinic = session.type === "clinic";
   const scheduleLabel = isSessionDateScheduled(session)
@@ -70,7 +72,9 @@ function SessionInfoCard({
     participants.length > 1
       ? participants.filter((p) => p.name !== primaryName)
       : [];
+  const namedPlayers = participants.map((p) => p.name).filter(Boolean);
   const playerLabel = `${session.playerCount} player${session.playerCount !== 1 ? "s" : ""}`;
+  const openSlots = Math.max(0, session.playerCount - namedPlayers.length);
 
   return (
     <div className="rounded-3xl bg-[#14532D] px-5 py-5 text-white sm:px-6 sm:py-6">
@@ -114,15 +118,26 @@ function SessionInfoCard({
           <MapPin className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
           <span>{courtName}</span>
         </p>
-        <p className="flex items-center gap-3 text-sm text-white/90">
-          <Users className="h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
-          <span>
-            {playerLabel}
-            {session.playerCount > 1 && !isClinic && otherPlayers.length === 0
-              ? ` · ${formatSessionParticipantList(session)}`
-              : null}
-          </span>
-        </p>
+        <div className="flex items-start gap-3 text-sm text-white/90">
+          <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#86EFAC]" strokeWidth={2.25} />
+          <div className="min-w-0 flex-1">
+            <p>
+              {playerLabel}
+              {namedPlayers.length > 0 ? ` · ${namedPlayers.join(", ")}` : null}
+              {openSlots > 0 ? ` · ${openSlots} open` : null}
+            </p>
+            {onEditPlayers && !isClinic ? (
+              <button
+                type="button"
+                onClick={onEditPlayers}
+                className="mt-1 inline-flex min-h-[36px] items-center gap-1 text-sm font-semibold text-[#86EFAC] hover:text-white"
+              >
+                <Pencil className="h-3.5 w-3.5" strokeWidth={2.25} />
+                Edit players
+              </button>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       {otherPlayers.length > 0 && !isClinic ? (
@@ -273,6 +288,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [playersOpen, setPlayersOpen] = useState(false);
   const [markingDone, setMarkingDone] = useState(false);
   const [step, setStep] = useState<SessionDetailStep>("session");
   const [ratingActions, setRatingActions] = useState<SkillRatingActions | null>(null);
@@ -417,6 +433,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
             participants={participants}
             displayStatus={displayStatus}
             onDelete={() => setDeleteOpen(true)}
+            onEditPlayers={() => setPlayersOpen(true)}
           />
 
           <SessionPaymentCard session={session} />
@@ -503,6 +520,13 @@ function StandardSessionDetail({ session }: { session: Session }) {
             }
           }}
         />
+
+        <EditSessionPlayersSheet
+          open={playersOpen}
+          onClose={() => setPlayersOpen(false)}
+          session={session}
+          onSaved={() => router.refresh()}
+        />
       </CoachPageShell>
     );
   }
@@ -527,6 +551,7 @@ function StandardSessionDetail({ session }: { session: Session }) {
             participants={participants}
             displayStatus={displayStatus}
             onDelete={() => setDeleteOpen(true)}
+            onEditPlayers={() => setPlayersOpen(true)}
           />
 
           {!isSessionDateScheduled(session) && status === "upcoming" && (
@@ -589,6 +614,13 @@ function StandardSessionDetail({ session }: { session: Session }) {
         onClose={() => setScheduleOpen(false)}
         session={session}
         onScheduled={() => router.refresh()}
+      />
+
+      <EditSessionPlayersSheet
+        open={playersOpen}
+        onClose={() => setPlayersOpen(false)}
+        session={session}
+        onSaved={() => router.refresh()}
       />
     </CoachPageShell>
   );

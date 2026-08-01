@@ -278,7 +278,7 @@ export function CoachDashboard() {
       ) : (
         <section className="mt-4 px-4">
           <Link
-            href="/coach/sessions?add=1"
+            href="/coach/sessions"
             className="coach-btn-primary gap-2 shadow-[0_4px_14px_rgba(22,163,74,0.28)]"
           >
             <Plus className="h-4 w-4" strokeWidth={2.5} />
@@ -399,11 +399,11 @@ function FirstRunChecklist({
     {
       key: "session",
       done: hasSession,
-      href: "/coach/sessions?add=1",
+      href: "/coach/sessions",
       icon: Plus,
       short: "Session",
       label: "Book your first session",
-      detail: "Pick the student, a date, and a time.",
+      detail: "Pick a free slot on your calendar.",
       cta: "Book session",
     },
   ] as const;

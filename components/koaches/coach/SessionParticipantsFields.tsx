@@ -12,6 +12,8 @@ type SessionParticipantsFieldsProps = {
   onChange: (participants: SessionParticipant[]) => void;
   formatStudentLabel?: (student: Student) => string;
   hint?: string;
+  /** When true, label shows (optional) and empty slots are allowed */
+  optional?: boolean;
 };
 
 function rosterForRow(roster: Student[], rows: SessionParticipant[], index: number) {
@@ -31,8 +33,10 @@ export function SessionParticipantsFields({
   onChange,
   formatStudentLabel,
   hint = "Pick from your roster. New players join via your join link first.",
+  optional = false,
 }: SessionParticipantsFieldsProps) {
   const rows = resizeParticipants(participants, playerCount);
+  const fieldLabel = optional ? "Who's playing? (optional)" : "Who's playing?";
 
   const setRowStudent = (index: number, studentId: string) => {
     const student = roster.find((s) => s.id === studentId);
@@ -49,7 +53,7 @@ export function SessionParticipantsFields({
   if (playerCount <= 1) {
     const studentId = rows[0]?.studentId ?? "";
     return (
-      <CoachSheetField label="Who's playing?" hint={hint}>
+      <CoachSheetField label={fieldLabel} hint={hint}>
         <CoachStudentSearchSelect
           students={roster}
           value={studentId ? [studentId] : []}
@@ -74,9 +78,10 @@ export function SessionParticipantsFields({
   return (
     <div className="space-y-3">
       <div>
-        <p className="coach-label mb-0">Who&apos;s playing?</p>
+        <p className="coach-label mb-0">{fieldLabel}</p>
         <p className="mt-0.5 text-xs text-[#6B7280]">
-          {playerCount} players · pick from your roster
+          {playerCount} players
+          {optional ? " · leave blank if they join later" : " · pick from your roster"}
         </p>
       </div>
       {rows.map((row, index) => {
