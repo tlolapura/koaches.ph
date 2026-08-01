@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Fredoka, Poppins, DM_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { siteMetadata } from "@/lib/koaches/site-metadata";
 import "./globals.css";
 
@@ -46,7 +47,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${jakarta.variable} ${fredoka.variable} ${poppins.variable} ${dmSans.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-bg text-text">{children}</body>
+      <body className="flex min-h-full flex-col bg-bg text-text">
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

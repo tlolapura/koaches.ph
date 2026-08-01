@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { ArrowRight, CreditCard, FileText } from "lucide-react";
+import { ArrowRight, CreditCard, ExternalLink, FileText, Globe } from "lucide-react";
 import type { AdminAnalyticsData } from "@/lib/koaches/admin-analytics";
 import { AdminPageHeader, AdminPageShell } from "@/components/koaches/admin/AdminPageLayout";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -18,6 +18,9 @@ const AdminSessionsTrendChart = dynamic(
   }
 );
 
+const VERCEL_ANALYTICS_URL =
+  process.env.NEXT_PUBLIC_VERCEL_ANALYTICS_URL ?? "https://vercel.com/dashboard";
+
 type AdminAnalyticsPageProps = {
   data: AdminAnalyticsData;
 };
@@ -31,6 +34,32 @@ export function AdminAnalyticsPage({ data }: AdminAnalyticsPageProps) {
   return (
     <AdminPageShell>
       <AdminPageHeader title="Analytics" className="mb-6" />
+
+      <section className={cn(cardClass, "mb-4 p-5")}>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#1D4ED8]">
+              <Globe className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="font-heading font-semibold text-[#111827]">Website visitors</h2>
+              <p className="mt-1 text-sm leading-relaxed text-[#6B7280]">
+                Page views and visitors are tracked with Vercel Analytics on the live site. Open your
+                Vercel project, then Analytics, to see visitors, top pages, and referrers.
+              </p>
+            </div>
+          </div>
+          <a
+            href={VERCEL_ANALYTICS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-xl bg-[#111827] px-3.5 text-sm font-semibold text-white hover:bg-[#1F2937]"
+          >
+            Open Vercel
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </div>
+      </section>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className={cn(cardClass, "p-4")}>

@@ -7,6 +7,9 @@ import { cn } from "@/lib/utils";
 export const FEED_WIDTH = 1080;
 export const FEED_HEIGHT = 1350;
 
+/** Square community / FB posts — 1:1 at 1080×1080 */
+export const SQUARE_SIZE = 1080;
+
 export const MASCOT_PATH = "/illustrations/mascot.png";
 export const BALL_PATH = "/illustrations/ball.webp";
 
@@ -301,15 +304,19 @@ export function FeedPreview({
   backdrop,
   ballSrc,
   previewWidth = 280,
+  width = FEED_WIDTH,
+  height = FEED_HEIGHT,
 }: {
   children: ReactNode;
   exportRef?: RefObject<HTMLDivElement | null>;
   backdrop: BackdropVariant;
   ballSrc: string;
   previewWidth?: number;
+  width?: number;
+  height?: number;
 }) {
-  const scale = previewWidth / FEED_WIDTH;
-  const previewHeight = FEED_HEIGHT * scale;
+  const scale = previewWidth / width;
+  const previewHeight = height * scale;
 
   return (
     <div
@@ -318,8 +325,8 @@ export function FeedPreview({
     >
       <div
         style={{
-          width: FEED_WIDTH,
-          height: FEED_HEIGHT,
+          width,
+          height,
           transform: `scale(${scale})`,
           transformOrigin: "top left",
         }}
@@ -327,7 +334,7 @@ export function FeedPreview({
         <div
           ref={exportRef}
           className="coach-portal relative flex h-full w-full flex-col overflow-hidden text-[#111827]"
-          style={{ width: FEED_WIDTH, height: FEED_HEIGHT }}
+          style={{ width, height }}
         >
           <PostBackdrop variant={backdrop} ballSrc={ballSrc} />
           <div className="relative z-10 flex h-full flex-col">{children}</div>

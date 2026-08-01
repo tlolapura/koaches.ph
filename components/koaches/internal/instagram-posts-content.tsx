@@ -1,4 +1,11 @@
 import type { ReactNode } from "react";
+import {
+  CalendarDays,
+  ClipboardList,
+  Package,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { BRAND_NAME, SITE_DOMAIN, SITE_TAGLINE } from "@/lib/koaches/constants";
 import {
   BrandMark,
@@ -17,6 +24,8 @@ export type InstagramPost = {
   filename: string;
   caption: string;
   backdrop: BackdropVariant;
+  /** Default feed 4:5. Use square for FB community posts. */
+  format?: "feed" | "square";
   render: (mascotSrc: string, shots: IgShots) => ReactNode;
 };
 
@@ -1498,5 +1507,84 @@ Start at ${SITE_LINK}`,
         </div>
       </div>
     ),
+  },
+  {
+    id: "49-community-coaches",
+    label: "49 · Community · early coaches",
+    filename: "pk-49-community-coaches.png",
+    format: "square",
+    backdrop: "mint",
+    caption: `Hi coaches!
+
+We’re looking for pickleball coaches in the Philippines who might want to try a small app we’ve been building.
+
+If this sounds like you, we’d love to hear from you:
+• It’s hard to keep your schedule clear when your bookings are spread across chats and Notes
+• It’s hard to know how much you’re really earning each month
+• It’s hard to offer packages or programs, so you mostly end up doing one-time sessions
+• After a session, students don’t really know how they did or what to work on next, so follow-through is tough
+
+PickleKoach is just a tool for coaches. It’s not another page where players browse for coaches. FB groups already help with that.
+
+It can help with your schedule, earnings, programs, progress cards, open-slot Stories, and messaging your students. We’re still adding more.
+
+We haven’t launched publicly yet. We’re hoping a few coaches can try it early and tell us what’s helpful and what’s not.
+
+If you’re open to it, please comment or send us a message. Salamat po!
+
+picklekoach.com`,
+    render: (mascotSrc) => {
+      const pains: { icon: LucideIcon; text: string }[] = [
+        { icon: CalendarDays, text: "Bookings are scattered in chats and Notes, so your schedule feels messy" },
+        { icon: Wallet, text: "You’re not sure how much you’re really earning each month" },
+        { icon: Package, text: "Packages and programs feel hard, so you stick to one-time sessions" },
+        {
+          icon: ClipboardList,
+          text: "After a session, students don’t know how they did or what to work on next",
+        },
+      ];
+
+      return (
+        <div className="flex h-full flex-col px-11 pb-9 pt-9">
+          <div className="flex items-center justify-between">
+            <BrandMark mascotSrc={mascotSrc} size="sm" />
+            <span className="rounded-full bg-[#16A34A] px-4 py-1.5 text-[20px] font-bold text-white">
+              Early try-out
+            </span>
+          </div>
+
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <p className="text-[22px] font-semibold text-[#4F8FF7]">Hi, coaches</p>
+            <h1 className="font-heading mt-3 max-w-[920px] text-[58px] font-bold leading-[1.04] tracking-tight text-[#111827]">
+              We’re looking for
+              <br />
+              pickleball coaches
+            </h1>
+            <p className="mt-4 max-w-[780px] text-[24px] leading-snug text-[#4B5563]">
+              If any of this feels familiar, we’d love your help trying an app for you.
+            </p>
+
+            <div className="mt-7 w-full max-w-[860px] space-y-2.5">
+              {pains.map(({ icon: Icon, text }) => (
+                <div
+                  key={text}
+                  className="flex items-center gap-3.5 rounded-2xl border border-[#BBF7D0] bg-white px-4 py-3 text-left"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#ECFDF5]">
+                    <Icon className="h-6 w-6 text-[#16A34A]" strokeWidth={2.25} />
+                  </span>
+                  <p className="text-[22px] font-semibold leading-snug text-[#14532D]">{text}</p>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-7 font-heading text-[36px] font-bold text-[#4F8FF7]">{SITE_LINK}</p>
+            <p className="mt-2 max-w-[720px] text-[22px] leading-snug text-[#6B7280]">
+              Please comment or message us if you’d like to try. Salamat po.
+            </p>
+          </div>
+        </div>
+      );
+    },
   },
 ];

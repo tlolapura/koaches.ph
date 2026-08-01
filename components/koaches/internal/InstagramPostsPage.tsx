@@ -8,6 +8,7 @@ import {
   FEED_WIDTH,
   FeedPreview,
   MASCOT_PATH,
+  SQUARE_SIZE,
   exportFeedPng,
   useExportAsset,
   useScreenshotSrc,
@@ -111,12 +112,16 @@ function PostCard({
     window.setTimeout(() => setCopied(false), 1800);
   };
 
+  const isSquare = post.format === "square";
+  const canvasW = isSquare ? SQUARE_SIZE : FEED_WIDTH;
+  const canvasH = isSquare ? SQUARE_SIZE : FEED_HEIGHT;
+
   return (
     <article className="rounded-3xl border border-[#E5E7EB] bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-heading text-lg font-bold text-[#111827]">{post.label}</h2>
         <p className="text-xs font-medium text-[#9CA3AF]">
-          {FEED_WIDTH}×{FEED_HEIGHT} · 4:5 · {post.backdrop}
+          {canvasW}×{canvasH} · {isSquare ? "1:1" : "4:5"} · {post.backdrop}
         </p>
       </div>
 
@@ -125,7 +130,9 @@ function PostCard({
           exportRef={exportRef}
           backdrop={post.backdrop}
           ballSrc={ballSrc}
-          previewWidth={260}
+          previewWidth={isSquare ? 300 : 260}
+          width={canvasW}
+          height={canvasH}
         >
           {post.render(mascotSrc, shots)}
         </FeedPreview>
@@ -133,7 +140,7 @@ function PostCard({
         <div className="min-w-0 flex-1 space-y-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
-              Caption (copy for Instagram)
+              Caption {isSquare ? "(copy for FB / community)" : "(copy for Instagram)"}
             </p>
             <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap rounded-2xl bg-[#F9FAFB] px-4 py-3 text-sm leading-relaxed text-[#374151]">
               {post.caption}
@@ -208,7 +215,8 @@ export function InstagramPostsPage() {
             Instagram posts
           </h1>
           <p className="mt-3 text-base leading-relaxed text-[#6B7280]">
-            {INSTAGRAM_POSTS.length} brand feed posts (4:5). Screenshot posters use files in{" "}
+            {INSTAGRAM_POSTS.length} brand posts (mostly 4:5 feed; community posters can be 1:1).
+            Screenshot posters use files in{" "}
             <code className="rounded bg-white px-1.5 py-0.5 text-sm">
               public/marketing/ig-screenshots/
             </code>
