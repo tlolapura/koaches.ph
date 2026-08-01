@@ -82,65 +82,74 @@ export const ALL_SKILL_CATEGORIES: SkillCategory[] = [
 ];
 
 export const DEFAULT_SKILLS: SkillDefinition[] = [
+  // Fundamentals
   { id: "fund-grip", name: "Grip & ready position", category: "fundamentals" },
   { id: "fund-stance", name: "Stance and footwork basics", category: "fundamentals" },
   { id: "fund-court", name: "Court awareness & positioning", category: "fundamentals" },
   { id: "fund-rules", name: "Scoring & rules knowledge", category: "fundamentals" },
-  { id: "serve-consistency", name: "Serve consistency (legal, in-court)", category: "serve-return" },
-  { id: "serve-placement", name: "Serve placement (depth, direction)", category: "serve-return" },
+
+  // Serve & return
+  { id: "serve-consistency", name: "Serve consistency", category: "serve-return" },
+  { id: "serve-placement", name: "Serve placement", category: "serve-return" },
   { id: "serve-spin", name: "Serve spin & variety", category: "serve-return" },
-  { id: "serve-drop", name: "Drop serve", category: "serve-return" },
-  { id: "serve-volley", name: "Volley serve", category: "serve-return" },
-  { id: "return-depth", name: "Return of serve depth", category: "serve-return" },
-  { id: "return-placement", name: "Return of serve placement", category: "serve-return" },
+  { id: "return-depth", name: "Return depth", category: "serve-return" },
+  { id: "return-placement", name: "Return placement", category: "serve-return" },
+
+  // Third shot
   { id: "third-drop-consistency", name: "Third shot drop consistency", category: "third-shot" },
   { id: "third-drop-placement", name: "Third shot drop placement", category: "third-shot" },
-  { id: "third-drive", name: "Third shot drive (as change-up)", category: "third-shot" },
-  { id: "third-transition", name: "Transition movement after third shot", category: "third-shot" },
-  { id: "drop-transition", name: "Drop from the transition zone", category: "third-shot" },
+  { id: "third-drive", name: "Third shot drive", category: "third-shot" },
+  { id: "drop-transition", name: "Transition-zone drop", category: "third-shot" },
+
+  // Groundstrokes
   { id: "drive-fh", name: "Forehand drive", category: "groundstrokes" },
   { id: "drive-bh", name: "Backhand drive", category: "groundstrokes" },
-  { id: "drive-topspin", name: "Topspin groundstroke", category: "groundstrokes" },
-  { id: "drive-backspin", name: "Backspin / slice groundstroke", category: "groundstrokes" },
-  { id: "drive-sidespin", name: "Sidespin groundstroke", category: "groundstrokes" },
-  { id: "drive-bh-twohand", name: "Two-handed backhand", category: "groundstrokes" },
+  { id: "drive-spin", name: "Groundstroke spin (topspin, slice, sidespin)", category: "groundstrokes" },
   { id: "half-volley", name: "Half-volley", category: "groundstrokes" },
-  { id: "lob", name: "Lob", category: "groundstrokes" },
   { id: "lob-offensive", name: "Offensive lob", category: "groundstrokes" },
   { id: "lob-defensive", name: "Defensive lob", category: "groundstrokes" },
   { id: "atp", name: "Around the post (ATP)", category: "groundstrokes" },
-  { id: "kitchen-dink-consistency", name: "Dinking consistency (cross-court and straight)", category: "kitchen" },
+
+  // Kitchen
+  { id: "kitchen-dink-fh", name: "Forehand dink", category: "kitchen" },
+  { id: "kitchen-dink-bh", name: "Backhand dink", category: "kitchen" },
   { id: "kitchen-dink-placement", name: "Dink placement & control", category: "kitchen" },
-  { id: "kitchen-dink-fh", name: "Forehand dink control", category: "kitchen" },
-  { id: "kitchen-dink-bh", name: "Backhand dink control", category: "kitchen" },
-  { id: "kitchen-flick", name: "Flick / speed-up from the dink", category: "kitchen" },
+  { id: "kitchen-flick", name: "Dink flick (speed-up)", category: "kitchen" },
   { id: "kitchen-counter", name: "Counter to a speed-up", category: "kitchen" },
-  { id: "kitchen-positioning", name: "Kitchen line positioning", category: "kitchen" },
+  { id: "kitchen-reset", name: "Reset", category: "kitchen" },
+  { id: "kitchen-positioning", name: "Kitchen-line positioning", category: "kitchen" },
   { id: "kitchen-patience", name: "Patience in dink rallies", category: "kitchen" },
-  { id: "kitchen-reset", name: "Reset ability (neutralizing fast balls)", category: "kitchen" },
   { id: "kitchen-erne", name: "Erne", category: "kitchen" },
-  { id: "kitchen-bert", name: "Bert (partner Erne)", category: "kitchen" },
-  { id: "volley-fh", name: "Forehand volley control", category: "volleys" },
-  { id: "volley-bh", name: "Backhand volley control", category: "volleys" },
-  { id: "volley-block", name: "Block / soft hands volley", category: "volleys" },
-  { id: "volley-drop", name: "Drop volley", category: "volleys" },
-  { id: "volley-roll", name: "Roll volley (topspin)", category: "volleys" },
-  { id: "volley-speedup", name: "Speed-up volley", category: "volleys" },
+  { id: "kitchen-bert", name: "Bert", category: "kitchen" },
+
+  // Volleys
+  { id: "volley-fh", name: "Forehand volley", category: "volleys" },
+  { id: "volley-bh", name: "Backhand volley", category: "volleys" },
   { id: "volley-punch", name: "Punch volley", category: "volleys" },
+  { id: "volley-block", name: "Block volley", category: "volleys" },
+  { id: "volley-drop", name: "Drop volley", category: "volleys" },
+  { id: "volley-roll", name: "Roll volley", category: "volleys" },
+  { id: "volley-speedup", name: "Speed-up volley", category: "volleys" },
   { id: "volley-overhead", name: "Overhead smash", category: "volleys" },
-  { id: "move-split", name: "Split step timing", category: "movement" },
+
+  // Movement
+  { id: "move-split", name: "Split step", category: "movement" },
   { id: "move-transition", name: "Transition (baseline to kitchen)", category: "movement" },
   { id: "move-lateral", name: "Lateral movement & recovery", category: "movement" },
-  { id: "move-partner", name: "Partner coordination (doubles)", category: "movement" },
-  { id: "iq-selection", name: "Shot selection under pressure", category: "game-iq" },
-  { id: "iq-stacking", name: "Stacking & switching (doubles)", category: "game-iq" },
-  { id: "iq-poach", name: "Poach / middle takeover", category: "game-iq" },
-  { id: "iq-targeting", name: "Identifying & targeting opponent weaknesses", category: "game-iq" },
-  { id: "iq-strategy", name: "Serve & return strategy", category: "game-iq" },
+  { id: "move-partner", name: "Partner spacing & movement", category: "movement" },
+
+  // Game IQ
+  { id: "iq-selection", name: "Shot selection", category: "game-iq" },
+  { id: "iq-stacking", name: "Stacking & switching", category: "game-iq" },
+  { id: "iq-poach", name: "Poaching the middle", category: "game-iq" },
+  { id: "iq-targeting", name: "Targeting opponent weaknesses", category: "game-iq" },
+  { id: "iq-strategy", name: "Serve & return patterns", category: "game-iq" },
+
+  // Mental
   { id: "mental-consistency", name: "Consistency under pressure", category: "mental" },
-  { id: "mental-recovery", name: "Error recovery & reset mindset", category: "mental" },
-  { id: "mental-closing", name: "Closing out tight games", category: "mental" },
-  { id: "mental-communication", name: "Communication with partner", category: "mental" },
+  { id: "mental-recovery", name: "Error recovery", category: "mental" },
+  { id: "mental-closing", name: "Closing out games", category: "mental" },
+  { id: "mental-communication", name: "Partner communication", category: "mental" },
 ];
 
 export const SKILL_RUBRICS_META: Record<Exclude<SkillRubricId, "custom">, { name: string; categories: SkillCategory[] }> = {
@@ -173,6 +182,26 @@ export function getSkillsForRubric(rubricId: SkillRubricId | "all-around", custo
   return DEFAULT_SKILLS.filter((s) => cats.includes(s.category));
 }
 
+/**
+ * Old catalog ids → current ids so saved coach skill lists still resolve
+ * after cleanup / renames.
+ */
+export const SKILL_ID_ALIASES: Record<string, string> = {
+  "serve-drop": "serve-spin",
+  "serve-volley": "serve-consistency",
+  "third-transition": "move-transition",
+  "drive-topspin": "drive-spin",
+  "drive-backspin": "drive-spin",
+  "drive-sidespin": "drive-spin",
+  "drive-bh-twohand": "drive-bh",
+  lob: "lob-offensive",
+  "kitchen-dink-consistency": "kitchen-dink-placement",
+};
+
+export function canonicalizeSkillId(skillId: string): string {
+  return SKILL_ID_ALIASES[skillId] ?? skillId;
+}
+
 export type SkillRubricConfig = {
   rubricId: SkillRubricId;
   customSkillIds?: string[];
@@ -201,7 +230,11 @@ export function resolveSkills(config: SkillRubricConfig): SkillDefinition[] {
   const customById = new Map((config.customSkills ?? []).map((skill) => [skill.id, skill]));
   const overrides = config.skillLabelOverrides ?? {};
 
-  return selectedIds
+  const canonicalIds = [
+    ...new Set(selectedIds.map((id) => (customById.has(id) ? id : canonicalizeSkillId(id)))),
+  ];
+
+  return canonicalIds
     .map((id) => {
       const owned = customById.get(id);
       if (owned) return owned;
@@ -222,10 +255,13 @@ export function resolveSkillDefinition(
   const owned = config.customSkills?.find((skill) => skill.id === skillId);
   if (owned) return owned;
 
-  const catalog = DEFAULT_SKILLS.find((skill) => skill.id === skillId);
+  const canonicalId = canonicalizeSkillId(skillId);
+  const catalog = DEFAULT_SKILLS.find((skill) => skill.id === canonicalId);
   if (!catalog) return undefined;
 
-  const label = config.skillLabelOverrides?.[skillId]?.trim();
+  const label =
+    config.skillLabelOverrides?.[skillId]?.trim() ||
+    config.skillLabelOverrides?.[canonicalId]?.trim();
   return label ? { ...catalog, name: label } : catalog;
 }
 
