@@ -22,6 +22,7 @@ export const COACH_PORTAL_SEGMENTS = new Set([
   "billing",
   "settings",
   "onboarding",
+  "guide",
 ]);
 
 export function buildPublicCoachPath(slug: string) {

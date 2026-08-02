@@ -8,6 +8,7 @@ export const COACH_RESTRICTED_ALLOWED_PREFIXES = [
   "/coach/profile",
   "/coach/more",
   "/coach/onboarding",
+  "/coach/guide",
 ] as const;
 
 export function isCoachRestrictedPathAllowed(pathname: string): boolean {

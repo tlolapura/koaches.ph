@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, CreditCard, FileText, Settings, Share2, User, UsersRound } from "lucide-react";
+import { ChevronRight, CreditCard, FileText, BookOpen, Settings, Share2, User, UsersRound } from "lucide-react";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
 import { CoachSignOutButton } from "@/components/koaches/coach/CoachSignOutButton";
 import { cn } from "@/lib/utils";
 
 const links = [
+  {
+    href: "/coach/guide",
+    label: "Coach guide",
+    icon: BookOpen,
+    desc: "How the app works, in plain words",
+  },
   {
     href: "/coach/clinics",
     label: "Clinics",

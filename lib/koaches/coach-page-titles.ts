@@ -15,6 +15,7 @@ const SECTIONS: Array<{ prefix: string; title: string; backHref?: string; backLa
   { prefix: "/coach/social", title: "Social", backHref: "/coach/dashboard", backLabel: "Home" },
   { prefix: "/coach/profile", title: "Profile", backHref: "/coach/dashboard", backLabel: "Home" },
   { prefix: "/coach/billing", title: "Billing" },
+  { prefix: "/coach/guide", title: "Coach guide" },
   { prefix: "/coach/settings/terms", title: "Terms", backHref: "/coach/settings", backLabel: "Settings" },
   { prefix: "/coach/settings/privacy", title: "Privacy", backHref: "/coach/settings", backLabel: "Settings" },
   {

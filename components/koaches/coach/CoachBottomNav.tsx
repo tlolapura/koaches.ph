@@ -23,6 +23,7 @@ const moreSectionPrefixes = [
   "/coach/settings",
   "/coach/programs",
   "/coach/clinics",
+  "/coach/guide",
 ];
 
 export function CoachBottomNav() {
