@@ -26,7 +26,7 @@ export const BUILT_FEATURES = [
   },
 ] as const;
 
-export const SUBSCRIPTION_MONTHLY_PHP = 499;
+export const SUBSCRIPTION_MONTHLY_PHP = 299;
 export const COACHES_FOR_1M_MRR = 2000;
 
 export function LetterSection({

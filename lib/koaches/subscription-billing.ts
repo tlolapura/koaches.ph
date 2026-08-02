@@ -33,11 +33,15 @@ export type SubscriptionBillingInfo = {
 };
 
 function planLabel(plan: CoachProfile["subscriptionPlan"]): string {
-  return plan === "early-bird" ? "Early bird" : "Regular";
+  return plan === "early-bird" ? "Founding (free)" : "Monthly";
 }
 
 export function subscriptionAmount(plan: CoachProfile["subscriptionPlan"]): number {
   return SUBSCRIPTION_PRICES[plan];
+}
+
+export function isFreeSubscriptionPlan(plan: CoachProfile["subscriptionPlan"]): boolean {
+  return subscriptionAmount(plan) === 0;
 }
 
 /** Statuses where the coach should see pay QR + receipt upload. */
@@ -58,6 +62,32 @@ export function getSubscriptionBillingInfo(
 ): SubscriptionBillingInfo {
   const amount = subscriptionAmount(coach.subscriptionPlan);
   const plan = planLabel(coach.subscriptionPlan);
+
+  // Founding coaches: free for life — never invoice or lock for non-payment
+  if (isFreeSubscriptionPlan(coach.subscriptionPlan)) {
+    if (!coach.isActive) {
+      return {
+        status: "inactive",
+        label: "Account inactive",
+        adminNote: "Portal and profile are off.",
+        renewalDate: null,
+        invoiceByDate: null,
+        daysUntilRenewal: null,
+        amount: 0,
+        planLabel: plan,
+      };
+    }
+    return {
+      status: "active",
+      label: "Free for life",
+      adminNote: "Founding coach. No monthly fee.",
+      renewalDate: null,
+      invoiceByDate: null,
+      daysUntilRenewal: null,
+      amount: 0,
+      planLabel: plan,
+    };
+  }
 
   if (!coach.subscriptionExpiry?.trim()) {
     if (!coach.isActive) {

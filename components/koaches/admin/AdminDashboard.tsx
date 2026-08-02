@@ -123,7 +123,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
         </div>
 
         <div className={cn(cardClass, "p-5")}>
-          <h2 className="font-heading font-semibold text-[#111827]">Early bird</h2>
+          <h2 className="font-heading font-semibold text-[#111827]">Founding free</h2>
           <p className="font-heading mt-3 text-3xl font-bold text-[#1D4ED8]">
             {data.earlyBirdSlotsUsed}
             <span className="text-lg font-semibold text-[#9CA3AF]">
@@ -137,7 +137,7 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
             />
           </div>
           <p className="mt-2 text-xs text-[#6B7280]">
-            {data.earlyBirdRemaining} left · ₱299/mo
+            {data.earlyBirdRemaining} left · then ₱299/mo
           </p>
         </div>
       </div>

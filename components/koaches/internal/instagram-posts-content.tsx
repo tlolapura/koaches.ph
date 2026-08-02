@@ -1032,26 +1032,26 @@ ${SITE_LINK}`,
   },
   {
     id: "32-early-bird",
-    label: "32 · Early bird",
+    label: "32 · Founding free",
     filename: "pk-32-early-bird.png",
     backdrop: "blueBand",
-    caption: `Early bird pricing for founding coaches.
+    caption: `First 30 coaches are free for life.
 
-Same full features: presets, progress cards, roster, billing.
-Founding rate while early bird slots last.
+Same full features: presets, progress cards, roster, billing tools.
+After that, ₱299/month.
 
 ${SITE_LINK}`,
     render: (mascotSrc) => (
       <div className="flex h-full flex-col px-16 pb-16 pt-24">
         <BrandMark mascotSrc={mascotSrc} size="md" />
         <h1 className="font-heading mt-16 text-[70px] font-bold leading-[1.05] tracking-tight text-[#111827]">
-          Early bird for founding coaches.
+          First 30 coaches are free for life.
         </h1>
         <p className="mt-8 text-[34px] leading-snug text-[#4B5563]">
-          Full access while founding slots last. Ask on the site.
+          Full access. After that, ₱299 a month.
         </p>
         <div className="mt-auto text-white">
-          <p className="font-heading text-[40px] font-bold">Founding coach rate</p>
+          <p className="font-heading text-[40px] font-bold">Founding coaches</p>
           <p className="mt-2 text-[28px] text-white/85">{SITE_LINK}</p>
         </div>
       </div>

@@ -226,8 +226,8 @@ export function AdminEditCoachSheet({ coach, open, onClose, onSaved }: AdminEdit
                 patch({ subscriptionPlan: e.target.value as CoachProfile["subscriptionPlan"] })
               }
             >
-              <option value="early-bird">Early bird (₱299/mo)</option>
-              <option value="regular">Regular (₱499/mo)</option>
+              <option value="early-bird">Founding (free for life)</option>
+              <option value="regular">Monthly (₱299/mo)</option>
             </select>
           </CoachSheetField>
           <CoachSheetField label="Subscription expiry" htmlFor="edit-coach-expiry">

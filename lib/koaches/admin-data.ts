@@ -1,6 +1,8 @@
 export const SUBSCRIPTION_PRICES = {
-  "early-bird": 299,
-  regular: 499,
+  /** First 30 coaches — free for life */
+  "early-bird": 0,
+  /** After founding slots — monthly subscription */
+  regular: 299,
 } as const;
 
 export type MonthlyMetric = {

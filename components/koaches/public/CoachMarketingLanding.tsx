@@ -23,27 +23,27 @@ import { formatCurrency } from "@/lib/utils";
 const PLANS = [
   {
     id: "early-bird",
-    name: "Early bird",
+    name: "Founding",
     price: SUBSCRIPTION_PRICES["early-bird"],
     badge: `First ${EARLY_BIRD_SLOTS_TOTAL} coaches`,
-    description: "Founding coach pricing while early bird slots last.",
+    description: "Free for life while founding slots last.",
     featured: true,
     perks: [
-      "Save ₱200 every month",
-      "Founding rate locked in while you stay subscribed",
+      "No monthly fee, ever",
+      "Full access to everything in PickleKoach",
       "Personal onboarding and setup help",
     ],
   },
   {
     id: "regular",
-    name: "Regular",
+    name: "Monthly",
     price: SUBSCRIPTION_PRICES.regular,
-    badge: "Standard plan",
-    description: "Full access once early bird slots fill up.",
+    badge: "After founding slots",
+    description: "For coaches who join after the first 30.",
     featured: false,
     perks: [
       "Month-to-month. Cancel anytime",
-      "Same features as early bird",
+      "Same features as founding coaches",
       "No locks or reduced access",
     ],
   },
@@ -212,9 +212,10 @@ export function CoachMarketingLanding() {
             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#16A34A]">
               Pricing
             </p>
-            <h2 className="font-heading mt-1 text-2xl font-bold">Simple monthly plans</h2>
+            <h2 className="font-heading mt-1 text-2xl font-bold">Simple pricing</h2>
             <p className="mt-1 max-w-xl text-sm text-[#4B5563]">
-              One subscription for everything you need to coach.
+              First {EARLY_BIRD_SLOTS_TOTAL} coaches are free for life. After that, ₱
+              {SUBSCRIPTION_PRICES.regular}/month.
             </p>
           </div>
 
@@ -240,8 +241,17 @@ export function CoachMarketingLanding() {
                 </div>
                 <p className="mt-2 text-sm text-[#6B7280]">{plan.description}</p>
                 <p className="font-heading mt-5 text-4xl font-bold tracking-tight text-[#14532D]">
-                  {formatCurrency(plan.price)}
-                  <span className="text-base font-semibold text-[#6B7280]">/mo</span>
+                  {plan.price === 0 ? (
+                    <>
+                      Free
+                      <span className="text-base font-semibold text-[#6B7280]"> forever</span>
+                    </>
+                  ) : (
+                    <>
+                      {formatCurrency(plan.price)}
+                      <span className="text-base font-semibold text-[#6B7280]">/mo</span>
+                    </>
+                  )}
                 </p>
                 <ul className="mt-5 space-y-2.5">
                   {plan.perks.map((perk) => (

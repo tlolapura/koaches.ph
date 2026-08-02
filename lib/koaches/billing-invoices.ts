@@ -35,6 +35,7 @@ export async function ensureCurrentCoachInvoice(
   coach: CoachProfile
 ): Promise<CoachSubscriptionInvoice | null> {
   if (!coach.subscriptionExpiry?.trim()) return null;
+  if (subscriptionAmount(coach.subscriptionPlan) === 0) return null;
 
   const periodEnd = coach.subscriptionExpiry;
   const { data: existing } = await supabase

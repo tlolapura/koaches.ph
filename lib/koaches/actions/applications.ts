@@ -7,6 +7,7 @@ import {
   provisionCoachAccount,
   type ProvisionCoachResult,
 } from "@/lib/koaches/provision-coach";
+import { resolveNewCoachSubscriptionPlan } from "@/lib/koaches/early-bird";
 import type { CoachApplication, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -108,7 +109,7 @@ export async function approveCoachApplicationAction(
       specialization: app.specialization,
       bio: app.bio,
       skillTemplateId: app.skillTemplateId,
-      subscriptionPlan: "early-bird",
+      subscriptionPlan: await resolveNewCoachSubscriptionPlan(supabase),
       sessionPricing: app.sessionPricing,
     },
     { loginEmail: input.email, password: input.password }
