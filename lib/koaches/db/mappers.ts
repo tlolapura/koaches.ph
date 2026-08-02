@@ -13,7 +13,7 @@ import type {
   StudentIntakeSubmission,
 } from "../types";
 import { joinPersonName, splitPersonName } from "../person-name";
-import { DEFAULT_SESSION_PRICING, getStartingRate } from "../pricing";
+import { DEFAULT_SESSION_PRICING, getStartingRate, normalizeSessionPricing } from "../pricing";
 import { normalizeSkillRatings } from "../session-progress";
 
 export type DbCoach = {
@@ -228,10 +228,7 @@ export function mapCoach(row: DbCoach): CoachProfile {
     bio: row.bio,
     specialization: row.specialization,
     ratePerSession: row.rate_per_session,
-    sessionPricing:
-      row.session_pricing && Array.isArray(row.session_pricing.tiers) && row.session_pricing.tiers.length > 0
-        ? row.session_pricing
-        : DEFAULT_SESSION_PRICING,
+    sessionPricing: normalizeSessionPricing(row.session_pricing),
     courtIds: row.court_ids ?? [],
     mobile: row.mobile ?? undefined,
     instagram: row.instagram ?? undefined,
@@ -388,10 +385,7 @@ export function mapApplication(row: DbApplication): CoachApplication {
     ).filter((id): id is CoachApplication["coachingLevels"][number] =>
       id === "beginner" || id === "intermediate" || id === "advanced"
     ),
-    sessionPricing:
-      row.session_pricing && Array.isArray(row.session_pricing.tiers) && row.session_pricing.tiers.length > 0
-        ? row.session_pricing
-        : DEFAULT_SESSION_PRICING,
+    sessionPricing: normalizeSessionPricing(row.session_pricing),
     preferredSlug: row.preferred_slug ?? undefined,
     currentStudentCount: row.current_student_count,
     status: row.status as CoachApplication["status"],

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { assertCoachAccess } from "@/lib/koaches/actions/guards";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { CoachProfile, CoachSessionPricing, SkillRubricId } from "@/lib/koaches/types";
+import { getStartingRate, normalizeSessionPricing, validateSessionPricing } from "@/lib/koaches/pricing";
 import type { CoachingLevelId } from "@/lib/koaches/application-form";
 import { primarySkillTemplateFromLevels } from "@/lib/koaches/application-form";
 import { mapCoach, type DbCoach } from "@/lib/koaches/db/mappers";
@@ -63,8 +64,11 @@ export async function updateCoachProfileAction(
     row.skill_template_id = primarySkillTemplateFromLevels(patch.coachingLevels);
   }
   if (patch.sessionPricing !== undefined) {
-    row.session_pricing = patch.sessionPricing;
-    row.rate_per_session = patch.sessionPricing.tiers[0]?.rate ?? 0;
+    const pricing = normalizeSessionPricing(patch.sessionPricing);
+    const pricingError = validateSessionPricing(pricing);
+    if (pricingError) throw new Error(pricingError);
+    row.session_pricing = pricing;
+    row.rate_per_session = getStartingRate(pricing);
   }
   if (patch.mobile !== undefined) row.mobile = patch.mobile || null;
   if (patch.instagram !== undefined) row.instagram = patch.instagram || null;

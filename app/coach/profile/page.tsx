@@ -214,7 +214,7 @@ function ProfilePageContent() {
           <div>
             <p className="font-heading font-semibold">Drop-in rates</p>
             <p className="text-sm text-[#6B7280]">
-              Per person, by group size · {pricing.defaultDurationMinutes} min · {pricing.minimumPlayers}–{pricing.maximumPlayers} pax
+              Packages by players + length · {pricing.minimumPlayers}–{pricing.maximumPlayers} pax
             </p>
           </div>
           <button type="button" className="text-sm font-semibold text-[#4F8FF7]" onClick={() => setPricingOpen(true)}>

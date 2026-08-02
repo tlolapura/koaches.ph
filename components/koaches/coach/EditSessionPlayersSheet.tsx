@@ -5,8 +5,10 @@ import type { Session, SessionParticipant } from "@/lib/koaches/types";
 import { updateSessionPlayersAction } from "@/lib/koaches/actions/sessions";
 import { invalidateCoachSessions, patchCachedSession } from "@/lib/koaches/queries/invalidate";
 import { resizeParticipants } from "@/lib/koaches/session-participants";
-import { DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
+import { DEFAULT_SESSION_PRICING, formatSuggestedDropInHint, normalizeSessionPricing } from "@/lib/koaches/pricing";
 import { suggestSessionPrice } from "@/lib/koaches/session-pricing";
+import { parseTimeToMinutes } from "@/lib/koaches/session-time";
+import { HOURLY_SESSION_MINUTES } from "@/lib/koaches/session-slots";
 import { useCoachProfile } from "@/hooks/useCoachProfile";
 import { useCoachStudents } from "@/hooks/useCoachStudents";
 import { CoachBottomSheet } from "@/components/koaches/coach/CoachBottomSheet";
@@ -15,7 +17,6 @@ import { CoachSheetField, CoachSheetFooter } from "@/components/koaches/coach/Co
 import { DropInPlayerCountField } from "@/components/koaches/coach/DropInPlayerCountField";
 import { SessionParticipantsFields } from "@/components/koaches/coach/SessionParticipantsFields";
 import { useCoachToast } from "@/components/koaches/coach/CoachUi";
-import { formatCurrency } from "@/lib/utils";
 
 type EditSessionPlayersSheetProps = {
   open: boolean;
@@ -33,9 +34,14 @@ export function EditSessionPlayersSheet({
   const { showToast } = useCoachToast();
   const { coach } = useCoachProfile(session.coachId);
   const { students: roster } = useCoachStudents(session.coachId);
-  const pricing = coach?.sessionPricing ?? DEFAULT_SESSION_PRICING;
+  const pricing = normalizeSessionPricing(coach?.sessionPricing ?? DEFAULT_SESSION_PRICING);
   const minPlayers = pricing.minimumPlayers ?? 1;
   const maxPlayers = pricing.maximumPlayers ?? 4;
+  const sessionDurationMinutes = (() => {
+    let diff = parseTimeToMinutes(session.endTime) - parseTimeToMinutes(session.time);
+    if (diff <= 0) diff += 24 * 60;
+    return Math.max(HOURLY_SESSION_MINUTES, diff || pricing.defaultDurationMinutes);
+  })();
 
   const [playerCount, setPlayerCount] = useState(session.playerCount || 1);
   const [participants, setParticipants] = useState<SessionParticipant[]>(() =>
@@ -56,7 +62,14 @@ export function EditSessionPlayersSheet({
     setPlayerCount(count);
     setParticipants((prev) => resizeParticipants(prev, count));
     if (session.type === "drop-in") {
-      setPrice(suggestSessionPrice({ type: "drop-in", playerCount: count, pricing }));
+      setPrice(
+        suggestSessionPrice({
+          type: "drop-in",
+          playerCount: count,
+          durationMinutes: sessionDurationMinutes,
+          pricing,
+        })
+      );
     }
   };
 
@@ -138,9 +151,17 @@ export function EditSessionPlayersSheet({
           <CoachSheetField
             label="Session total (₱)"
             htmlFor="edit-session-price"
-            hint={`Suggested for ${playerCount} player${playerCount === 1 ? "" : "s"}: ${formatCurrency(
-              suggestSessionPrice({ type: "drop-in", playerCount, pricing })
-            )}`}
+            hint={formatSuggestedDropInHint(
+              pricing,
+              playerCount,
+              sessionDurationMinutes,
+              suggestSessionPrice({
+                type: "drop-in",
+                playerCount,
+                durationMinutes: sessionDurationMinutes,
+                pricing,
+              })
+            )}
           >
             <input
               id="edit-session-price"

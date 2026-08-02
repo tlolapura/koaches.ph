@@ -48,7 +48,7 @@ export function CoachResetPasswordPage() {
           }}
         >
           <AuthLoginCard>
-            <AuthLoginIntro portalLabel="Coach portal" subtitle="Choose a new password" />
+              <AuthLoginIntro portalLabel="Coach portal" subtitle="Choose a new password" />
 
             <div className="mt-6 space-y-3">
               <AuthLoginField label="New password" htmlFor="reset-password">

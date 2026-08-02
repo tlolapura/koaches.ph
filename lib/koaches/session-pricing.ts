@@ -1,5 +1,5 @@
 import type { CoachSessionPricing, Program, Session } from "@/lib/koaches/types";
-import { getDropInSessionTotal } from "@/lib/koaches/pricing";
+import { getDropInSessionTotal, normalizeSessionPricing } from "@/lib/koaches/pricing";
 import { getProgramPerSessionRevenue } from "@/lib/koaches/program-pricing";
 
 /** Suggested price when scheduling a session */
@@ -7,6 +7,7 @@ export function suggestSessionPrice(options: {
   type: Session["type"];
   program?: Program;
   playerCount?: number;
+  durationMinutes?: number;
   pricing?: CoachSessionPricing;
 }): number {
   const { type, program, playerCount = 1, pricing } = options;
@@ -14,10 +15,9 @@ export function suggestSessionPrice(options: {
     return getProgramPerSessionRevenue(program);
   }
   if (pricing) {
-    return (
-      getDropInSessionTotal(pricing, playerCount) ??
-      (pricing.tiers[0]?.rate ?? 0) * playerCount
-    );
+    const normalized = normalizeSessionPricing(pricing);
+    const duration = options.durationMinutes ?? normalized.defaultDurationMinutes;
+    return getDropInSessionTotal(normalized, playerCount, duration) ?? 0;
   }
   return 0;
 }

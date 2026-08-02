@@ -9,7 +9,6 @@ import {
   ClipboardCheck,
   Link2,
   Mail,
-  MessageCircle,
   Send,
   Sparkles,
   User,
@@ -85,9 +84,9 @@ const NEXT_STEPS = [
     body: "Usually within 1 to 2 business days. We read every one.",
   },
   {
-    icon: MessageCircle,
-    title: "We reach out personally",
-    body: "SMS and email with payment and onboarding details.",
+    icon: Mail,
+    title: "We email your login details",
+    body: "Once approved, you'll get an email with your password so you can sign in.",
   },
   {
     icon: CheckCircle2,
@@ -321,8 +320,8 @@ export function CoachApplicationWizard({
                   )}
                 </dl>
                 <p className="mt-4 text-xs text-[#6B7280]">
-                  When you submit, our team will reach out via SMS and email. We&apos;re grateful you
-                  took the time to apply.
+                  When you submit, our team will review and email you. We&apos;re grateful you took
+                  the time to apply.
                 </p>
               </div>
             )}
@@ -347,20 +346,6 @@ export function CoachApplicationWizard({
                     </li>
                   ))}
                 </ol>
-                <div className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 text-sm">
-                  <p className="font-semibold text-[#111827]">Watch for a message from us</p>
-                  <p className="mt-1 text-xs text-[#6B7280]">
-                    SMS to {review.mobile} and email to {review.email}.
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#6B7280] ring-1 ring-[#E5E7EB]">
-                      <MessageCircle className="h-3.5 w-3.5" /> SMS
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-medium text-[#6B7280] ring-1 ring-[#E5E7EB]">
-                      <Mail className="h-3.5 w-3.5" /> Email
-                    </span>
-                  </div>
-                </div>
               </div>
             )}
           </div>

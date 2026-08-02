@@ -1,6 +1,7 @@
 "use client";
 
 import type { CoachSessionPricing, Program } from "@/lib/koaches/types";
+import { formatSuggestedDropInHint } from "@/lib/koaches/pricing";
 import { suggestSessionPrice } from "@/lib/koaches/session-pricing";
 import { formatProgramBundleSummary } from "@/lib/koaches/program-pricing";
 import { formatCurrency } from "@/lib/utils";
@@ -11,6 +12,7 @@ type SessionPriceFieldsProps = {
   program?: Program;
   pricing: CoachSessionPricing;
   playerCount: number;
+  durationMinutes?: number;
   price: number;
   onPriceChange: (price: number) => void;
 };
@@ -20,6 +22,7 @@ export function SessionPriceFields({
   program,
   pricing,
   playerCount,
+  durationMinutes,
   price,
   onPriceChange,
 }: SessionPriceFieldsProps) {
@@ -53,18 +56,18 @@ export function SessionPriceFields({
   const suggested = suggestSessionPrice({
     type: "drop-in",
     playerCount,
+    durationMinutes,
     pricing,
   });
-  const perPerson = suggested > 0 ? Math.round(suggested / playerCount) : 0;
 
   return (
     <CoachSheetField
       label="Session total (₱)"
       htmlFor="session-total-input"
       hint={
-        suggested !== price
-          ? `Suggested: ${formatCurrency(perPerson)}/person × ${playerCount} = ${formatCurrency(suggested)}`
-          : `${formatCurrency(perPerson)}/person × ${playerCount} players`
+        durationMinutes
+          ? formatSuggestedDropInHint(pricing, playerCount, durationMinutes, suggested)
+          : undefined
       }
     >
       <input

@@ -24,12 +24,22 @@ export type ProvisionCoachProfile = {
 
 export type ProvisionCoachCredentials = {
   loginEmail: string;
-  password: string;
+  /** If omitted, a random password is generated. */
+  password?: string;
 };
 
 export type ProvisionCoachResult =
   | { ok: true; coachId: string; slug: string; loginEmail: string; userId: string }
   | { ok: false; error: string };
+
+/** Human-typable random password for provisioned coach accounts. */
+export function generateProvisionPassword(length = 12): string {
+  // Avoid ambiguous characters (0/O, 1/l/I)
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
+}
 
 export function validateCoachLoginEmail(email: string): string | null {
   const trimmed = email.trim().toLowerCase();
@@ -128,7 +138,10 @@ export async function provisionCoachAccount(
 ): Promise<ProvisionCoachResult> {
   const emailError = validateCoachLoginEmail(credentials.loginEmail);
   if (emailError) return { ok: false, error: emailError };
-  const passwordError = validateCoachLoginPassword(credentials.password);
+  const password = credentials.password?.trim()
+    ? credentials.password
+    : generateProvisionPassword();
+  const passwordError = validateCoachLoginPassword(password);
   if (passwordError) return { ok: false, error: passwordError };
 
   if (!resolveProvisionNames(profile)) {
@@ -161,7 +174,7 @@ export async function provisionCoachAccount(
 
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email: loginEmail,
-    password: credentials.password,
+    password,
     email_confirm: true,
     user_metadata: { full_name: names.displayName },
   });

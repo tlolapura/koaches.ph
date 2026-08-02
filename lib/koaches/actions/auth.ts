@@ -3,11 +3,12 @@
 import { redirect } from "next/navigation";
 import type { Profile } from "@/lib/koaches/auth/profile";
 import { isAdminRole, isCoachRole } from "@/lib/koaches/auth/profile";
-import { createClient } from "@/lib/supabase/server";
-
-import { SITE_URL } from "@/lib/koaches/site-metadata";
-
-import { validateCoachLoginPassword } from "@/lib/koaches/provision-coach";
+import { sendCoachPasswordResetEmail } from "@/lib/koaches/email/send-coach-password-reset";
+import {
+  generateProvisionPassword,
+  validateCoachLoginPassword,
+} from "@/lib/koaches/provision-coach";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export async function coachSignInAction(email: string, password: string, nextPath?: string) {
   const supabase = await createClient();
@@ -115,19 +116,49 @@ export async function changeCoachPasswordAction(
   return { ok: true };
 }
 
+/**
+ * Emails a new temporary password (no reset link).
+ * Always returns ok for unknown emails so we don't leak whether an account exists.
+ */
 export async function coachForgotPasswordAction(email: string) {
-  const trimmed = email.trim();
+  const trimmed = email.trim().toLowerCase();
   if (!trimmed) return { ok: false as const, error: "Email is required." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return { ok: false as const, error: "Please enter a valid email." };
+  }
 
-  const supabase = await createClient();
-  const redirectTo = `${SITE_URL}/auth/callback?next=${encodeURIComponent("/coach/reset-password")}`;
+  const supabase = createServiceClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id, email, full_name, role, coach_id")
+    .eq("email", trimmed)
+    .maybeSingle();
 
-  const { error } = await supabase.auth.resetPasswordForEmail(trimmed, { redirectTo });
-  if (error) return { ok: false as const, error: error.message };
+  if (!profile || !isCoachRole(profile.role) || !profile.coach_id) {
+    return { ok: true as const };
+  }
+
+  const temporaryPassword = generateProvisionPassword();
+  const { error: updateError } = await supabase.auth.admin.updateUserById(profile.id, {
+    password: temporaryPassword,
+  });
+  if (updateError) {
+    return { ok: false as const, error: updateError.message };
+  }
+
+  const emailResult = await sendCoachPasswordResetEmail({
+    coachName: profile.full_name?.trim() || "Coach",
+    loginEmail: profile.email ?? trimmed,
+    temporaryPassword,
+  });
+  if (!emailResult.ok) {
+    return { ok: false as const, error: emailResult.error };
+  }
 
   return { ok: true as const };
 }
 
+/** Kept for recovery sessions from older reset links; new flow emails a temp password instead. */
 export async function coachResetPasswordAction(newPassword: string) {
   const passwordError = validateCoachLoginPassword(newPassword);
   if (passwordError) return { ok: false as const, error: passwordError };
@@ -140,7 +171,7 @@ export async function coachResetPasswordAction(newPassword: string) {
   if (!user) {
     return {
       ok: false as const,
-      error: "This reset link has expired. Please request a new one.",
+      error: "This reset link has expired. Please request a new one from Forgot password.",
     };
   }
 
@@ -158,5 +189,11 @@ export async function coachResetPasswordAction(newPassword: string) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) return { ok: false as const, error: error.message };
 
-  redirect("/coach/dashboard");
+  const { data: coachRow } = await supabase
+    .from("coaches")
+    .select("onboarding_completed_at")
+    .eq("id", profile.coach_id)
+    .maybeSingle();
+
+  redirect(coachRow && !coachRow.onboarding_completed_at ? "/coach/onboarding" : "/coach/dashboard");
 }

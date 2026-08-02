@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/koaches/actions/guards";
 import { mapApplication, type DbApplication } from "@/lib/koaches/db/mappers";
 import {
+  sendCoachWelcomeEmail,
+} from "@/lib/koaches/email/send-coach-welcome";
+import {
+  generateProvisionPassword,
   provisionCoachAccount,
   type ProvisionCoachResult,
 } from "@/lib/koaches/provision-coach";
@@ -74,10 +78,16 @@ export async function submitCoachApplicationAction(input: SubmitApplicationInput
 
 export type ApproveCoachApplicationInput = {
   email: string;
-  password: string;
 };
 
-export type ApproveCoachApplicationResult = ProvisionCoachResult;
+export type ApproveCoachApplicationResult =
+  | (Extract<ProvisionCoachResult, { ok: true }> & {
+      welcomeEmailSent: boolean;
+      welcomeEmailError?: string;
+      /** Only returned when the welcome email failed, so admin can share credentials manually. */
+      temporaryPassword?: string;
+    })
+  | Extract<ProvisionCoachResult, { ok: false }>;
 
 export async function approveCoachApplicationAction(
   applicationId: string,
@@ -100,6 +110,7 @@ export async function approveCoachApplicationAction(
     return { ok: false, error: "This application has already been reviewed." };
   }
 
+  const temporaryPassword = generateProvisionPassword();
   const result = await provisionCoachAccount(
     supabase,
     {
@@ -112,7 +123,7 @@ export async function approveCoachApplicationAction(
       subscriptionPlan: await resolveNewCoachSubscriptionPlan(supabase),
       sessionPricing: app.sessionPricing,
     },
-    { loginEmail: input.email, password: input.password }
+    { loginEmail: input.email, password: temporaryPassword }
   );
   if (!result.ok) return result;
 
@@ -127,8 +138,20 @@ export async function approveCoachApplicationAction(
     return { ok: false, error: statusError.message };
   }
 
+  const emailResult = await sendCoachWelcomeEmail({
+    coachName: app.fullName,
+    loginEmail: result.loginEmail,
+    temporaryPassword,
+    slug: result.slug,
+  });
+
   revalidateCoachPaths(result.slug);
-  return result;
+  return {
+    ...result,
+    welcomeEmailSent: emailResult.ok,
+    welcomeEmailError: emailResult.ok ? undefined : emailResult.error,
+    temporaryPassword: emailResult.ok ? undefined : temporaryPassword,
+  };
 }
 
 export async function rejectApplicationAction(applicationId: string) {

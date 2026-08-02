@@ -65,7 +65,7 @@ export function socialStoryCoachName(
 }
 
 export function coachFirstName(
-  coach: { firstName: string; lastName?: string; name?: string }
+  coach: { firstName?: string; lastName?: string; name?: string }
 ): string {
   return (
     coach.firstName?.trim() ||

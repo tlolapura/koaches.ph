@@ -131,12 +131,19 @@ export type Program = {
   skillLabelOverrides?: Record<string, string>;
 };
 
-/** Drop-in rate for a group size band (e.g. 1 player, 2 players, 3–4 players) */
+/** Drop-in rate for a players + duration package */
 export type SessionRateTier = {
   id: string;
   minPlayers: number;
   maxPlayers: number;
-  /** Per-person drop-in rate for this group size (PHP) */
+  /** Session length this rate applies to (minutes). */
+  durationMinutes: number;
+  /**
+   * per_person: total = rate × playerCount
+   * flat: total = rate (package price for the whole group)
+   */
+  chargeType: "per_person" | "flat";
+  /** ₱ amount — per person or flat total, depending on chargeType */
   rate: number;
 };
 
@@ -145,7 +152,7 @@ export type CoachSessionPricing = {
   minimumPlayers: number;
   /** Maximum players accepted per drop-in */
   maximumPlayers: number;
-  /** Default length when scheduling a new drop-in */
+  /** Default booking length — derived from packages (most common length). */
   defaultDurationMinutes: number;
   tiers: SessionRateTier[];
 };

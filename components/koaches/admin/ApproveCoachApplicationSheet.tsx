@@ -22,14 +22,12 @@ export function ApproveCoachApplicationSheet({
   onApproved,
 }: ApproveCoachApplicationSheetProps) {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!application) return;
     setEmail(application.email);
-    setPassword("");
     setError(null);
     setSubmitting(false);
   }, [application]);
@@ -39,7 +37,7 @@ export function ApproveCoachApplicationSheet({
     if (!application) return;
     setSubmitting(true);
     setError(null);
-    const result = await approveCoachApplicationAction(application.id, { email, password });
+    const result = await approveCoachApplicationAction(application.id, { email });
     setSubmitting(false);
     if (!result.ok) {
       setError(result.error);
@@ -71,9 +69,9 @@ export function ApproveCoachApplicationSheet({
             form="approve-coach-form"
             className="w-full py-3 text-sm"
             loading={submitting}
-            loadingLabel="Creating account…"
+            loadingLabel="Approving…"
           >
-            Approve & create account
+            Approve & send welcome email
           </CoachButton>
         </CoachSheetFooter>
       }
@@ -85,8 +83,8 @@ export function ApproveCoachApplicationSheet({
             htmlFor="approve-email"
             hint={
               email.trim().toLowerCase() !== application.email.trim().toLowerCase()
-                ? `Application email: ${application.email} · you are using a different login email`
-                : `Application email: ${application.email}`
+                ? `Application email: ${application.email} · welcome email will go to the login email`
+                : "We'll email a temporary password and a link to the coach portal."
             }
           >
             <input
@@ -101,28 +99,12 @@ export function ApproveCoachApplicationSheet({
             />
           </CoachSheetField>
 
-          <CoachSheetField
-            label="Temporary password"
-            htmlFor="approve-password"
-            hint="Share this with the coach. They should update it from their profile after first login."
-          >
-            <input
-              id="approve-password"
-              type="password"
-              autoComplete="new-password"
-              className="coach-input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min. 8 characters"
-              minLength={8}
-              required
-            />
-          </CoachSheetField>
-
           {application.preferredSlug && (
             <p className="rounded-xl bg-[#F9FAFB] px-3 py-2.5 text-xs text-[#6B7280]">
-              Public profile: <span className="font-semibold text-[#374151]">/coach/{application.preferredSlug}</span>
-              {" "}(or similar if taken)
+              Public profile:{" "}
+              <span className="font-semibold text-[#374151]">/coach/{application.preferredSlug}</span>
+              {" "}
+              (or similar if taken)
             </p>
           )}
 

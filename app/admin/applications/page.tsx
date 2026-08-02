@@ -57,9 +57,20 @@ export default function ApplicationsPage() {
     if (approveTarget) {
       setApps((prev) => prev.filter((a) => a.id !== approveTarget.id));
     }
-    setSuccessMessage(
-      `${approveTarget?.fullName ?? "Coach"} approved. Login: ${result.loginEmail} · /coach/${result.slug}`
-    );
+    const name = approveTarget?.fullName ?? "Coach";
+    if (result.welcomeEmailSent) {
+      setSuccessMessage(
+        `${name} approved. Welcome email sent to ${result.loginEmail} · /coach/${result.slug}`
+      );
+    } else {
+      setSuccessMessage(
+        `${name} approved (${result.loginEmail} · /coach/${result.slug}), but welcome email failed: ${result.welcomeEmailError ?? "unknown error"}.${
+          result.temporaryPassword
+            ? ` Temporary password: ${result.temporaryPassword}`
+            : ""
+        }`
+      );
+    }
     setApproveTarget(null);
   };
 

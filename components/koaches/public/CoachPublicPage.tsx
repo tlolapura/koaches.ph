@@ -248,7 +248,7 @@ export function CoachPublicPage({
         <PublicSection
           icon={Sparkles}
           title="Drop-in rates"
-          subtitle={`${pricing.defaultDurationMinutes} min sessions · ${pricing.minimumPlayers}–${pricing.maximumPlayers} players`}
+          subtitle={`${pricing.minimumPlayers}–${pricing.maximumPlayers} players · packages by length`}
         >
           <ul className="coach-card divide-y divide-[#E5E7EB] overflow-hidden">
             {pricing.tiers.map((tier) => (

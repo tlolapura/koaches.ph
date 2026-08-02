@@ -221,7 +221,14 @@ export function AddSessionSheet({
     setPaymentStatus("unpaid");
     setDate(day);
     setCourtId(courts[0]?.id ?? "");
-    setPrice(suggestSessionPrice({ type: "drop-in", playerCount: 1, pricing: coach?.sessionPricing }));
+    setPrice(
+      suggestSessionPrice({
+        type: "drop-in",
+        playerCount: 1,
+        durationMinutes: defaultDuration,
+        pricing: coach?.sessionPricing,
+      })
+    );
     setParticipants(resizeParticipants([], 1));
 
     if (initialStartTime && initialEndTime) {
@@ -304,13 +311,30 @@ export function AddSessionSheet({
   const handleDurationChange = (nextDuration: number) => {
     setDurationMinutes(nextDuration);
     setEndTime(addMinutesToTimeValue(startTime, nextDuration));
+    if (sessionType === "drop-in") {
+      setPrice(
+        suggestSessionPrice({
+          type: "drop-in",
+          playerCount,
+          durationMinutes: nextDuration,
+          pricing: coach?.sessionPricing,
+        })
+      );
+    }
   };
 
   const handlePlayerCountChange = (count: number) => {
     setPlayerCount(count);
     setParticipants((prev) => resizeParticipants(prev, count, prev[0]));
     if (sessionType === "drop-in") {
-      setPrice(suggestSessionPrice({ type: "drop-in", playerCount: count, pricing: coach?.sessionPricing }));
+      setPrice(
+        suggestSessionPrice({
+          type: "drop-in",
+          playerCount: count,
+          durationMinutes,
+          pricing: coach?.sessionPricing,
+        })
+      );
     }
   };
 
@@ -332,6 +356,7 @@ export function AddSessionSheet({
         type: t,
         program: t === "program" ? program : undefined,
         playerCount: 1,
+        durationMinutes,
         pricing: coach?.sessionPricing,
       })
     );
@@ -661,6 +686,7 @@ export function AddSessionSheet({
           program={selectedProgram}
           pricing={coach?.sessionPricing ?? DEFAULT_SESSION_PRICING}
           playerCount={playerCount}
+          durationMinutes={durationMinutes}
           price={price}
           onPriceChange={setPrice}
         />

@@ -35,8 +35,8 @@ export function CoachForgotPasswordPage() {
 
           {sent ? (
             <p className="mt-6 text-sm leading-relaxed text-[#6B7280]">
-              If there&apos;s an account for that email, we sent a reset link. Check your inbox and
-              spam folder.
+              If there&apos;s an account for that email, we sent a temporary password. Check your
+              inbox and spam folder, then sign in.
             </p>
           ) : (
             <form
@@ -80,7 +80,7 @@ export function CoachForgotPasswordPage() {
 
               <CoachButton type="submit" className="mt-6 w-full" loading={pending} loadingLabel="Sending…">
                 <Mail className="h-4 w-4" strokeWidth={2.5} />
-                Send reset link
+                Email me a new password
               </CoachButton>
             </form>
           )}
