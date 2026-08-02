@@ -11,11 +11,11 @@ import {
 } from "@/lib/koaches/actions/availability";
 import {
   DEFAULT_WORKING_HOURS,
-  getBlockedSlotsForDate,
+  blockedSlotsToBusyIntervals,
   type BlockedSlot,
   type CoachWorkingHours,
 } from "@/lib/koaches/coach-availability";
-import { HOURLY_SESSION_MINUTES } from "@/lib/koaches/session-slots";
+import { resolveOvernightBooking } from "@/lib/koaches/session-slots";
 import { coachKeys } from "@/lib/koaches/queries/keys";
 
 export function useCoachAvailability(coachId: string) {
@@ -51,12 +51,13 @@ export function useCoachAvailability(coachId: string) {
   );
 
   const blockSlot = useCallback(
-    async (date: string, startMin: number) => {
+    async (viewDate: string, startMin: number) => {
+      const resolved = resolveOvernightBooking(viewDate, startMin);
       const slot: BlockedSlot = {
-        id: `${date}-${startMin}`,
-        date,
-        startMin,
-        endMin: startMin + HOURLY_SESSION_MINUTES,
+        id: `${resolved.date}-${resolved.startMin}`,
+        date: resolved.date,
+        startMin: resolved.startMin,
+        endMin: resolved.endMin,
       };
       await upsertBlockedSlotAction(coachId, slot);
       refresh();
@@ -74,7 +75,7 @@ export function useCoachAvailability(coachId: string) {
   );
 
   const blockedForDate = useCallback(
-    (date: string) => getBlockedSlotsForDate(blockedSlots, date),
+    (date: string) => blockedSlotsToBusyIntervals(blockedSlots, date),
     [blockedSlots]
   );
 

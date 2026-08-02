@@ -21,14 +21,19 @@ import type { Court, Session } from "@/lib/koaches/types";
 import { courtNameFromLookup, useCourts } from "@/hooks/useCourts";
 import { usePortalCoachId } from "@/components/koaches/coach/CoachAuthProvider";
 import {
+  continuousHoursSpan,
+  getBusyBlocksForDate,
   getHourlySlotRows,
   HOURLY_SESSION_MINUTES,
+  OPERATING_DAY_END,
+  OPERATING_DAY_START,
   slotFromRow,
   type AvailableSlot,
   type HourlySlotRow,
   type SlotGridOptions,
+  type TimeInterval,
 } from "@/lib/koaches/session-slots";
-import { formatTimeDisplay } from "@/lib/koaches/session-time";
+import { formatTimeDisplay, minutesToHtmlValue } from "@/lib/koaches/session-time";
 import { useCoachAvailability } from "@/hooks/useCoachAvailability";
 import { workingHoursToIntervals } from "@/lib/koaches/coach-availability";
 import type { CoachWorkingHours } from "@/lib/koaches/coach-availability";
@@ -367,10 +372,12 @@ function DayHeaderButton({
   dateKey,
   selectedDate,
   onDateChange,
+  isDayOff,
 }: {
   dateKey: string;
   selectedDate: string;
   onDateChange: (date: string) => void;
+  isDayOff?: boolean;
 }) {
   const d = parseDateKey(dateKey);
   const active = dateKey === selectedDate;
@@ -402,6 +409,16 @@ function DayHeaderButton({
       >
         {format(d, "d")}
       </p>
+      {isDayOff ? (
+        <p
+          className={cn(
+            "mt-1 text-[8px] font-semibold uppercase leading-none",
+            active ? "text-white/70" : "text-[#9CA3AF]"
+          )}
+        >
+          Off
+        </p>
+      ) : null}
     </button>
   );
 }
@@ -421,7 +438,8 @@ function OpenCell({
   onBookSlot: (date: string, slot: AvailableSlot) => void;
   onBlockSlot: (date: string, cell: HourlySlotRow) => void;
 }) {
-  const label = blockMode ? "Close" : "Open";
+  const outside = cell.status === "outside";
+  const label = blockMode ? "Close" : outside ? (compact ? "Outside" : "") : "Open";
 
   return (
     <button
@@ -429,7 +447,9 @@ function OpenCell({
       title={
         blockMode
           ? `Mark ${format(parseDateKey(dateKey), "EEE MMM d")} ${cell.timeLabel} as time off`
-          : `Book ${format(parseDateKey(dateKey), "EEE MMM d")} ${cell.timeLabel}`
+          : outside
+            ? `Outside usual hours — book ${format(parseDateKey(dateKey), "EEE MMM d")} ${cell.timeLabel}`
+            : `Book ${format(parseDateKey(dateKey), "EEE MMM d")} ${cell.timeLabel}`
       }
       onClick={() =>
         blockMode ? onBlockSlot(dateKey, cell) : onBookSlot(dateKey, slotFromRow(cell))
@@ -438,11 +458,13 @@ function OpenCell({
         slotCellBase,
         blockMode
           ? "items-center justify-center border border-[#9CA3AF] bg-[#F3F4F6] font-bold text-[#6B7280] transition-all hover:border-[#6B7280] hover:bg-[#E5E7EB] active:scale-[0.98]"
-          : "items-center justify-center border border-[#4F8FF7] bg-[#EFF6FF] font-bold text-[#4F8FF7] transition-all hover:border-[#3B82F6] hover:bg-[#DBEAFE] active:scale-[0.98]",
+          : outside
+            ? "items-center justify-center border border-transparent bg-[#F3F4F6]/80 font-medium text-[#9CA3AF] transition-all hover:border-[#D1D5DB] hover:bg-[#E5E7EB] hover:text-[#6B7280] active:scale-[0.98]"
+            : "items-center justify-center border border-[#4F8FF7] bg-[#EFF6FF] font-bold text-[#4F8FF7] transition-all hover:border-[#3B82F6] hover:bg-[#DBEAFE] active:scale-[0.98]",
         compact ? "gap-1 px-2 text-xs" : "px-0.5 text-[8px] sm:text-[9px] lg:text-[10px]"
       )}
     >
-      {label}
+      {label || <span className="sr-only">Book outside hours</span>}
     </button>
   );
 }
@@ -558,10 +580,41 @@ function BookedCell({
   );
 }
 
+function weekHoursBound(
+  weekDates: string[],
+  workingHours: CoachWorkingHours,
+  sessions: Session[],
+  blockedForDate: (date: string) => Array<{ startMin: number; endMin: number }>,
+  expandFullDay: boolean
+): TimeInterval {
+  if (expandFullDay) {
+    return { startMin: OPERATING_DAY_START, endMin: OPERATING_DAY_END };
+  }
+
+  const intervals: TimeInterval[] = weekDates.flatMap((dateKey) => [
+    ...workingHoursToIntervals(workingHours, dateKey),
+    ...blockedForDate(dateKey).map((s) => ({ startMin: s.startMin, endMin: s.endMin })),
+    // Use view-day busy blocks so after-midnight sessions expand the overnight stretch
+    // (not the early-morning clock of the following day).
+    ...getBusyBlocksForDate(sessions, dateKey).map((b) => ({
+      startMin: b.startMin,
+      endMin: b.endMin,
+    })),
+  ]);
+
+  return (
+    continuousHoursSpan(intervals) ?? {
+      startMin: OPERATING_DAY_START,
+      endMin: OPERATING_DAY_END,
+    }
+  );
+}
+
 function slotGridOptions(
   workingHours: CoachWorkingHours,
   blockedForDate: (date: string) => Array<{ id: string; startMin: number; endMin: number }>,
   date: string,
+  bound: TimeInterval,
   labelForSession?: (session: Session) => string | undefined
 ): SlotGridOptions {
   return {
@@ -571,6 +624,9 @@ function slotGridOptions(
       startMin: s.startMin,
       endMin: s.endMin,
     })),
+    fitToWorkingHours: true,
+    dayStart: bound.startMin,
+    dayEnd: bound.endMin,
     labelForSession,
   };
 }
@@ -579,6 +635,7 @@ function MobileDaySlots({
   date,
   sessions,
   slotOptions,
+  isDayOff,
   blockMode,
   courtLookup,
   onBookSlot,
@@ -588,6 +645,7 @@ function MobileDaySlots({
   date: string;
   sessions: Session[];
   slotOptions: SlotGridOptions;
+  isDayOff: boolean;
   blockMode: boolean;
   courtLookup: Map<string, Court>;
   onBookSlot: (date: string, slot: AvailableSlot) => void;
@@ -601,14 +659,22 @@ function MobileDaySlots({
 
   return (
     <div className="space-y-1 md:hidden">
+      {isDayOff ? (
+        <p className="rounded-lg bg-[#F9FAFB] px-3 py-2 text-center text-xs text-[#6B7280]">
+          Day off · tap any grey slot to book anyway
+        </p>
+      ) : null}
       {rows.map((cell) => (
-        <div key={cell.startValue} className="grid grid-cols-[44px_1fr] items-center gap-2">
+        <div
+          key={`${cell.startMin}-${cell.startValue}`}
+          className="grid grid-cols-[44px_1fr] items-center gap-2"
+        >
           <div className="text-right">
             <span className="font-heading text-[11px] font-bold tabular-nums text-[#6B7280]">
               {formatTimeDisplay(cell.startValue).replace(":00", "")}
             </span>
           </div>
-          {cell.status === "open" ? (
+          {cell.status === "open" || cell.status === "outside" ? (
             <OpenCell
               dateKey={date}
               cell={cell}
@@ -634,6 +700,7 @@ function DesktopWeekGrid({
   selectedDate,
   workingHours,
   blockedForDate,
+  bound,
   blockMode,
   courtLookup,
   labelForSession,
@@ -647,6 +714,7 @@ function DesktopWeekGrid({
   selectedDate: string;
   workingHours: CoachWorkingHours;
   blockedForDate: (date: string) => Array<{ id: string; startMin: number; endMin: number }>;
+  bound: TimeInterval;
   blockMode: boolean;
   courtLookup: Map<string, Court>;
   labelForSession?: (session: Session) => string | undefined;
@@ -655,43 +723,57 @@ function DesktopWeekGrid({
   onBlockSlot: (date: string, cell: HourlySlotRow) => void;
   onUnblockSlot: (slotId: string) => void;
 }) {
-  const hourRows = useMemo(
-    () =>
-      getHourlySlotRows([], weekDates[0], HOURLY_SESSION_MINUTES, {
-        availabilityWindows: weekDates.flatMap((dateKey) =>
-          workingHoursToIntervals(workingHours, dateKey)
-        ),
-      }),
-    [weekDates, workingHours]
-  );
   const grid = useMemo(
     () =>
-      weekDates.map((dateKey) => ({
-        dateKey,
-        rows: getHourlySlotRows(
-          sessions,
+      weekDates.map((dateKey) => {
+        const windows = workingHoursToIntervals(workingHours, dateKey);
+        const options = slotGridOptions(
+          workingHours,
+          blockedForDate,
           dateKey,
-          HOURLY_SESSION_MINUTES,
-          slotGridOptions(workingHours, blockedForDate, dateKey, labelForSession)
-        ),
-      })),
-    [weekDates, sessions, workingHours, blockedForDate, labelForSession]
+          bound,
+          labelForSession
+        );
+        return {
+          dateKey,
+          rows: getHourlySlotRows(sessions, dateKey, HOURLY_SESSION_MINUTES, options),
+          isDayOff: windows.length === 0,
+        };
+      }),
+    [weekDates, sessions, workingHours, blockedForDate, bound, labelForSession]
   );
+
+  const hourRows = useMemo(() => {
+    const hourSet = new Set<number>();
+    for (const day of grid) {
+      for (const row of day.rows) hourSet.add(row.startMin);
+    }
+    return [...hourSet]
+      .sort((a, b) => a - b)
+      .map((startMin) => ({
+        startMin,
+        startValue: minutesToHtmlValue(startMin),
+      }));
+  }, [grid]);
 
   return (
     <div className={cn(DESKTOP_GRID)}>
       <div aria-hidden />
-      {weekDates.map((key) => (
-        <DayHeaderButton
-          key={key}
-          dateKey={key}
-          selectedDate={selectedDate}
-          onDateChange={onDateChange}
-        />
-      ))}
+      {weekDates.map((key) => {
+        const day = grid.find((g) => g.dateKey === key);
+        return (
+          <DayHeaderButton
+            key={key}
+            dateKey={key}
+            selectedDate={selectedDate}
+            onDateChange={onDateChange}
+            isDayOff={day?.isDayOff}
+          />
+        );
+      })}
 
       {hourRows.map((hourRow) => (
-        <div key={hourRow.startValue} className="contents">
+        <div key={hourRow.startMin} className="contents">
           <div className="flex items-center justify-end self-stretch py-0.5 pr-0.5 lg:pr-1">
             <span className="font-heading text-[10px] font-bold tabular-nums text-[#14532D] lg:text-xs">
               <span className="lg:hidden">{compactTime(hourRow.startValue)}</span>
@@ -704,10 +786,10 @@ function DesktopWeekGrid({
             const cell = rows.find((row) => row.startMin === hourRow.startMin);
             if (!cell) return <div key={dateKey} className="min-w-0" aria-hidden />;
 
-            if (cell.status === "open") {
+            if (cell.status === "open" || cell.status === "outside") {
               return (
                 <OpenCell
-                  key={`${dateKey}-${cell.startValue}`}
+                  key={`${dateKey}-${cell.startMin}`}
                   dateKey={dateKey}
                   cell={cell}
                   blockMode={blockMode}
@@ -720,7 +802,7 @@ function DesktopWeekGrid({
             if (cell.status === "blocked") {
               return (
                 <BlockedCell
-                  key={`${dateKey}-${cell.startValue}`}
+                  key={`${dateKey}-${cell.startMin}`}
                   cell={cell}
                   onUnblockSlot={onUnblockSlot}
                 />
@@ -728,7 +810,11 @@ function DesktopWeekGrid({
             }
 
             return (
-              <BookedCell key={`${dateKey}-${cell.startValue}`} cell={cell} courtLookup={courtLookup} />
+              <BookedCell
+                key={`${dateKey}-${cell.startMin}`}
+                cell={cell}
+                courtLookup={courtLookup}
+              />
             );
           })}
         </div>
@@ -748,13 +834,21 @@ export function CoachScheduleGrid({
   const { lookup } = useCourts();
   const weekDates = useMemo(() => weekKeys(date), [date]);
   const [blockMode, setBlockMode] = useState(false);
+  const [showFullDay, setShowFullDay] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const { workingHours, blockSlot, unblockSlot, blockedForDate } = useCoachAvailability(coachId);
 
-  const mobileSlotOptions = useMemo(
-    () => slotGridOptions(workingHours, blockedForDate, date, labelForSession),
-    [workingHours, blockedForDate, date, labelForSession]
+  const hoursBound = useMemo(
+    () => weekHoursBound(weekDates, workingHours, sessions, blockedForDate, showFullDay),
+    [weekDates, workingHours, sessions, blockedForDate, showFullDay]
   );
+
+  const mobileSlotOptions = useMemo(
+    () => slotGridOptions(workingHours, blockedForDate, date, hoursBound, labelForSession),
+    [workingHours, blockedForDate, date, hoursBound, labelForSession]
+  );
+
+  const selectedIsDayOff = workingHoursToIntervals(workingHours, date).length === 0;
 
   const shiftWeek = (delta: number) => {
     onDateChange(toDateKey(addWeeks(parseDateKey(date), delta)));
@@ -788,6 +882,7 @@ export function CoachScheduleGrid({
         date={date}
         sessions={sessions}
         slotOptions={mobileSlotOptions}
+        isDayOff={selectedIsDayOff}
         blockMode={blockMode}
         courtLookup={lookup}
         onBookSlot={onBookSlot}
@@ -802,6 +897,7 @@ export function CoachScheduleGrid({
           selectedDate={date}
           workingHours={workingHours}
           blockedForDate={blockedForDate}
+          bound={hoursBound}
           blockMode={blockMode}
           courtLookup={lookup}
           labelForSession={labelForSession}
@@ -830,7 +926,20 @@ export function CoachScheduleGrid({
           </button>
         </div>
       ) : (
-        <div className="mt-1 flex justify-center border-t border-[#E5E7EB] pt-3 md:mt-0 md:justify-end md:border-0 md:pt-0">
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-2 border-t border-[#E5E7EB] pt-3 md:mt-0 md:justify-end md:border-0 md:pt-0">
+          <button
+            type="button"
+            onClick={() => setShowFullDay((v) => !v)}
+            aria-pressed={showFullDay}
+            className={cn(
+              "font-heading inline-flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors",
+              showFullDay
+                ? "bg-[#EFF6FF] text-[#1D4ED8]"
+                : "text-[#6B7280] hover:bg-[#F9FAFB] hover:text-[#374151]"
+            )}
+          >
+            {showFullDay ? "Showing 6am–2am" : "Show earlier / later"}
+          </button>
           <button
             type="button"
             onClick={() => setBlockMode(true)}

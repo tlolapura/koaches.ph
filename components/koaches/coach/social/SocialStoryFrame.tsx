@@ -174,14 +174,14 @@ export function SocialStoryFooter({ url }: { url: string }) {
   );
 }
 
-export function storySlotCellClass(status?: "open" | "booked" | "blocked") {
+export function storySlotCellClass(status?: "open" | "outside" | "booked" | "blocked" | "off") {
   if (status === "open") return "bg-[#F0FDF4] ring-2 ring-[#16A34A]";
   if (status === "booked") return "bg-[#EDF2F7] ring-1 ring-[#D1D5DB]";
   if (status === "blocked") return "bg-[#E5E7EB] ring-1 ring-[#9CA3AF]";
   return "bg-transparent";
 }
 
-export function storySlotLabel(status: "open" | "booked" | "blocked"): string | null {
+export function storySlotLabel(status: "open" | "outside" | "booked" | "blocked"): string | null {
   if (status === "open") return "Open";
   if (status === "booked") return "Booked";
   return null;

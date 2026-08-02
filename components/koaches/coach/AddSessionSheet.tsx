@@ -15,6 +15,7 @@ import { useCoachStudents } from "@/hooks/useCoachStudents";
 import { useCoachAvailability } from "@/hooks/useCoachAvailability";
 import { DEFAULT_SESSION_PRICING } from "@/lib/koaches/pricing";
 import { suggestSessionPrice } from "@/lib/koaches/session-pricing";
+import { workingHoursToIntervals, getBlockedSlotsForDate } from "@/lib/koaches/coach-availability";
 import {
   findNearestAvailableSlot,
   getAllowedSessionDurations,
@@ -23,6 +24,8 @@ import {
   getMaxDurationMinutesForStart,
   hasScheduleConflict,
   HOURLY_SESSION_MINUTES,
+  MINUTES_PER_DAY,
+  resolveOvernightBooking,
 } from "@/lib/koaches/session-slots";
 import {
   addMinutesToTimeValue,
@@ -30,8 +33,8 @@ import {
   formatSessionDuration,
   formatTimeDisplay,
   minutesBetweenTimeValues,
+  parseTimeToMinutes,
 } from "@/lib/koaches/session-time";
-import { blockedSlotsToBusyIntervals, workingHoursToIntervals } from "@/lib/koaches/coach-availability";
 import { participantFromStudent, resizeParticipants } from "@/lib/koaches/session-participants";
 import { getNextProgramSessionNumber, formatProgramStudentOptionLabel, formatProgramBookingBanner, formatSessionOrdinal } from "@/lib/koaches/schedule-program-sessions";
 import { enrollStudentInProgramAction } from "@/lib/koaches/actions/programs";
@@ -88,13 +91,8 @@ export function AddSessionSheet({
   const { courts } = useCoachCourts(coachId);
   const { sessions: allSessions } = useCoachSessions(coachId);
   const { students: rosterStudents } = useCoachStudents(coachId);
-  const { workingHours, blockedSlots } = useCoachAvailability(coachId);
+  const { workingHours, blockedForDate, blockedSlots } = useCoachAvailability(coachId);
   const roster = useMemo(() => rosterStudents.filter((s) => !s.isArchived), [rosterStudents]);
-
-  const blockedForDate = useMemo(
-    () => (day: string) => blockedSlotsToBusyIntervals(blockedSlots, day),
-    [blockedSlots]
-  );
 
   const defaultDuration = coach?.sessionPricing?.defaultDurationMinutes ?? HOURLY_SESSION_MINUTES;
 
@@ -109,6 +107,8 @@ export function AddSessionSheet({
   const [paymentStatus, setPaymentStatus] = useState<SessionPaymentStatus>("unpaid");
   const [date, setDate] = useState(initialDate ?? format(new Date(), "yyyy-MM-dd"));
   const [startTime, setStartTime] = useState("08:00");
+  /** Continuum minutes for the selected start (distinguishes early morning vs next-day overnight). */
+  const [viewStartMin, setViewStartMin] = useState(() => parseTimeToMinutes("08:00"));
   const [durationMinutes, setDurationMinutes] = useState(defaultDuration);
   const [endTime, setEndTime] = useState(() => addMinutesToTimeValue("08:00", defaultDuration));
   const [courtId, setCourtId] = useState("");
@@ -135,18 +135,26 @@ export function AddSessionSheet({
   const showScheduleFields =
     sessionType === "drop-in" || (sessionType === "program" && Boolean(nextSessionNumber));
 
-  const slotOptionsForDate = useMemo(
-    () => ({
-      availabilityWindows: workingHoursToIntervals(workingHours, date),
+  const slotOptionsForDate = useMemo(() => {
+    const availabilityWindows = workingHoursToIntervals(workingHours, date);
+    return {
+      availabilityWindows,
       blockedIntervals: date ? blockedForDate(date) : [],
-    }),
-    [workingHours, blockedForDate, date]
-  );
+      // Full operating day so coaches can override outside usual hours (grey “Outside hours”).
+      fitToWorkingHours: false,
+    };
+  }, [workingHours, blockedForDate, date]);
 
   const maxDurationMinutes = useMemo(() => {
     if (!date) return 0;
-    return getMaxDurationMinutesForStart(allSessions, date, startTime, slotOptionsForDate);
-  }, [allSessions, date, startTime, slotOptionsForDate]);
+    return getMaxDurationMinutesForStart(
+      allSessions,
+      date,
+      startTime,
+      slotOptionsForDate,
+      viewStartMin
+    );
+  }, [allSessions, date, startTime, slotOptionsForDate, viewStartMin]);
 
   const allowedDurations = useMemo(
     () => getAllowedSessionDurations(maxDurationMinutes, defaultDuration),
@@ -154,33 +162,61 @@ export function AddSessionSheet({
   );
   const startTimeOptions = useMemo<CoachSelectOption[]>(() => {
     if (!date) return [];
-    return getHourlySlotRows(allSessions, date, durationMinutes, slotOptionsForDate).map((row) => ({
-      value: row.startValue,
-      label:
-        row.status === "booked"
-          ? `${row.timeLabel} (Booked)`
-          : row.status === "blocked"
-            ? `${row.timeLabel} (Blocked)`
-            : row.timeLabel,
-      disabled: row.status !== "open",
-    }));
-  }, [allSessions, date, durationMinutes, slotOptionsForDate]);
+    const rows = getHourlySlotRows(allSessions, date, durationMinutes, slotOptionsForDate);
+    const options = rows.map((row) => {
+      const nextDay = row.startMin >= MINUTES_PER_DAY;
+      return {
+        // Prefix so early-morning 01:00 ≠ next-day overnight 01:00.
+        value: nextDay ? `n:${row.startValue}` : row.startValue,
+        label:
+          row.status === "booked"
+            ? `${row.timeLabel}${nextDay ? " · next day" : ""} (Booked)`
+            : row.status === "blocked"
+              ? `${row.timeLabel}${nextDay ? " · next day" : ""} (Blocked)`
+              : row.status === "outside"
+                ? `${row.timeLabel}${nextDay ? " · next day" : ""} (Outside hours)`
+                : nextDay
+                  ? `${row.timeLabel} (Next day)`
+                  : row.timeLabel,
+        disabled: row.status === "booked" || row.status === "blocked",
+      };
+    });
+
+    const selectedValue = viewStartMin >= MINUTES_PER_DAY ? `n:${startTime}` : startTime;
+    if (startTime && !options.some((o) => o.value === selectedValue)) {
+      options.unshift({
+        value: selectedValue,
+        label: `${formatTimeDisplay(startTime)}${
+          viewStartMin >= MINUTES_PER_DAY ? " (Next day)" : ""
+        }`,
+        disabled: false,
+      });
+    }
+    return options;
+  }, [allSessions, date, durationMinutes, slotOptionsForDate, startTime, viewStartMin]);
+
+  const startTimeSelectValue =
+    viewStartMin >= MINUTES_PER_DAY ? `n:${startTime}` : startTime;
 
   const canAdjustDuration = allowedDurations.length > 1;
   const selectedCourt = courts.find((court) => court.id === courtId);
 
   const hasConflict = useMemo(() => {
     if (!date) return false;
+    const resolved = resolveOvernightBooking(date, viewStartMin, durationMinutes);
     return hasScheduleConflict(
       allSessions,
-      date,
-      startTime,
-      endTime,
+      resolved.date,
+      resolved.startValue,
+      addMinutesToTimeValue(resolved.startValue, durationMinutes),
       undefined,
-      blockedForDate(date),
-      workingHoursToIntervals(workingHours, date)
+      getBlockedSlotsForDate(blockedSlots, resolved.date).map((s) => ({
+        startMin: s.startMin,
+        endMin: s.endMin,
+      })),
+      workingHoursToIntervals(workingHours, resolved.date)
     );
-  }, [allSessions, date, startTime, endTime, blockedForDate, workingHours]);
+  }, [allSessions, date, viewStartMin, durationMinutes, blockedSlots, workingHours]);
 
   const scheduleTimeLabel =
     date && startTime && endTime
@@ -234,6 +270,8 @@ export function AddSessionSheet({
     if (initialStartTime && initialEndTime) {
       const initialDuration = minutesBetweenTimeValues(initialStartTime, initialEndTime);
       setStartTime(initialStartTime);
+      // Calendar already resolved overnight → early morning on the next date.
+      setViewStartMin(parseTimeToMinutes(initialStartTime));
       setDurationMinutes(initialDuration);
       setEndTime(initialEndTime);
       return;
@@ -247,10 +285,12 @@ export function AddSessionSheet({
     if (slot) {
       const slotDuration = minutesBetweenTimeValues(slot.startValue, slot.endValue);
       setStartTime(slot.startValue);
+      setViewStartMin(slot.startMin);
       setDurationMinutes(slotDuration);
       setEndTime(slot.endValue);
     } else {
       setStartTime(preferredStart);
+      setViewStartMin(parseTimeToMinutes(preferredStart));
       setDurationMinutes(defaultDuration);
       setEndTime(addMinutesToTimeValue(preferredStart, defaultDuration));
     }
@@ -298,14 +338,19 @@ export function AddSessionSheet({
     if (slot) {
       const slotDuration = minutesBetweenTimeValues(slot.startValue, slot.endValue);
       setStartTime(slot.startValue);
+      setViewStartMin(slot.startMin);
       setDurationMinutes(slotDuration);
       setEndTime(slot.endValue);
     }
   };
 
   const handleStartTimeChange = (nextStart: string) => {
-    setStartTime(nextStart);
-    setEndTime(addMinutesToTimeValue(nextStart, durationMinutes));
+    const nextDay = nextStart.startsWith("n:");
+    const clock = nextDay ? nextStart.slice(2) : nextStart;
+    const startMin = parseTimeToMinutes(clock) + (nextDay ? MINUTES_PER_DAY : 0);
+    setStartTime(clock);
+    setViewStartMin(startMin);
+    setEndTime(addMinutesToTimeValue(clock, durationMinutes));
   };
 
   const handleDurationChange = (nextDuration: number) => {
@@ -379,6 +424,8 @@ export function AddSessionSheet({
         return;
       }
 
+      const overnight = resolveOvernightBooking(date, viewStartMin, durationMinutes);
+
       const session: Session = {
         id: `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         coachId: coachId,
@@ -386,9 +433,11 @@ export function AddSessionSheet({
         type: sessionType,
         programId: program?.id,
         sessionNumber,
-        date,
-        time: formatTimeDisplay(startTime),
-        endTime: formatTimeDisplay(endTime),
+        date: overnight.date,
+        time: formatTimeDisplay(overnight.startValue),
+        endTime: formatTimeDisplay(
+          addMinutesToTimeValue(overnight.startValue, durationMinutes)
+        ),
         courtId,
         status: "upcoming",
         paymentStatus,
@@ -723,7 +772,7 @@ export function AddSessionSheet({
             {date && (
               <>
                 <SessionTimeFields
-                  startTime={startTime}
+                  startTime={startTimeSelectValue}
                   endTime={endTime}
                   fixedDurationMinutes={canAdjustDuration ? undefined : durationMinutes}
                   showEndTime={!canAdjustDuration}

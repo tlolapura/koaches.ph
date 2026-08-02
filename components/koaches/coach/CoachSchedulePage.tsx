@@ -15,6 +15,7 @@ import {
   getSessionParticipants,
 } from "@/lib/koaches/session-participants";
 import type { AvailableSlot } from "@/lib/koaches/session-slots";
+import { resolveOvernightBooking } from "@/lib/koaches/session-slots";
 import { CoachScheduleGrid } from "@/components/koaches/coach/CoachScheduleGrid";
 import dynamic from "next/dynamic";
 import {
@@ -135,8 +136,13 @@ export function CoachSchedulePage() {
   };
 
   const handleBookSlot = (date: string, slot: AvailableSlot) => {
-    setSelectedDate(date);
-    openAddSession({ date, startTime: slot.startValue, endTime: slot.endValue });
+    const resolved = resolveOvernightBooking(date, slot.startMin);
+    setSelectedDate(resolved.date);
+    openAddSession({
+      date: resolved.date,
+      startTime: resolved.startValue,
+      endTime: resolved.endValue,
+    });
   };
 
   if (!coachId || loading) return <CoachScheduleSkeleton />;

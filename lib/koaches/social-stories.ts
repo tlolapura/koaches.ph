@@ -81,7 +81,7 @@ function slotGridOptions(
 function storySlotFromRow(row: HourlySlotRow): DailyStorySlot {
   return {
     timeLabel: formatTimeDisplay(row.startValue).replace(":00", ""),
-    status: row.status,
+    status: row.status === "blocked" ? "blocked" : row.status === "booked" ? "booked" : "open",
   };
 }
 
@@ -96,7 +96,7 @@ export function getDailyStoryDay(
     date,
     60,
     slotGridOptions(workingHours, blockedSlots, date)
-  );
+  ).filter((row) => row.status !== "outside");
   let openCount = 0;
   let bookedCount = 0;
   for (const row of rows) {
@@ -137,7 +137,8 @@ export function getCalendarStoryWeek(
   const hourSet = new Set<number>();
   for (const rows of rowsByDay) {
     for (const row of rows) {
-      hourSet.add(row.startMin);
+      // Outside-hours slots stay bookable on the portal, but stories only show usual hours.
+      if (row.status !== "outside") hourSet.add(row.startMin);
     }
   }
 
@@ -154,7 +155,7 @@ export function getCalendarStoryWeek(
     const d = parse(date, "yyyy-MM-dd", new Date());
     const cells: CalendarStoryCell[] = sortedHours.map((startMin) => {
       const row = rowMap.get(startMin);
-      if (!row) return { status: "off" };
+      if (!row || row.status === "outside") return { status: "off" };
       if (row.status === "open") openCount += 1;
       if (row.status === "booked") bookedCount += 1;
       return {

@@ -1,6 +1,10 @@
 import { formatTimeDisplay, minutesToHtmlValue, parseTimeToMinutes } from "./session-time";
 import type { TimeInterval } from "./session-slots";
-import { HOURLY_SESSION_MINUTES, intervalsOverlap } from "./session-slots";
+import {
+  HOURLY_SESSION_MINUTES,
+  intervalsOverlap,
+  toViewDayMinutes,
+} from "./session-slots";
 
 export type WorkingHoursWindow = {
   id: string;
@@ -350,9 +354,13 @@ export function isIntervalBlocked(
   );
 }
 
-export function blockedSlotsToBusyIntervals(slots: BlockedSlot[], date: string): TimeInterval[] {
-  return getBlockedSlotsForDate(slots, date).map((s) => ({
-    startMin: s.startMin,
-    endMin: s.endMin,
-  }));
+export function blockedSlotsToBusyIntervals(
+  slots: BlockedSlot[],
+  date: string
+): Array<TimeInterval & { id: string }> {
+  return slots.flatMap((s) => {
+    const view = toViewDayMinutes(s.date, s.startMin, s.endMin, date);
+    if (!view) return [];
+    return [{ id: s.id, startMin: view.startMin, endMin: view.endMin }];
+  });
 }
