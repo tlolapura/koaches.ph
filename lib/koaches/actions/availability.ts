@@ -6,6 +6,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import {
   DEFAULT_WORKING_HOURS,
   normalizeCoachWorkingHours,
+  workingHoursFromWindows,
   type BlockedSlot,
   type CoachWorkingHours,
 } from "@/lib/koaches/coach-availability";
@@ -21,9 +22,32 @@ function blockedFromDb(row: DbBlockedSlot): BlockedSlot {
   };
 }
 
-function workingHoursFromLegacyRows(rows: DbWorkingHours[]): CoachWorkingHours {
+function workingHoursFromLegacyRows(rows: DbWorkingHours[]): CoachWorkingHours | null {
   const enabled = rows.filter((r) => r.enabled && r.start_time && r.end_time);
-  if (enabled.length === 0) return DEFAULT_WORKING_HOURS;
+  if (enabled.length === 0) return null;
+
+  // Prefer per-day rows when present (legacy table had day_of_week)
+  const byDay = new Map<number, { startMin: number; endMin: number }>();
+  for (const row of enabled) {
+    byDay.set(row.day_of_week, {
+      startMin: parseTimeToMinutes(row.start_time!),
+      endMin: parseTimeToMinutes(row.end_time!),
+    });
+  }
+
+  if (byDay.size > 0) {
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const slot = byDay.get(i);
+      if (!slot) return { enabled: false, windows: [] as CoachWorkingHours["days"][0]["windows"] };
+      return {
+        enabled: true,
+        windows: [{ id: `legacy-${i}`, startMin: slot.startMin, endMin: slot.endMin }],
+      };
+    });
+    if (days.some((d) => d.enabled)) {
+      return { version: 2, days };
+    }
+  }
 
   const seen = new Set<string>();
   const windows = [];
@@ -38,20 +62,23 @@ function workingHoursFromLegacyRows(rows: DbWorkingHours[]): CoachWorkingHours {
     });
   }
 
-  return windows.length > 0 ? { windows } : DEFAULT_WORKING_HOURS;
+  return windows.length > 0 ? workingHoursFromWindows(windows) : null;
 }
 
 function workingHoursFromColumn(value: unknown): CoachWorkingHours | null {
+  if (value == null || typeof value !== "object") return null;
+  if (Object.keys(value as object).length === 0) return null;
+  const normalized = normalizeCoachWorkingHours(value);
+  // Empty object / junk falls through to default via normalize — treat as unset only if {}
   if (
-    typeof value === "object" &&
-    value !== null &&
-    "windows" in value &&
-    Array.isArray((value as CoachWorkingHours).windows) &&
-    (value as CoachWorkingHours).windows.length > 0
+    !("windows" in (value as object)) &&
+    !("days" in (value as object)) &&
+    !("startMin" in (value as object)) &&
+    !("version" in (value as object))
   ) {
-    return normalizeCoachWorkingHours(value);
+    return null;
   }
-  return null;
+  return normalized;
 }
 
 export async function fetchCoachAvailabilityAction(coachId: string): Promise<{
@@ -85,11 +112,12 @@ export async function fetchCoachAvailabilityAction(coachId: string): Promise<{
 export async function saveCoachWorkingHoursAction(coachId: string, hours: CoachWorkingHours) {
   await assertCoachAccess(coachId);
   const supabase = createServiceClient();
+  const normalized = normalizeCoachWorkingHours(hours);
 
   const { error } = await supabase
     .from("coaches")
     .update({
-      working_hours: hours,
+      working_hours: normalized,
       updated_at: new Date().toISOString(),
     })
     .eq("id", coachId);

@@ -60,16 +60,6 @@ export function ScheduleProgramSessionsSheet({
     return rosterStudents.filter((s) => idSet.has(s.id) && !s.isArchived);
   }, [program.enrolledStudentIds, rosterStudents]);
 
-  const availabilityWindows = useMemo(
-    () => workingHoursToIntervals(workingHours),
-    [workingHours]
-  );
-
-  const blockedForDate = useMemo(
-    () => (day: string) => blockedSlotsToBusyIntervals(blockedSlots, day),
-    [blockedSlots]
-  );
-
   const [studentId, setStudentId] = useState(() => enrolled[0]?.id ?? "");
   const [date, setDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [startTime, setStartTime] = useState("08:00");
@@ -77,6 +67,16 @@ export function ScheduleProgramSessionsSheet({
   const [courtId, setCourtId] = useState(() => courts[0]?.id ?? "");
   const [paymentStatus, setPaymentStatus] = useState<SessionPaymentStatus>("unpaid");
   const [saving, setSaving] = useState(false);
+
+  const availabilityWindows = useMemo(
+    () => workingHoursToIntervals(workingHours, date),
+    [workingHours, date]
+  );
+
+  const blockedForDate = useMemo(
+    () => (day: string) => blockedSlotsToBusyIntervals(blockedSlots, day),
+    [blockedSlots]
+  );
 
   const student = enrolled.find((s) => s.id === studentId) ?? enrolled[0];
 

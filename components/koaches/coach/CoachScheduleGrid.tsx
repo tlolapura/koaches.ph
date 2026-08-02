@@ -565,7 +565,7 @@ function slotGridOptions(
   labelForSession?: (session: Session) => string | undefined
 ): SlotGridOptions {
   return {
-    availabilityWindows: workingHoursToIntervals(workingHours),
+    availabilityWindows: workingHoursToIntervals(workingHours, date),
     blockedIntervals: blockedForDate(date).map((s) => ({
       id: s.id,
       startMin: s.startMin,
@@ -658,7 +658,9 @@ function DesktopWeekGrid({
   const hourRows = useMemo(
     () =>
       getHourlySlotRows([], weekDates[0], HOURLY_SESSION_MINUTES, {
-        availabilityWindows: workingHoursToIntervals(workingHours),
+        availabilityWindows: weekDates.flatMap((dateKey) =>
+          workingHoursToIntervals(workingHours, dateKey)
+        ),
       }),
     [weekDates, workingHours]
   );

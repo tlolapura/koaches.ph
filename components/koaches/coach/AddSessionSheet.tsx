@@ -91,13 +91,6 @@ export function AddSessionSheet({
   const { workingHours, blockedSlots } = useCoachAvailability(coachId);
   const roster = useMemo(() => rosterStudents.filter((s) => !s.isArchived), [rosterStudents]);
 
-  const slotAvailabilityOptions = useMemo(
-    () => ({
-      availabilityWindows: workingHoursToIntervals(workingHours),
-    }),
-    [workingHours]
-  );
-
   const blockedForDate = useMemo(
     () => (day: string) => blockedSlotsToBusyIntervals(blockedSlots, day),
     [blockedSlots]
@@ -144,10 +137,10 @@ export function AddSessionSheet({
 
   const slotOptionsForDate = useMemo(
     () => ({
-      ...slotAvailabilityOptions,
+      availabilityWindows: workingHoursToIntervals(workingHours, date),
       blockedIntervals: date ? blockedForDate(date) : [],
     }),
-    [slotAvailabilityOptions, blockedForDate, date]
+    [workingHours, blockedForDate, date]
   );
 
   const maxDurationMinutes = useMemo(() => {
@@ -185,9 +178,9 @@ export function AddSessionSheet({
       endTime,
       undefined,
       blockedForDate(date),
-      slotAvailabilityOptions.availabilityWindows
+      workingHoursToIntervals(workingHours, date)
     );
-  }, [allSessions, date, startTime, endTime, blockedForDate, slotAvailabilityOptions]);
+  }, [allSessions, date, startTime, endTime, blockedForDate, workingHours]);
 
   const scheduleTimeLabel =
     date && startTime && endTime
@@ -240,7 +233,7 @@ export function AddSessionSheet({
     }
 
     const slots = getAvailableSlots(allSessions, day, defaultDuration, {
-      ...slotAvailabilityOptions,
+      availabilityWindows: workingHoursToIntervals(workingHours, day),
       blockedIntervals: blockedForDate(day),
     });
     const slot = findNearestAvailableSlot(slots, preferredStart);
@@ -291,7 +284,7 @@ export function AddSessionSheet({
     setDate(nextDate);
     if (!nextDate) return;
     const slots = getAvailableSlots(allSessions, nextDate, durationMinutes, {
-      ...slotAvailabilityOptions,
+      availabilityWindows: workingHoursToIntervals(workingHours, nextDate),
       blockedIntervals: blockedForDate(nextDate),
     });
     const slot = findNearestAvailableSlot(slots, startTime);

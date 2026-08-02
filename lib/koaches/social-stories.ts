@@ -73,7 +73,7 @@ function slotGridOptions(
   date: string
 ) {
   return {
-    availabilityWindows: workingHoursToIntervals(workingHours),
+    availabilityWindows: workingHoursToIntervals(workingHours, date),
     blockedIntervals: blockedSlotsToBusyIntervals(blockedSlots, date),
   };
 }
